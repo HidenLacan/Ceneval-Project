@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset='utf-8'/>
+  <title>Dibujar Polígono</title>
+  <link rel='stylesheet' href='https://unpkg.com/leaflet@1.9.3/dist/leaflet.css'/>
+  <link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/leaflet-draw@1.0.4/dist/leaflet.draw.css'/>
+  <style> html, body, #map { height: 100%; margin: 0; } </style>
+</head>
+<body>
+  <div id='map'></div>
+  <script src='https://unpkg.com/leaflet@1.9.3/dist/leaflet.js'></script>
+  <script src='https://cdn.jsdelivr.net/npm/leaflet-draw@1.0.4/dist/leaflet.draw.js'></script>
+  <script>
+    async function initMap() {
+      const res = await fetch('/editor/config/?colonia=San Lorenzo Tezonco, Ciudad de México');
+      const config = await res.json();
+
+      const map = L.map('map').setView([config.center_lat, config.center_lon], 16);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+      const bounds = [
+        [config.bbox[0], config.bbox[2]],
+        [config.bbox[1], config.bbox[3]]
+      ];
+      L.rectangle(bounds, { color: 'orange', weight: 2, fillOpacity: 0.2 }).addTo(map);
+
+      const drawnItems = new L.FeatureGroup().addTo(map);
+      new L.Control.Draw({
+        draw: { polygon: true, polyline: false, marker: false, circle: false, rectangle: false, circlemarker: false },
+        edit: { featureGroup: drawnItems }
+      }).addTo(map);
+
+      map.on('draw:created', function (e) {
+        const layer = e.layer;
+        drawnItems.addLayer(layer);
+        const geojson = layer.toGeoJSON();
+        geojson.nombre = config.nombre;
+
+        fetch('/editor/guardar/', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(geojson)
+        }).then(() => {
+          alert('✅ Polígono enviado. Puedes cerrar esta ventana.');
+        });
+      });
+    }
+
+    initMap();
+  </script>
+</body>
+</html>
