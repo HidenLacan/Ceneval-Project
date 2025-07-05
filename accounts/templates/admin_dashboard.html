@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin - Creación de polígonos</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-draw@1.0.4/dist/leaflet.draw.css"/>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        .container { width: 90%; margin: 30px auto; border: 2px solid #ccc; padding: 30px; border-radius: 10px; }
+        .header { display: flex; justify-content: space-between; align-items: center; }
+        .panel-row { display: flex; gap: 30px; margin-top: 20px; }
+        .panel { flex: 1; border: 1px solid #333; min-height: 350px; padding: 10px; background: #fafafa; }
+        .actions { display: flex; justify-content: space-between; margin-top: 30px; }
+        .actions button { width: 30%; padding: 10px; font-size: 1.1em; }
+        #map { width: 100%; height: 340px; }
+        #png-preview { width: 100%; height: 340px; object-fit: contain; background: #eee; display: block; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>ADMIN</h1>
+        <h2>Creación de polígonos</h2>
+    </div>
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div style="display: flex; gap: 10px; align-items: center;">
+            <input type="text" name="colonia" id="colonia" placeholder="Escribir Nombre de la colonia" style="flex: 1; padding:10px; font-size:1.1em;" required value="{{ colonia|default:'' }}">
+            <button type="button" id="buscar-btn" style="padding: 10px 20px; font-size: 1.1em; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer;">Buscar</button>
+        </div>
+        <div class="panel-row">
+            <div class="panel">
+                <div id="map"></div>
+                <p style="font-size:0.95em;">Dibujar polígono con ayuda de Folium/Leaflet.<br>Se renderiza utilizando el bounding box de la colonia de OpenStreetMap.</p>
+            </div>
+            <div class="panel" style="display:flex;flex-direction:column;align-items:center;justify-content:center;">
+                <label for="png-upload"><b>Subir y visualizar una imagen PNG del mapa</b></label>
+                <input type="file" id="png-upload" name="png_file" accept="image/png" style="margin:10px 0;">
+                <img id="png-preview" src="#" alt="Vista previa de la imagen" style="display:none;"/>
+            </div>
+        </div>
+        <div class="actions">
+            <button type="submit" name="action" value="guardar">GUARDAR</button>
+            <button type="submit" name="action" value="modificar">MODIFICAR</button>
+            <button type="submit" name="action" value="borrar">BORRAR</button>
+        </div>
+    </form>
+    {% if error %}
+        <p style="color: red;">{{ error }}</p>
+    {% endif %}
+    {% if resultado %}
+        <h3>Resultado:</h3>
+        <pre>{{ resultado|safe }}</pre>
+    {% endif %}
+</div>
+{% if config %}
+<script>
+    var coloniaConfig = {{ config|safe }};
+</script>
+{% endif %}
+<script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
+<script>
+    // Inicialización del mapa
+    let map = L.map('map').setView([19.3574, -99.0731], 15); // Coordenadas por defecto (CDMX)
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+    let drawnItems = new L.FeatureGroup().addTo(map);
+    let boundingBoxLayer = null;
+    new L.Control.Draw({
+        draw: { polygon: true, polyline: false, marker: false, circle: false, rectangle: false, circlemarker: false },
+        edit: { featureGroup: drawnItems }
+    }).addTo(map);
+    map.on('draw:created', function (e) {
+        drawnItems.clearLayers();
+        drawnItems.addLayer(e.layer);
+    });
+    
+    // Centrar mapa según la colonia buscada
+    if (typeof coloniaConfig !== 'undefined' && coloniaConfig.center_lat && coloniaConfig.center_lon) {
+        map.setView([coloniaConfig.center_lat, coloniaConfig.center_lon], 15);
+        var bounds = [
+            [coloniaConfig.bbox[0], coloniaConfig.bbox[2]],
+            [coloniaConfig.bbox[1], coloniaConfig.bbox[3]]
+        ];
+        if (boundingBoxLayer) {
+            map.removeLayer(boundingBoxLayer);
+        }
+        boundingBoxLayer = L.rectangle(bounds, { color: 'orange', weight: 2, fillOpacity: 0.2 });
+        boundingBoxLayer.addTo(map);
+    }
+    
+    // Vista previa de imagen PNG
+    document.getElementById('png-upload').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(ev) {
+                const img = document.getElementById('png-preview');
+                img.src = ev.target.result;
+                img.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+    
+    // Botón de búsqueda
+    document.getElementById('buscar-btn').addEventListener('click', function() {
+        const colonia = document.getElementById('colonia').value;
+        if (colonia.trim() === '') {
+            alert('Por favor ingresa el nombre de una colonia');
+            return;
+        }
+        
+        // Mostrar indicador de carga
+        this.textContent = 'Buscando...';
+        this.disabled = true;
+        
+        // Hacer petición AJAX para obtener configuración de la colonia
+        fetch(`/core/editor/config/?colonia=${encodeURIComponent(colonia)}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Error en la búsqueda');
+                }
+                return response.json();
+            })
+            .then(config => {
+                if (config.center_lat && config.center_lon) {
+                    // Centrar mapa en la colonia
+                    map.setView([config.center_lat, config.center_lon], 15);
+                    
+                    // Dibujar bounding box
+                    if (boundingBoxLayer) {
+                        map.removeLayer(boundingBoxLayer);
+                    }
+                    const bounds = [
+                        [config.bbox[0], config.bbox[2]],
+                        [config.bbox[1], config.bbox[3]]
+                    ];
+                    boundingBoxLayer = L.rectangle(bounds, { 
+                        color: 'orange', 
+                        weight: 2, 
+                        fillOpacity: 0.2 
+                    });
+                    boundingBoxLayer.addTo(map);
+                    
+                    // Limpiar polígonos dibujados anteriormente
+                    drawnItems.clearLayers();
+                } else {
+                    alert('No se encontró información para esta colonia');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error al buscar la colonia: ' + error.message);
+            })
+            .finally(() => {
+                // Restaurar botón
+                this.textContent = 'Buscar';
+                this.disabled = false;
+            });
+    });
+</script>
+</body>
+</html>
+

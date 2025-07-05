@@ -1,11 +1,12 @@
 from django.shortcuts import render
 from django.http import JsonResponse, HttpResponseBadRequest
-from core.utils.main import download_bbox,procesar_poligono_completo
+from core.utils.main import download_bbox,procesar_poligono_completo, sanitize_filename
 import json
 import requests   
 from django.views.decorators.csrf import csrf_exempt
 from core.utils.polygon_logic import get_colonia_config 
 import os
+from pathlib import Path
 # Create your views here.
 
 def home(request):
@@ -35,8 +36,14 @@ def config_editor(request):
         return HttpResponseBadRequest("Falta parámetro 'colonia'")
 
     try:
-        cache_path = download_bbox(colonia)
-        config = get_colonia_config(cache_path)
+        # Usar el nombre original para la consulta a Nominatim
+        cache_file_name = f"{sanitize_filename(colonia)}.json"
+        base_cache_dir = Path(__file__).resolve().parent / "cache"
+        cache_path = base_cache_dir / cache_file_name
+        if not cache_path.exists():
+            # Solo descarga si no existe
+            download_bbox(colonia)
+        config = get_colonia_config(str(cache_path))
         return JsonResponse(config)
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
