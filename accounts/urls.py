@@ -3,8 +3,19 @@ from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
 )
-from .views import user_login, admin_dashboard, staff_dashboard, employee_dashboard, researcher_dashboard, admin_map_dashboard
-
+from .views import (user_login, 
+                    admin_dashboard, 
+                    staff_dashboard, 
+                    employee_dashboard, 
+                    researcher_dashboard, 
+                    admin_map_dashboard, 
+                    guardar_poligono_colonia, 
+                    cargar_colonia_existente, 
+                    admin_user_control,
+                    procesar_usuarios_masivos,
+                    cargar_colonia_staff,
+                    guardar_configuracion_rutas,
+                    listar_rutas_staff)
 
 urlpatterns = [
     path('login/', user_login, name='user_login'),
@@ -15,4 +26,11 @@ urlpatterns = [
     path('employee_dashboard/', employee_dashboard, name='employee_dashboard'),
     path('researcher_dashboard/', researcher_dashboard, name='researcher_dashboard'),
     path('admin_map_dashboard/', admin_map_dashboard, name='admin_map_dashboard'),
+    path('guardar_poligono/', guardar_poligono_colonia, name='guardar_poligono_colonia'),
+    path('cargar_colonia/', cargar_colonia_existente, name='cargar_colonia_existente'),
+    path('admin_user_control/', admin_user_control, name='admin_user_control'),
+    path('procesar_usuarios_masivos/', procesar_usuarios_masivos, name='procesar_usuarios_masivos'),
+    path('cargar_colonia_staff/', cargar_colonia_staff, name='cargar_colonia_staff'),
+    path('guardar_configuracion_rutas/', guardar_configuracion_rutas, name='guardar_configuracion_rutas'),
+    path('listar_rutas_staff/', listar_rutas_staff, name='listar_rutas_staff'),
 ]

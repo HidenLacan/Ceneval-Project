@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin - Control de Usuarios</title>
+    <style>
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            margin: 0; 
+            padding: 20px; 
+            background: #f5f5f5; 
+        }
+        .container { 
+            max-width: 1200px; 
+            margin: 0 auto; 
+            background: white; 
+            border-radius: 10px; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1); 
+            overflow: hidden; 
+        }
+        .header { 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+            color: white; 
+            padding: 30px; 
+            text-align: center; 
+        }
+        .header h1 { margin: 0; font-size: 2.5em; }
+        .header p { margin: 10px 0 0 0; opacity: 0.9; }
+        
+        .nav-buttons { 
+            padding: 20px; 
+            background: #f8f9fa; 
+            border-bottom: 1px solid #dee2e6; 
+        }
+        .nav-buttons a { 
+            display: inline-block; 
+            padding: 10px 20px; 
+            background: #007bff; 
+            color: white; 
+            text-decoration: none; 
+            border-radius: 5px; 
+            margin-right: 10px; 
+            transition: background 0.3s; 
+        }
+        .nav-buttons a:hover { background: #0056b3; }
+        
+        .content { padding: 30px; }
+        
+        .success { 
+            color: #155724; 
+            background: #d4edda; 
+            padding: 15px; 
+            border-radius: 5px; 
+            margin-bottom: 20px; 
+            border: 1px solid #c3e6cb; 
+        }
+        .error { 
+            color: #721c24; 
+            background: #f8d7da; 
+            padding: 15px; 
+            border-radius: 5px; 
+            margin-bottom: 20px; 
+            border: 1px solid #f5c6cb; 
+        }
+        
+        .section { 
+            margin-bottom: 40px; 
+            padding: 25px; 
+            border: 1px solid #dee2e6; 
+            border-radius: 8px; 
+            background: #fafafa; 
+        }
+        .section h2 { 
+            margin-top: 0; 
+            color: #333; 
+            border-bottom: 2px solid #007bff; 
+            padding-bottom: 10px; 
+        }
+        
+        .form-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); 
+            gap: 20px; 
+            margin-bottom: 20px; 
+        }
+        .form-group { 
+            display: flex; 
+            flex-direction: column; 
+        }
+        .form-group label { 
+            margin-bottom: 5px; 
+            font-weight: 600; 
+            color: #555; 
+        }
+        .form-group input, .form-group select { 
+            padding: 12px; 
+            border: 1px solid #ddd; 
+            border-radius: 5px; 
+            font-size: 14px; 
+        }
+        .form-group input:focus, .form-group select:focus { 
+            outline: none; 
+            border-color: #007bff; 
+            box-shadow: 0 0 0 2px rgba(0,123,255,0.25); 
+        }
+        
+        .btn { 
+            padding: 12px 25px; 
+            border: none; 
+            border-radius: 5px; 
+            cursor: pointer; 
+            font-size: 14px; 
+            font-weight: 600; 
+            transition: all 0.3s; 
+            text-decoration: none; 
+            display: inline-block; 
+            text-align: center; 
+        }
+        .btn-primary { 
+            background: #007bff; 
+            color: white; 
+        }
+        .btn-primary:hover { background: #0056b3; }
+        .btn-success { 
+            background: #28a745; 
+            color: white; 
+        }
+        .btn-success:hover { background: #1e7e34; }
+        .btn-warning { 
+            background: #ffc107; 
+            color: #212529; 
+        }
+        .btn-warning:hover { background: #e0a800; }
+        .btn-danger { 
+            background: #dc3545; 
+            color: white; 
+        }
+        .btn-danger:hover { background: #c82333; }
+        
+        .users-table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin-top: 20px; 
+            background: white; 
+            border-radius: 8px; 
+            overflow: hidden; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1); 
+        }
+        .users-table th, .users-table td { 
+            padding: 15px; 
+            text-align: left; 
+            border-bottom: 1px solid #dee2e6; 
+        }
+        .users-table th { 
+            background: #f8f9fa; 
+            font-weight: 600; 
+            color: #495057; 
+        }
+        .users-table tr:hover { background: #f8f9fa; }
+        
+        .role-badge { 
+            padding: 4px 8px; 
+            border-radius: 12px; 
+            font-size: 12px; 
+            font-weight: 600; 
+            text-transform: uppercase; 
+        }
+        .role-admin { background: #dc3545; color: white; }
+        .role-staff { background: #007bff; color: white; }
+        .role-employee { background: #28a745; color: white; }
+        .role-researcher { background: #ffc107; color: #212529; }
+        
+        .status-active { color: #28a745; font-weight: 600; }
+        .status-inactive { color: #dc3545; font-weight: 600; }
+        
+        .actions-cell { 
+            display: flex; 
+            gap: 10px; 
+            flex-wrap: wrap; 
+        }
+        
+        .modal { 
+            display: none; 
+            position: fixed; 
+            z-index: 1000; 
+            left: 0; 
+            top: 0; 
+            width: 100%; 
+            height: 100%; 
+            background-color: rgba(0,0,0,0.5); 
+        }
+        .modal-content { 
+            background-color: white; 
+            margin: 5% auto; 
+            padding: 30px; 
+            border-radius: 10px; 
+            width: 90%; 
+            max-width: 500px; 
+            position: relative; 
+        }
+        .close { 
+            position: absolute; 
+            right: 20px; 
+            top: 15px; 
+            font-size: 28px; 
+            font-weight: bold; 
+            cursor: pointer; 
+            color: #aaa; 
+        }
+        .close:hover { color: #000; }
+        
+        .checkbox-group { 
+            display: flex; 
+            align-items: center; 
+            gap: 10px; 
+            margin-top: 10px; 
+        }
+        .checkbox-group input[type="checkbox"] { 
+            width: auto; 
+            margin: 0; 
+        }
+        
+        .status-badge { 
+            font-weight: 600; 
+            text-transform: uppercase; 
+        }
+        .status-pendiente { background: #ffc107; color: #212529; }
+        .status-exitoso { background: #28a745; color: white; }
+        .status-error { background: #dc3545; color: white; }
+        
+        .upload-zone { 
+            transition: all 0.3s ease; 
+            cursor: pointer; 
+        }
+        .upload-zone:hover { 
+            border-color: #28a745 !important; 
+            background: #d4edda !important; 
+        }
+        
+        .preview-table input, .preview-table select { 
+            font-size: 12px; 
+        }
+        
+        @media (max-width: 768px) {
+            .form-grid { grid-template-columns: 1fr; }
+            .actions-cell { flex-direction: column; }
+            .users-table { font-size: 14px; }
+            .users-table th, .users-table td { padding: 10px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>👥 Control de Usuarios</h1>
+            <p>Gestiona usuarios del sistema</p>
+        </div>
+        
+        <div class="nav-buttons">
+            <a href="{% url 'admin_dashboard' %}">← Volver al Dashboard</a>
+        </div>
+        
+        <div class="content">
+            {% if success %}
+                <div class="success">{{ success }}</div>
+            {% endif %}
+            
+            {% if error %}
+                <div class="error">{{ error }}</div>
+            {% endif %}
+            
+            <!-- Sección: Crear Nuevo Usuario -->
+            <div class="section">
+                <h2>➕ Crear Nuevo Usuario</h2>
+                <form method="post" id="create-user-form">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="crear_usuario">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="username">Nombre de Usuario *</label>
+                            <input type="text" id="username" name="username" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="email">Email *</label>
+                            <input type="email" id="email" name="email" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="password">Contraseña *</label>
+                            <input type="password" id="password" name="password" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="role">Rol *</label>
+                            <select id="role" name="role" required>
+                                <option value="">Seleccionar rol...</option>
+                                <option value="admin">Administrador</option>
+                                <option value="staff">Staff</option>
+                                <option value="employee">Empleado</option>
+                                <option value="researcher">Investigador</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-success">Crear Usuario</button>
+                </form>
+            </div>
+            
+            <!-- Sección: Carga Masiva de Usuarios -->
+            <div class="section">
+                <h2>📊 Carga Masiva de Usuarios</h2>
+                <p style="color: #666; margin-bottom: 20px;">Sube una hoja electrónica (Excel/CSV) con información de usuarios para crear múltiples cuentas de forma masiva.</p>
+                
+                <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 30px; margin-bottom: 20px;">
+                    <!-- Panel de carga -->
+                    <div class="upload-zone" style="border: 2px dashed #007bff; border-radius: 10px; padding: 30px; text-align: center; background: #f8f9fa;">
+                        <div style="font-size: 3em; margin-bottom: 15px;">📁</div>
+                        <h3 style="margin: 0 0 10px 0; color: #333;">Espacio para subir la hoja electrónica</h3>
+                        <p style="color: #666; margin-bottom: 20px; font-size: 14px;">Arrastra y suelta tu archivo aquí o haz clic para seleccionar</p>
+                        
+                        <form method="post" enctype="multipart/form-data" id="upload-form">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="carga_masiva">
+                            <input type="file" id="file-upload" name="archivo_usuarios" accept=".xlsx,.xls,.csv" style="display: none;">
+                            <button type="button" class="btn btn-primary" onclick="document.getElementById('file-upload').click()">
+                                📂 Seleccionar Archivo
+                            </button>
+                        </form>
+                        
+                        <div id="file-info" style="margin-top: 15px; display: none;">
+                            <p style="color: #28a745; font-weight: 600;">✓ Archivo seleccionado</p>
+                            <p id="file-name" style="font-size: 12px; color: #666;"></p>
+                        </div>
+                        
+                        <div style="margin-top: 20px; padding: 15px; background: #e9ecef; border-radius: 5px; text-align: left;">
+                            <h4 style="margin: 0 0 10px 0; font-size: 14px;">📋 Formato requerido:</h4>
+                            <ul style="margin: 0; padding-left: 20px; font-size: 12px; color: #666;">
+                                <li>Columnas: username, email, password, role</li>
+                                <li>Roles válidos: admin, staff, employee, researcher</li>
+                                <li>Formatos: .xlsx, .xls, .csv</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <!-- Panel de visualización -->
+                    <div style="border: 1px solid #dee2e6; border-radius: 10px; padding: 20px; background: white;">
+                        <h3 style="margin: 0 0 15px 0; color: #333;">Visualización de los datos de la hoja electrónica</h3>
+                        <p style="color: #666; margin-bottom: 20px; font-size: 14px;">En esta visualización se podrá modificar la información y guardarla directamente. Los datos incluyen el nombre de los usuarios y su información personal.</p>
+                        
+                        <div id="data-preview" style="display: none;">
+                            <div style="margin-bottom: 15px;">
+                                <button type="button" class="btn btn-success" onclick="procesarUsuarios()">
+                                    ✅ Procesar Usuarios
+                                </button>
+                                <button type="button" class="btn btn-warning" onclick="limpiarDatos()">
+                                    🗑️ Limpiar Datos
+                                </button>
+                            </div>
+                            
+                            <div style="max-height: 400px; overflow-y: auto; border: 1px solid #dee2e6; border-radius: 5px;">
+                                <table id="preview-table" style="width: 100%; border-collapse: collapse;">
+                                    <thead style="background: #f8f9fa; position: sticky; top: 0;">
+                                        <tr>
+                                            <th style="padding: 10px; border-bottom: 1px solid #dee2e6; font-size: 12px;">Usuario</th>
+                                            <th style="padding: 10px; border-bottom: 1px solid #dee2e6; font-size: 12px;">Email</th>
+                                            <th style="padding: 10px; border-bottom: 1px solid #dee2e6; font-size: 12px;">Contraseña</th>
+                                            <th style="padding: 10px; border-bottom: 1px solid #dee2e6; font-size: 12px;">Rol</th>
+                                            <th style="padding: 10px; border-bottom: 1px solid #dee2e6; font-size: 12px;">Estado</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="preview-tbody">
+                                        <!-- Los datos se cargarán dinámicamente aquí -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        
+                        <div id="no-data" style="text-align: center; padding: 40px; color: #666;">
+                            <div style="font-size: 3em; margin-bottom: 15px;">📊</div>
+                            <p>Sube un archivo para ver la vista previa de los datos</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Sección: Lista de Usuarios -->
+            <div class="section">
+                <h2>📋 Lista de Usuarios ({{ usuarios.count }})</h2>
+                {% if usuarios %}
+                    <table class="users-table">
+                        <thead>
+                            <tr>
+                                <th>Usuario</th>
+                                <th>Email</th>
+                                <th>Rol</th>
+                                <th>Estado</th>
+                                <th>Fecha de Registro</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for usuario in usuarios %}
+                            <tr>
+                                <td><strong>{{ usuario.username }}</strong></td>
+                                <td>{{ usuario.email }}</td>
+                                <td>
+                                    <span class="role-badge role-{{ usuario.role }}">
+                                        {{ usuario.role|title }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="{% if usuario.is_active %}status-active{% else %}status-inactive{% endif %}">
+                                        {% if usuario.is_active %}Activo{% else %}Inactivo{% endif %}
+                                    </span>
+                                </td>
+                                <td>{{ usuario.date_joined|date:"d/m/Y H:i" }}</td>
+                                <td class="actions-cell">
+                                    <button class="btn btn-warning" onclick="editarUsuario({{ usuario.id }}, '{{ usuario.username }}', '{{ usuario.email }}', '{{ usuario.role }}', {% if usuario.is_active %}true{% else %}false{% endif %})">
+                                        ✏️ Editar
+                                    </button>
+                                    {% if usuario != user %}
+                                    <button class="btn btn-danger" onclick="eliminarUsuario({{ usuario.id }}, '{{ usuario.username }}')">
+                                        🗑️ Eliminar
+                                    </button>
+                                    {% else %}
+                                    <span style="color: #6c757d; font-size: 12px;">Tu cuenta</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                {% else %}
+                    <p style="text-align: center; color: #6c757d; font-style: italic;">No hay usuarios registrados</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal para editar usuario -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="cerrarModal()">&times;</span>
+            <h2>✏️ Editar Usuario</h2>
+            <form method="post" id="edit-user-form">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="editar_usuario">
+                <input type="hidden" name="user_id" id="edit_user_id">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="edit_username">Nombre de Usuario</label>
+                        <input type="text" id="edit_username" name="username" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit_email">Email</label>
+                        <input type="email" id="edit_email" name="email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit_role">Rol</label>
+                        <select id="edit_role" name="role" required>
+                            <option value="admin">Administrador</option>
+                            <option value="staff">Staff</option>
+                            <option value="employee">Empleado</option>
+                            <option value="researcher">Investigador</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="edit_is_active" name="is_active">
+                    <label for="edit_is_active">Usuario activo</label>
+                </div>
+                <div style="margin-top: 20px;">
+                    <button type="submit" class="btn btn-success">Guardar Cambios</button>
+                    <button type="button" class="btn btn-primary" onclick="cerrarModal()">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Modal para confirmar eliminación -->
+    <div id="deleteModal" class="modal">
+        <div class="modal-content">
+            <h2>⚠️ Confirmar Eliminación</h2>
+            <p>¿Estás seguro de que quieres eliminar al usuario <strong id="delete_username"></strong>?</p>
+            <p style="color: #dc3545; font-size: 14px;">Esta acción no se puede deshacer.</p>
+            <form method="post" id="delete-user-form">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="eliminar_usuario">
+                <input type="hidden" name="user_id" id="delete_user_id">
+                <div style="margin-top: 20px;">
+                    <button type="submit" class="btn btn-danger">Sí, Eliminar</button>
+                    <button type="button" class="btn btn-primary" onclick="cerrarModal()">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <script>
+        // Función para editar usuario
+        function editarUsuario(userId, username, email, role, isActive) {
+            document.getElementById('edit_user_id').value = userId;
+            document.getElementById('edit_username').value = username;
+            document.getElementById('edit_email').value = email;
+            document.getElementById('edit_role').value = role;
+            document.getElementById('edit_is_active').checked = isActive;
+            document.getElementById('editModal').style.display = 'block';
+        }
+        
+        // Función para eliminar usuario
+        function eliminarUsuario(userId, username) {
+            document.getElementById('delete_user_id').value = userId;
+            document.getElementById('delete_username').textContent = username;
+            document.getElementById('deleteModal').style.display = 'block';
+        }
+        
+        // Función para cerrar modales
+        function cerrarModal() {
+            document.getElementById('editModal').style.display = 'none';
+            document.getElementById('deleteModal').style.display = 'none';
+        }
+        
+        // Cerrar modal al hacer clic fuera de él
+        window.onclick = function(event) {
+            var editModal = document.getElementById('editModal');
+            var deleteModal = document.getElementById('deleteModal');
+            if (event.target == editModal) {
+                editModal.style.display = 'none';
+            }
+            if (event.target == deleteModal) {
+                deleteModal.style.display = 'none';
+            }
+        }
+        
+        // Validación del formulario de creación
+        document.getElementById('create-user-form').addEventListener('submit', function(e) {
+            var password = document.getElementById('password').value;
+            if (password.length < 6) {
+                alert('La contraseña debe tener al menos 6 caracteres');
+                e.preventDefault();
+                return;
+            }
+        });
+        
+        // Mostrar mensajes de éxito/error con animación
+        var messages = document.querySelectorAll('.success, .error');
+        messages.forEach(function(message) {
+            message.style.opacity = '0';
+            message.style.transform = 'translateY(-20px)';
+            message.style.transition = 'all 0.3s ease';
+            
+            setTimeout(function() {
+                message.style.opacity = '1';
+                message.style.transform = 'translateY(0)';
+            }, 100);
+        });
+        
+        // Funcionalidad para carga masiva de usuarios
+        var usuariosData = [];
+        
+        // Manejar selección de archivo
+        document.getElementById('file-upload').addEventListener('change', function(e) {
+            var file = e.target.files[0];
+            if (file) {
+                mostrarInfoArchivo(file);
+                procesarArchivo(file);
+            }
+        });
+        
+        // Mostrar información del archivo seleccionado
+        function mostrarInfoArchivo(file) {
+            document.getElementById('file-info').style.display = 'block';
+            document.getElementById('file-name').textContent = file.name + ' (' + (file.size / 1024).toFixed(1) + ' KB)';
+        }
+        
+        // Procesar el archivo subido
+        function procesarArchivo(file) {
+            var reader = new FileReader();
+            var extension = file.name.split('.').pop().toLowerCase();
+            
+            reader.onload = function(e) {
+                var data = e.target.result;
+                
+                if (extension === 'csv') {
+                    procesarCSV(data);
+                } else if (extension === 'xlsx' || extension === 'xls') {
+                    procesarExcel(data, file);
+                } else {
+                    alert('Formato de archivo no soportado. Use .csv, .xlsx o .xls');
+                }
+            };
+            
+            if (extension === 'csv') {
+                reader.readAsText(file);
+            } else {
+                reader.readAsArrayBuffer(file);
+            }
+        }
+        
+        // Procesar archivo CSV
+        function procesarCSV(csvData) {
+            console.log('Procesando CSV:', csvData.substring(0, 200) + '...');
+            var lines = csvData.split('\n');
+            console.log('Líneas encontradas:', lines.length);
+            var headers = lines[0].split(',').map(h => h.trim());
+            console.log('Headers:', headers);
+            
+            usuariosData = [];
+            for (var i = 1; i < lines.length; i++) {
+                if (lines[i].trim()) {
+                    var values = lines[i].split(',').map(v => v.trim());
+                    console.log('Línea', i, 'valores:', values);
+                    if (values.length >= 4) {
+                        usuariosData.push({
+                            username: values[0] || '',
+                            email: values[1] || '',
+                            password: values[2] || '',
+                            role: values[3] || 'employee',
+                            status: 'pendiente'
+                        });
+                    }
+                }
+            }
+            
+            console.log('Usuarios procesados:', usuariosData.length);
+            mostrarVistaPrevia();
+        }
+        
+        // Procesar archivo Excel (simulado - en producción usarías una librería como SheetJS)
+        function procesarExcel(data, file) {
+            // Simulación de procesamiento Excel
+            alert('Procesamiento de Excel simulado. En producción, se usaría una librería como SheetJS.');
+            
+            // Datos de ejemplo para demostración
+            usuariosData = [
+                { username: 'usuario1', email: 'user1@example.com', password: 'pass123', role: 'employee', status: 'pendiente' },
+                { username: 'usuario2', email: 'user2@example.com', password: 'pass456', role: 'staff', status: 'pendiente' },
+                { username: 'usuario3', email: 'user3@example.com', password: 'pass789', role: 'researcher', status: 'pendiente' }
+            ];
+            
+            mostrarVistaPrevia();
+        }
+        
+        // Mostrar vista previa de los datos
+        function mostrarVistaPrevia() {
+            console.log('Mostrando vista previa con', usuariosData.length, 'usuarios');
+            
+            document.getElementById('no-data').style.display = 'none';
+            document.getElementById('data-preview').style.display = 'block';
+            
+            var tbody = document.getElementById('preview-tbody');
+            tbody.innerHTML = '';
+            
+            usuariosData.forEach(function(usuario, index) {
+                console.log('Creando fila para usuario:', usuario.username);
+                var row = document.createElement('tr');
+                row.innerHTML = `
+                    <td style="padding: 8px; border-bottom: 1px solid #dee2e6;">
+                        <input type="text" value="${usuario.username}" onchange="actualizarUsuario(${index}, 'username', this.value)" style="width: 100%; border: 1px solid #ddd; padding: 4px; border-radius: 3px;">
+                    </td>
+                    <td style="padding: 8px; border-bottom: 1px solid #dee2e6;">
+                        <input type="email" value="${usuario.email}" onchange="actualizarUsuario(${index}, 'email', this.value)" style="width: 100%; border: 1px solid #ddd; padding: 4px; border-radius: 3px;">
+                    </td>
+                    <td style="padding: 8px; border-bottom: 1px solid #dee2e6;">
+                        <input type="password" value="${usuario.password}" onchange="actualizarUsuario(${index}, 'password', this.value)" style="width: 100%; border: 1px solid #ddd; padding: 4px; border-radius: 3px;">
+                    </td>
+                    <td style="padding: 8px; border-bottom: 1px solid #dee2e6;">
+                        <select onchange="actualizarUsuario(${index}, 'role', this.value)" style="width: 100%; border: 1px solid #ddd; padding: 4px; border-radius: 3px;">
+                            <option value="admin" ${usuario.role === 'admin' ? 'selected' : ''}>Administrador</option>
+                            <option value="staff" ${usuario.role === 'staff' ? 'selected' : ''}>Staff</option>
+                            <option value="employee" ${usuario.role === 'employee' ? 'selected' : ''}>Empleado</option>
+                            <option value="researcher" ${usuario.role === 'researcher' ? 'selected' : ''}>Investigador</option>
+                        </select>
+                    </td>
+                    <td style="padding: 8px; border-bottom: 1px solid #dee2e6;">
+                        <span class="status-badge status-${usuario.status}" style="padding: 2px 6px; border-radius: 3px; font-size: 11px; text-transform: uppercase;">
+                            ${usuario.status}
+                        </span>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+            
+            console.log('Vista previa completada');
+        }
+        
+        // Actualizar datos de usuario en la vista previa
+        function actualizarUsuario(index, campo, valor) {
+            usuariosData[index][campo] = valor;
+        }
+        
+        // Procesar usuarios masivamente
+        function procesarUsuarios() {
+            if (usuariosData.length === 0) {
+                alert('No hay datos para procesar');
+                return;
+            }
+            
+            if (!confirm(`¿Estás seguro de que quieres crear ${usuariosData.length} usuarios?`)) {
+                return;
+            }
+            
+            // Enviar datos al servidor
+            fetch('/accounts/procesar_usuarios_masivos/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                },
+                body: JSON.stringify({ usuarios: usuariosData })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(`✅ ${data.creados} usuarios creados exitosamente\n❌ ${data.errores} errores encontrados`);
+                    if (data.errores === 0) {
+                        limpiarDatos();
+                        location.reload(); // Recargar para mostrar nuevos usuarios
+                    }
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error al procesar usuarios');
+            });
+        }
+        
+        // Limpiar datos cargados
+        function limpiarDatos() {
+            usuariosData = [];
+            document.getElementById('file-upload').value = '';
+            document.getElementById('file-info').style.display = 'none';
+            document.getElementById('no-data').style.display = 'block';
+            document.getElementById('data-preview').style.display = 'none';
+        }
+        
+        // Drag and drop para archivos
+        var dropZone = document.querySelector('.section:nth-child(3) .form-grid > div:first-child');
+        
+        dropZone.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            dropZone.style.borderColor = '#28a745';
+            dropZone.style.background = '#d4edda';
+        });
+        
+        dropZone.addEventListener('dragleave', function(e) {
+            e.preventDefault();
+            dropZone.style.borderColor = '#007bff';
+            dropZone.style.background = '#f8f9fa';
+        });
+        
+        dropZone.addEventListener('drop', function(e) {
+            e.preventDefault();
+            dropZone.style.borderColor = '#007bff';
+            dropZone.style.background = '#f8f9fa';
+            
+            var files = e.dataTransfer.files;
+            if (files.length > 0) {
+                document.getElementById('file-upload').files = files;
+                mostrarInfoArchivo(files[0]);
+                procesarArchivo(files[0]);
+            }
+        });
+    </script>
+</body>
+</html> 

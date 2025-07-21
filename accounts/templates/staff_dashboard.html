@@ -2,10 +2,946 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Dashboard Staff</title>
+    <title>Staff - Asignación de Rutas</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-draw@1.0.4/dist/leaflet.draw.css"/>
+    <style>
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            margin: 0; 
+            padding: 0; 
+            background: #f5f5f5; 
+            overflow-x: hidden;
+        }
+        
+        .dashboard-container {
+            display: grid;
+            grid-template-columns: 60px 1fr 1fr 1fr;
+            grid-template-rows: auto 1fr auto;
+            height: 100vh;
+            gap: 0;
+        }
+        
+        /* Toolbar lateral */
+        .toolbar {
+            grid-column: 1;
+            grid-row: 1 / -1;
+            background: #2c3e50;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px 0;
+            gap: 15px;
+        }
+        
+        .toolbar-icon {
+            width: 40px;
+            height: 40px;
+            background: #34495e;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 18px;
+        }
+        
+        .toolbar-icon:hover {
+            background: #3498db;
+            transform: scale(1.1);
+        }
+        
+        .toolbar-icon.active {
+            background: #e74c3c;
+        }
+        
+        /* Panel superior */
+        .top-panel {
+            grid-column: 2 / -1;
+            grid-row: 1;
+            background: white;
+            padding: 20px;
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            gap: 30px;
+            align-items: center;
+        }
+        
+        .selection-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .selection-group label {
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 14px;
+        }
+        
+        .selection-group select {
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            min-width: 200px;
+            background: white;
+        }
+        
+        .selection-group select:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+        
+        /* Panel principal izquierdo - Mapa con polígonos */
+        .map-panel {
+            grid-column: 2;
+            grid-row: 2;
+            background: white;
+            margin: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .map-header {
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .map-header h3 {
+            margin: 0;
+            font-size: 1.2em;
+        }
+        
+        #map {
+            width: 100%;
+            height: calc(100% - 80px);
+        }
+        
+        /* Panel central - Mapa dividido */
+        .divided-map-panel {
+            grid-column: 3;
+            grid-row: 2;
+            background: white;
+            margin: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .divided-map-header {
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+        
+        .divided-map-header h3 {
+            margin: 0;
+            font-size: 1.2em;
+        }
+        
+        #divided-map {
+            width: 100%;
+            height: calc(100% - 80px);
+        }
+        
+        /* Panel derecho - Información de empleados */
+        .employees-panel {
+            grid-column: 4;
+            grid-row: 2;
+            background: white;
+            margin: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .employees-header {
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+        }
+        
+        .employees-header h3 {
+            margin: 0;
+            font-size: 1.2em;
+        }
+        
+        .employees-content {
+            padding: 20px;
+            height: calc(100% - 80px);
+            overflow-y: auto;
+        }
+        
+        .employee-item {
+            padding: 15px;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            background: #f8f9fa;
+            transition: all 0.3s;
+        }
+        
+        .employee-item:hover {
+            background: #e9ecef;
+            transform: translateX(5px);
+        }
+        
+        .employee-item.selected {
+            background: #d4edda;
+            border-color: #28a745;
+            position: relative;
+        }
+        
+        .employee-item.selected::before {
+            content: '✓';
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #28a745;
+            color: white;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .employee-name {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 5px;
+            font-size: 16px;
+        }
+        
+        .employee-email {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+        
+        .employee-details {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 10px;
+        }
+        
+        .employee-info {
+            flex: 1;
+        }
+        
+        .employee-actions {
+            display: flex;
+            gap: 5px;
+        }
+        
+        .btn-small {
+            padding: 4px 8px;
+            font-size: 11px;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        
+        .btn-remove {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .btn-remove:hover {
+            background: #c82333;
+        }
+        
+        .employee-status {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-top: 5px;
+        }
+        
+        .status-available {
+            background: #28a745;
+            color: white;
+        }
+        
+        .status-assigned {
+            background: #ffc107;
+            color: #212529;
+        }
+        
+        .employee-counter {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            text-align: center;
+            border: 1px solid #dee2e6;
+        }
+        
+        .counter-text {
+            font-weight: 600;
+            color: #495057;
+        }
+        
+        .counter-limit {
+            color: #dc3545;
+            font-weight: bold;
+        }
+        
+        /* Panel inferior - Botones de acción */
+        .action-panel {
+            grid-column: 2 / -1;
+            grid-row: 3;
+            background: white;
+            padding: 20px;
+            border-top: 1px solid #ddd;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+        
+        .btn-primary {
+            background: #3498db;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+        }
+        
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #1e7e34;
+            transform: translateY(-2px);
+        }
+        
+        .btn-warning {
+            background: #ffc107;
+            color: #212529;
+        }
+        
+        .btn-warning:hover {
+            background: #e0a800;
+            transform: translateY(-2px);
+        }
+        
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #c82333;
+            transform: translateY(-2px);
+        }
+        
+        /* Mensajes */
+        .message {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-weight: 600;
+        }
+        
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .message.warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .dashboard-container {
+                grid-template-columns: 60px 1fr 1fr;
+            }
+            
+            .divided-map-panel {
+                grid-column: 3;
+                grid-row: 2;
+            }
+            
+            .employees-panel {
+                grid-column: 2 / -1;
+                grid-row: 3;
+                margin: 0 20px 20px 20px;
+            }
+            
+            .action-panel {
+                grid-row: 4;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .dashboard-container {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto auto auto auto auto;
+            }
+            
+            .toolbar {
+                grid-column: 1;
+                grid-row: 1;
+                flex-direction: row;
+                justify-content: center;
+                padding: 10px;
+            }
+            
+            .top-panel {
+                grid-column: 1;
+                grid-row: 2;
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .map-panel, .divided-map-panel {
+                grid-column: 1;
+                margin: 10px;
+            }
+            
+            .map-panel {
+                grid-row: 3;
+            }
+            
+            .divided-map-panel {
+                grid-row: 4;
+            }
+            
+            .employees-panel {
+                grid-column: 1;
+                grid-row: 5;
+                margin: 10px;
+            }
+            
+            .action-panel {
+                grid-column: 1;
+                grid-row: 6;
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+    </style>
 </head>
 <body>
-    <h2>Bienvenido, Staff</h2>
-    <p>Este es el dashboard del staff.</p>
+    <!-- CSRF Token -->
+    {% csrf_token %}
+    
+    <div class="dashboard-container">
+        <!-- Toolbar lateral -->
+        <div class="toolbar">
+            <div class="toolbar-icon" title="Inicio">🏠</div>
+            <div class="toolbar-icon active" title="Mapa">🗺️</div>
+            <div class="toolbar-icon" title="Rutas">🛣️</div>
+            <div class="toolbar-icon" title="Empleados">👥</div>
+            <div class="toolbar-icon" title="Reportes">📊</div>
+            <div class="toolbar-icon" title="Configuración">⚙️</div>
+            <div class="toolbar-icon" title="Chat">💬</div>
+            <div class="toolbar-icon" title="Ayuda">❓</div>
+            <div class="toolbar-icon" title="Nuevo">➕</div>
+        </div>
+        
+        <!-- Panel superior -->
+        <div class="top-panel">
+            <div class="selection-group">
+                <label for="colonia-select">Selección de colonia</label>
+                <select id="colonia-select">
+                    <option value="">Seleccionar colonia...</option>
+                    {% for colonia in colonias %}
+                    <option value="{{ colonia.id }}">{{ colonia.nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="selection-group">
+                <label for="empleados-select">Selección de empleados para asignar ruta (máximo 2)</label>
+                <select id="empleados-select">
+                    <option value="">Seleccionar empleado...</option>
+                    {% for empleado in empleados %}
+                    <option value="{{ empleado.id }}" data-username="{{ empleado.username }}" data-email="{{ empleado.email }}">
+                        {{ empleado.username }} - {{ empleado.email }}
+                    </option>
+                    {% endfor %}
+                </select>
+                <small style="color: #666; font-size: 12px;">Puedes seleccionar hasta 2 empleados por ruta</small>
+            </div>
+        </div>
+        
+        <!-- Panel principal izquierdo - Mapa con polígonos -->
+        <div class="map-panel">
+            <div class="map-header">
+                <h3>🗺️ MAPA CON POLÍGONOS</h3>
+            </div>
+            <div id="map"></div>
+        </div>
+        
+        <!-- Panel central - Mapa dividido -->
+        <div class="divided-map-panel">
+            <div class="divided-map-header">
+                <h3>📊 MAPA DIVIDIDO</h3>
+            </div>
+            <div id="divided-map"></div>
+        </div>
+        
+        <!-- Panel derecho - Información de empleados -->
+        <div class="employees-panel">
+            <div class="employees-header">
+                <h3>👥 INFORMACIÓN DE LOS EMPLEADOS</h3>
+            </div>
+            <div class="employees-content" id="employees-content">
+                <div class="employee-counter" id="employee-counter">
+                    <div class="counter-text">
+                        Empleados seleccionados: <span id="selected-count">0</span> / <span class="counter-limit">2</span>
+                    </div>
+                </div>
+                
+                <div id="employees-list">
+                    <p style="text-align: center; color: #666; font-style: italic;">
+                        Selecciona empleados para ver su información
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Panel inferior - Botones de acción -->
+        <div class="action-panel">
+            <button class="btn btn-primary" id="generar-rutas-btn">
+                🛣️ Generar rutas
+            </button>
+            
+            <button class="btn btn-success" id="guardar-btn">
+                💾 Guardar
+            </button>
+            
+            <button class="btn btn-warning" id="mandar-info-btn">
+                📤 MANDAR INFORMACIÓN
+            </button>
+        </div>
+    </div>
+    
+    <!-- Scripts -->
+    <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
+    
+    <script>
+        // Variables globales
+        var map, dividedMap;
+        var selectedColonia = null;
+        var selectedEmployees = [];
+        var coloniaPolygon = null;
+        
+        // Inicializar mapas
+        function initializeMaps() {
+            // Mapa principal
+            map = L.map('map').setView([19.3574, -99.0731], 13);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+            
+            // Mapa dividido
+            dividedMap = L.map('divided-map').setView([19.3574, -99.0731], 13);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(dividedMap);
+        }
+        
+        // Cargar colonia seleccionada
+        function loadColonia(coloniaId) {
+            if (!coloniaId) {
+                clearMap();
+                return;
+            }
+            
+            fetch(`/accounts/cargar_colonia_staff/?id=${coloniaId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        displayColonia(data.colonia);
+                        selectedColonia = data.colonia;
+                    } else {
+                        showMessage('Error al cargar la colonia: ' + data.error, 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showMessage('Error al cargar la colonia', 'error');
+                });
+        }
+        
+        // Mostrar colonia en el mapa
+        function displayColonia(colonia) {
+            clearMap();
+            
+            if (colonia.poligono_geojson) {
+                try {
+                    coloniaPolygon = L.geoJSON(colonia.poligono_geojson, {
+                        style: {
+                            color: '#e74c3c',
+                            weight: 3,
+                            fillOpacity: 0.3,
+                            fillColor: '#e74c3c'
+                        }
+                    }).addTo(map);
+                    
+                    // Centrar mapa en el polígono
+                    map.fitBounds(coloniaPolygon.getBounds());
+                    
+                    // Agregar información del polígono
+                    coloniaPolygon.bindPopup(`
+                        <strong>${colonia.nombre}</strong><br>
+                        Área: ${colonia.area_aproximada ? colonia.area_aproximada.toFixed(2) : 'N/A'} km²<br>
+                        Creado: ${new Date(colonia.fecha_creacion).toLocaleDateString()}
+                    `);
+                    
+                    showMessage(`Colonia "${colonia.nombre}" cargada exitosamente`, 'success');
+                } catch (error) {
+                    console.error('Error al mostrar polígono:', error);
+                    showMessage('Error al mostrar el polígono de la colonia', 'warning');
+                }
+            }
+        }
+        
+        // Limpiar mapa
+        function clearMap() {
+            if (coloniaPolygon) {
+                map.removeLayer(coloniaPolygon);
+                coloniaPolygon = null;
+            }
+        }
+        
+        // Actualizar información de empleados
+        function updateEmployeesInfo() {
+            const counter = document.getElementById('selected-count');
+            const employeesList = document.getElementById('employees-list');
+            
+            // Actualizar contador
+            counter.textContent = selectedEmployees.length;
+            
+            // Cambiar color del contador si se alcanza el límite
+            if (selectedEmployees.length >= 2) {
+                counter.style.color = '#dc3545';
+                counter.style.fontWeight = 'bold';
+            } else {
+                counter.style.color = '#495057';
+                counter.style.fontWeight = 'normal';
+            }
+            
+            if (selectedEmployees.length === 0) {
+                employeesList.innerHTML = '<p style="text-align: center; color: #666; font-style: italic;">Selecciona empleados para ver su información</p>';
+                return;
+            }
+            
+            let html = '';
+            selectedEmployees.forEach((employee, index) => {
+                html += `
+                    <div class="employee-item selected" data-employee-id="${employee.id}">
+                        <div class="employee-name">${employee.username}</div>
+                        <div class="employee-email">${employee.email}</div>
+                        <div class="employee-details">
+                            <div class="employee-info">
+                                <div class="employee-status status-assigned">Asignado a ruta #${index + 1}</div>
+                                <div style="font-size: 11px; color: #666; margin-top: 3px;">
+                                    ID: ${employee.id} | Fecha: ${new Date().toLocaleDateString()}
+                                </div>
+                            </div>
+                            <div class="employee-actions">
+                                <button class="btn-small btn-remove" onclick="removeEmployee('${employee.id}')">
+                                    ✕ Remover
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            employeesList.innerHTML = html;
+        }
+        
+        // Remover empleado
+        function removeEmployee(employeeId) {
+            selectedEmployees = selectedEmployees.filter(emp => emp.id !== employeeId);
+            updateEmployeesInfo();
+            updateEmployeeSelect();
+        }
+        
+        // Actualizar selector de empleados
+        function updateEmployeeSelect() {
+            const select = document.getElementById('empleados-select');
+            const selectedIds = selectedEmployees.map(emp => emp.id);
+            
+            // Habilitar/deshabilitar opciones según selección
+            Array.from(select.options).forEach(option => {
+                if (option.value && selectedIds.includes(option.value)) {
+                    option.disabled = true;
+                    option.style.color = '#999';
+                } else {
+                    option.disabled = false;
+                    option.style.color = '#000';
+                }
+            });
+            
+            // Resetear selector
+            select.value = '';
+        }
+        
+        // Generar rutas
+        function generateRoutes() {
+            if (!selectedColonia) {
+                showMessage('Debes seleccionar una colonia primero', 'warning');
+                return;
+            }
+            
+            if (selectedEmployees.length === 0) {
+                showMessage('Debes seleccionar al menos un empleado', 'warning');
+                return;
+            }
+            
+            if (selectedEmployees.length > 2) {
+                showMessage('No puedes asignar más de 2 empleados por ruta', 'error');
+                return;
+            }
+            
+            showMessage('Generando rutas...', 'success');
+            
+            // Simulación de generación de rutas
+            setTimeout(() => {
+                showMessage(`Rutas generadas para ${selectedEmployees.length} empleado${selectedEmployees.length > 1 ? 's' : ''} en "${selectedColonia.nombre}"`, 'success');
+                
+                // Mostrar rutas en el mapa dividido
+                displayRoutes();
+            }, 2000);
+        }
+        
+        // Mostrar rutas en el mapa dividido
+        function displayRoutes() {
+            // Limpiar mapa dividido
+            dividedMap.eachLayer((layer) => {
+                if (layer instanceof L.Marker || layer instanceof L.Polyline) {
+                    dividedMap.removeLayer(layer);
+                }
+            });
+            
+            // Simular rutas para cada empleado
+            selectedEmployees.forEach((employee, index) => {
+                // Punto de inicio (centro del polígono)
+                const center = coloniaPolygon.getBounds().getCenter();
+                
+                // Punto de destino (aleatorio dentro del polígono)
+                const bounds = coloniaPolygon.getBounds();
+                const destLat = bounds.getSouth() + Math.random() * (bounds.getNorth() - bounds.getSouth());
+                const destLng = bounds.getWest() + Math.random() * (bounds.getEast() - bounds.getWest());
+                
+                // Crear ruta
+                const route = L.polyline([
+                    [center.lat, center.lng],
+                    [destLat, destLng]
+                ], {
+                    color: getRouteColor(index),
+                    weight: 4,
+                    opacity: 0.8
+                }).addTo(dividedMap);
+                
+                // Marcadores
+                L.marker([center.lat, center.lng], {
+                    icon: L.divIcon({
+                        className: 'route-start',
+                        html: '🏁',
+                        iconSize: [20, 20]
+                    })
+                }).addTo(dividedMap);
+                
+                L.marker([destLat, destLng], {
+                    icon: L.divIcon({
+                        className: 'route-end',
+                        html: '🎯',
+                        iconSize: [20, 20]
+                    })
+                }).addTo(dividedMap);
+                
+                // Popup con información
+                route.bindPopup(`
+                    <strong>Ruta ${index + 1}</strong><br>
+                    Empleado: ${employee.username}<br>
+                    Distancia: ${(Math.random() * 5 + 1).toFixed(2)} km
+                `);
+            });
+            
+            // Centrar mapa en las rutas
+            dividedMap.fitBounds(coloniaPolygon.getBounds());
+        }
+        
+        // Obtener color para ruta
+        function getRouteColor(index) {
+            const colors = ['#e74c3c', '#3498db', '#2ecc71', '#f39c12', '#9b59b6', '#1abc9c'];
+            return colors[index % colors.length];
+        }
+        
+        // Guardar configuración
+        function saveConfiguration() {
+            if (!selectedColonia || selectedEmployees.length === 0) {
+                showMessage('Debes seleccionar una colonia y empleados antes de guardar', 'warning');
+                return;
+            }
+            
+            if (selectedEmployees.length > 2) {
+                showMessage('No puedes guardar más de 2 empleados por ruta', 'error');
+                return;
+            }
+            
+            const config = {
+                colonia_id: selectedColonia.id,
+                empleados: selectedEmployees.map(e => e.id),
+                fecha_creacion: new Date().toISOString()
+            };
+            
+            fetch('/accounts/guardar_configuracion_rutas/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                },
+                body: JSON.stringify(config)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showMessage('Configuración guardada exitosamente', 'success');
+                } else {
+                    showMessage('Error al guardar: ' + data.error, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showMessage('Error al guardar la configuración', 'error');
+            });
+        }
+        
+        // Enviar información
+        function sendInformation() {
+            if (!selectedColonia || selectedEmployees.length === 0) {
+                showMessage('Debes seleccionar una colonia y empleados antes de enviar', 'warning');
+                return;
+            }
+            
+            showMessage('Enviando información...', 'success');
+            
+            // Simulación de envío
+            setTimeout(() => {
+                showMessage('Información enviada exitosamente a los empleados', 'success');
+            }, 1500);
+        }
+        
+        // Mostrar mensajes
+        function showMessage(message, type) {
+            // Crear elemento de mensaje
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}`;
+            messageDiv.textContent = message;
+            
+            // Insertar al inicio del body
+            document.body.insertBefore(messageDiv, document.body.firstChild);
+            
+            // Remover después de 5 segundos
+            setTimeout(() => {
+                if (messageDiv.parentNode) {
+                    messageDiv.remove();
+                }
+            }, 5000);
+        }
+        
+        // Event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeMaps();
+            
+            // Selector de colonia
+            document.getElementById('colonia-select').addEventListener('change', function() {
+                loadColonia(this.value);
+            });
+            
+            // Selector de empleados
+            document.getElementById('empleados-select').addEventListener('change', function() {
+                const selectedOption = this.options[this.selectedIndex];
+                
+                if (!selectedOption.value) return; // Opción vacía seleccionada
+                
+                // Verificar límite de 2 empleados
+                if (selectedEmployees.length >= 2) {
+                    showMessage('Ya has seleccionado el máximo de 2 empleados. Remueve uno antes de agregar otro.', 'warning');
+                    this.value = '';
+                    return;
+                }
+                
+                // Verificar que no esté ya seleccionado
+                if (selectedEmployees.some(emp => emp.id === selectedOption.value)) {
+                    showMessage('Este empleado ya está seleccionado.', 'warning');
+                    this.value = '';
+                    return;
+                }
+                
+                // Agregar empleado
+                const newEmployee = {
+                    id: selectedOption.value,
+                    username: selectedOption.getAttribute('data-username'),
+                    email: selectedOption.getAttribute('data-email')
+                };
+                
+                selectedEmployees.push(newEmployee);
+                updateEmployeesInfo();
+                updateEmployeeSelect();
+                
+                showMessage(`Empleado "${newEmployee.username}" agregado a la ruta`, 'success');
+            });
+            
+            // Botones de acción
+            document.getElementById('generar-rutas-btn').addEventListener('click', generateRoutes);
+            document.getElementById('guardar-btn').addEventListener('click', saveConfiguration);
+            document.getElementById('mandar-info-btn').addEventListener('click', sendInformation);
+            
+            // Toolbar
+            document.querySelectorAll('.toolbar-icon').forEach(icon => {
+                icon.addEventListener('click', function() {
+                    document.querySelectorAll('.toolbar-icon').forEach(i => i.classList.remove('active'));
+                    this.classList.add('active');
+                });
+            });
+        });
+    </script>
 </body>
 </html> 

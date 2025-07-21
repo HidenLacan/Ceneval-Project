@@ -1,0 +1,5 @@
+username,email,password,role
+test_admin,admin@test.com,admin123,admin
+test_staff,staff@test.com,staff123,staff
+test_employee,employee@test.com,employee123,employee
+test_researcher,researcher@test.com,researcher123,researcher 

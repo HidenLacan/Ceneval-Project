@@ -130,3 +130,12 @@ REST_FRAMEWORK = {
 }
 
 AUTH_USER_MODEL = 'accounts.User'
+
+# Media files (uploads)
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
+# Static files configuration
+STATICFILES_DIRS = [
+    BASE_DIR / 'static',
+]

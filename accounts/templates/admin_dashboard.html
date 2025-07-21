@@ -10,11 +10,23 @@
         .container { width: 90%; margin: 30px auto; border: 2px solid #ccc; padding: 30px; border-radius: 10px; }
         .header { display: flex; justify-content: space-between; align-items: center; }
         .panel-row { display: flex; gap: 30px; margin-top: 20px; }
-        .panel { flex: 1; border: 1px solid #333; min-height: 350px; padding: 10px; background: #fafafa; }
+        .panel { flex: 1; border: 1px solid #333; min-height: 550px; padding: 10px; background: #fafafa; }
         .actions { display: flex; justify-content: space-between; margin-top: 30px; }
         .actions button { width: 30%; padding: 10px; font-size: 1.1em; }
-        #map { width: 100%; height: 340px; }
-        #png-preview { width: 100%; height: 340px; object-fit: contain; background: #eee; display: block; }
+        #map { width: 100%; height: 500px; }
+        #png-preview { width: 100%; height: 500px; object-fit: contain; background: #eee; display: block; }
+        .success { color: green; background: #d4edda; padding: 10px; border-radius: 5px; margin: 10px 0; }
+        .error { color: red; background: #f8d7da; padding: 10px; border-radius: 5px; margin: 10px 0; }
+        .warning { color: #856404; background: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; border-radius: 8px; margin: 15px 0; font-weight: bold; }
+        .colonias-existentes { margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 5px; }
+        .colonia-item { padding: 8px; margin: 5px 0; background: white; border-radius: 3px; border-left: 4px solid #007bff; }
+        .colonia-item:hover { background: #e9ecef; cursor: pointer; }
+        .status-indicators { display: flex; gap: 10px; margin-top: 5px; }
+        .status-indicator { font-size: 0.8em; padding: 2px 6px; border-radius: 3px; }
+        .status-imagen { background: #28a745; color: white; }
+        .status-poligono { background: #17a2b8; color: white; }
+        .status-json { background: #ffc107; color: black; }
+        .hidden { display: none; }
     </style>
 </head>
 <body>
@@ -23,58 +35,143 @@
         <h1>ADMIN</h1>
         <h2>Creación de polígonos</h2>
     </div>
-    <form method="post" enctype="multipart/form-data">
+    
+    {% if success %}
+        <div class="success">{{ success }}</div>
+    {% endif %}
+    
+    {% if error %}
+        <div class="error">{{ error }}</div>
+    {% endif %}
+    
+    <form method="post" enctype="multipart/form-data" id="main-form">
         {% csrf_token %}
         <div style="display: flex; gap: 10px; align-items: center;">
             <input type="text" name="colonia" id="colonia" placeholder="Escribir Nombre de la colonia" style="flex: 1; padding:10px; font-size:1.1em;" required value="{{ colonia|default:'' }}">
             <button type="button" id="buscar-btn" style="padding: 10px 20px; font-size: 1.1em; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer;">Buscar</button>
         </div>
+        
+        <!-- Campos ocultos para polígono y datos JSON -->
+        <input type="hidden" name="poligono_geojson" id="poligono_geojson" value="">
+        <input type="hidden" name="datos_json" id="datos_json" value="">
+        
         <div class="panel-row">
             <div class="panel">
                 <div id="map"></div>
-                <p style="font-size:0.95em;">Dibujar polígono con ayuda de Folium/Leaflet.<br>Se renderiza utilizando el bounding box de la colonia de OpenStreetMap.</p>
             </div>
             <div class="panel" style="display:flex;flex-direction:column;align-items:center;justify-content:center;">
                 <label for="png-upload"><b>Subir y visualizar una imagen PNG del mapa</b></label>
                 <input type="file" id="png-upload" name="png_file" accept="image/png" style="margin:10px 0;">
                 <img id="png-preview" src="#" alt="Vista previa de la imagen" style="display:none;"/>
+                {% if colonia_existente and colonia_existente.imagen %}
+                    <p style="font-size: 0.9em; color: #666;">Imagen actual: {{ colonia_existente.imagen.name }}</p>
+                {% endif %}
             </div>
         </div>
+        
         <div class="actions">
-            <button type="submit" name="action" value="guardar">GUARDAR</button>
+            <button type="submit" name="action" value="guardar" id="guardar-btn">GUARDAR TODO</button>
             <button type="submit" name="action" value="modificar">MODIFICAR</button>
             <button type="submit" name="action" value="borrar">BORRAR</button>
+            <button type="submit" name="action" value="usuarios">USUARIOS</button>
         </div>
     </form>
-    {% if error %}
-        <p style="color: red;">{{ error }}</p>
+    
+    {% if colonias_existentes %}
+    <div class="colonias-existentes">
+        <h3>Colonias Existentes (últimas 10):</h3>
+        {% for colonia in colonias_existentes %}
+        <div class="colonia-item" onclick="cargarColonia('{{ colonia.nombre }}')">
+            <strong>{{ colonia.nombre }}</strong>
+            <div style="font-size: 0.8em; color: #666;">Creado: {{ colonia.fecha_creacion|date:"d/m/Y H:i" }} por {{ colonia.creado_por.username }}</div>
+            <div class="status-indicators">
+                {% if colonia.imagen %}
+                    <span class="status-indicator status-imagen">Imagen</span>
+                {% endif %}
+                {% if colonia.poligono_geojson %}
+                    <span class="status-indicator status-poligono">Polígono</span>
+                {% endif %}
+                {% if colonia.datos_json %}
+                    <span class="status-indicator status-json">JSON</span>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
     {% endif %}
+    
     {% if resultado %}
         <h3>Resultado:</h3>
         <pre>{{ resultado|safe }}</pre>
     {% endif %}
 </div>
+
 {% if config %}
 <script>
     var coloniaConfig = {{ config|safe }};
 </script>
 {% endif %}
+
 <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
 <script>
     // Inicialización del mapa
-    let map = L.map('map').setView([19.3574, -99.0731], 15); // Coordenadas por defecto (CDMX)
+    var map = L.map('map').setView([19.3574, -99.0731], 15);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-    let drawnItems = new L.FeatureGroup().addTo(map);
-    let boundingBoxLayer = null;
+    var drawnItems = new L.FeatureGroup().addTo(map);
+    var boundingBoxLayer = null;
+    
     new L.Control.Draw({
         draw: { polygon: true, polyline: false, marker: false, circle: false, rectangle: false, circlemarker: false },
         edit: { featureGroup: drawnItems }
     }).addTo(map);
+    
     map.on('draw:created', function (e) {
         drawnItems.clearLayers();
         drawnItems.addLayer(e.layer);
+        actualizarCamposOcultos();
     });
+    
+    map.on('draw:edited', function (e) {
+        actualizarCamposOcultos();
+    });
+    
+    map.on('draw:deleted', function (e) {
+        actualizarCamposOcultos();
+    });
+    
+    // Función para actualizar campos ocultos con datos del polígono
+    function actualizarCamposOcultos() {
+        var layers = drawnItems.getLayers();
+        if (layers.length > 0) {
+            var layer = layers[0];
+            var poligono_geojson = layer.toGeoJSON();
+            var colonia = document.getElementById('colonia').value;
+            
+            // Verificar que el polígono tenga la estructura correcta
+            if (poligono_geojson && poligono_geojson.geometry && poligono_geojson.geometry.coordinates && poligono_geojson.geometry.coordinates[0]) {
+                var coordenadas = poligono_geojson.geometry.coordinates[0];
+                var datos_json = {
+                    nombre_colonia: colonia,
+                    fecha_creacion: new Date().toISOString(),
+                    coordenadas: coordenadas,
+                    area_aproximada: calcularAreaPoligono(coordenadas)
+                };
+                
+                document.getElementById('poligono_geojson').value = JSON.stringify(poligono_geojson);
+                document.getElementById('datos_json').value = JSON.stringify(datos_json);
+                
+                console.log('Campos actualizados con polígono');
+            } else {
+                console.warn('Polígono no tiene la estructura esperada:', poligono_geojson);
+                document.getElementById('poligono_geojson').value = '';
+                document.getElementById('datos_json').value = '';
+            }
+        } else {
+            document.getElementById('poligono_geojson').value = '';
+            document.getElementById('datos_json').value = '';
+        }
+    }
     
     // Centrar mapa según la colonia buscada
     if (typeof coloniaConfig !== 'undefined' && coloniaConfig.center_lat && coloniaConfig.center_lon) {
@@ -92,11 +189,11 @@
     
     // Vista previa de imagen PNG
     document.getElementById('png-upload').addEventListener('change', function(e) {
-        const file = e.target.files[0];
+        var file = e.target.files[0];
         if (file) {
-            const reader = new FileReader();
+            var reader = new FileReader();
             reader.onload = function(ev) {
-                const img = document.getElementById('png-preview');
+                var img = document.getElementById('png-preview');
                 img.src = ev.target.result;
                 img.style.display = 'block';
             };
@@ -106,34 +203,30 @@
     
     // Botón de búsqueda
     document.getElementById('buscar-btn').addEventListener('click', function() {
-        const colonia = document.getElementById('colonia').value;
+        var colonia = document.getElementById('colonia').value;
         if (colonia.trim() === '') {
             alert('Por favor ingresa el nombre de una colonia');
             return;
         }
         
-        // Mostrar indicador de carga
         this.textContent = 'Buscando...';
         this.disabled = true;
         
-        // Hacer petición AJAX para obtener configuración de la colonia
-        fetch(`/core/editor/config/?colonia=${encodeURIComponent(colonia)}`)
-            .then(response => {
+        fetch('/editor/config/?colonia=' + encodeURIComponent(colonia))
+            .then(function(response) {
                 if (!response.ok) {
                     throw new Error('Error en la búsqueda');
                 }
                 return response.json();
             })
-            .then(config => {
+            .then(function(config) {
                 if (config.center_lat && config.center_lon) {
-                    // Centrar mapa en la colonia
                     map.setView([config.center_lat, config.center_lon], 15);
                     
-                    // Dibujar bounding box
                     if (boundingBoxLayer) {
                         map.removeLayer(boundingBoxLayer);
                     }
-                    const bounds = [
+                    var bounds = [
                         [config.bbox[0], config.bbox[2]],
                         [config.bbox[1], config.bbox[3]]
                     ];
@@ -144,23 +237,200 @@
                     });
                     boundingBoxLayer.addTo(map);
                     
-                    // Limpiar polígonos dibujados anteriormente
                     drawnItems.clearLayers();
+                    actualizarCamposOcultos();
                 } else {
                     alert('No se encontró información para esta colonia');
                 }
             })
-            .catch(error => {
+            .catch(function(error) {
                 console.error('Error:', error);
                 alert('Error al buscar la colonia: ' + error.message);
             })
-            .finally(() => {
-                // Restaurar botón
+            .finally(function() {
                 this.textContent = 'Buscar';
                 this.disabled = false;
+            }.bind(this));
+    });
+    
+    // Validación del formulario antes de enviar
+    document.getElementById('main-form').addEventListener('submit', function(e) {
+        var colonia = document.getElementById('colonia').value;
+        var poligono = document.getElementById('poligono_geojson').value;
+        var imagen = document.getElementById('png-upload').files[0];
+        
+        if (!colonia.trim()) {
+            alert('Por favor ingresa el nombre de una colonia');
+            e.preventDefault();
+            return;
+        }
+        
+        if (!poligono && !imagen) {
+            alert('Por favor dibuja un polígono o sube una imagen antes de guardar');
+            e.preventDefault();
+            return;
+        }
+        
+        // Mostrar mensaje de confirmación
+        var action = e.submitter ? e.submitter.value : '';
+        if (action === 'guardar') {
+            var mensaje = 'Guardando colonia con:\n';
+            if (poligono) mensaje += '✓ Polígono dibujado\n';
+            if (imagen) mensaje += '✓ Imagen PNG\n';
+            mensaje += '✓ Configuración de la colonia\n';
+            console.log(mensaje);
+        }
+    });
+    
+    // Función para cargar colonia existente
+    function cargarColonia(nombre) {
+        var buscarBtn = document.getElementById('buscar-btn');
+        buscarBtn.textContent = 'Cargando...';
+        buscarBtn.disabled = true;
+        
+        fetch('/accounts/cargar_colonia/?nombre=' + encodeURIComponent(nombre))
+            .then(function(response) {
+                if (!response.ok) {
+                    throw new Error('Error al cargar la colonia');
+                }
+                return response.json();
+            })
+            .then(function(data) {
+                document.getElementById('colonia').value = data.nombre;
+                
+                if (data.configuracion && data.configuracion.center_lat && data.configuracion.center_lon) {
+                    map.setView([data.configuracion.center_lat, data.configuracion.center_lon], 15);
+                    
+                    if (boundingBoxLayer) {
+                        map.removeLayer(boundingBoxLayer);
+                    }
+                    if (data.configuracion.bbox) {
+                        var bounds = [
+                            [data.configuracion.bbox[0], data.configuracion.bbox[2]],
+                            [data.configuracion.bbox[1], data.configuracion.bbox[3]]
+                        ];
+                        boundingBoxLayer = L.rectangle(bounds, { 
+                            color: 'orange', 
+                            weight: 2, 
+                            fillOpacity: 0.2 
+                        });
+                        boundingBoxLayer.addTo(map);
+                    }
+                }
+                
+                if (data.poligono_geojson) {
+                    try {
+                        drawnItems.clearLayers();
+                        var poligonoLayer = L.geoJSON(data.poligono_geojson, {
+                            style: {
+                                color: 'red',
+                                weight: 3,
+                                fillOpacity: 0.3
+                            }
+                        });
+                        drawnItems.addLayer(poligonoLayer);
+                        actualizarCamposOcultos();
+                        console.log('Polígono cargado exitosamente');
+                    } catch (error) {
+                        console.error('Error al cargar el polígono:', error);
+                        mostrarMensaje('Advertencia: El polígono no se pudo cargar correctamente', 'warning');
+                    }
+                }
+                
+                if (data.imagen_url) {
+                    var img = document.getElementById('png-preview');
+                    img.src = data.imagen_url;
+                    img.style.display = 'block';
+                }
+                
+                mostrarMensaje('Colonia "' + data.nombre + '" cargada exitosamente', 'success');
+            })
+            .catch(function(error) {
+                console.error('Error:', error);
+                mostrarMensaje('Error al cargar la colonia: ' + error.message, 'error');
+            })
+            .finally(function() {
+                buscarBtn.textContent = 'Buscar';
+                buscarBtn.disabled = false;
             });
+    }
+    
+    // Función para mostrar mensajes
+    function mostrarMensaje(mensaje, tipo) {
+        var mensajesAnteriores = document.querySelectorAll('.mensaje-temp');
+        for (var i = 0; i < mensajesAnteriores.length; i++) {
+            mensajesAnteriores[i].remove();
+        }
+        
+        var color, background;
+        switch(tipo) {
+            case 'success':
+                color = 'green';
+                background = '#d4edda';
+                break;
+            case 'error':
+                color = 'red';
+                background = '#f8d7da';
+                break;
+            case 'warning':
+                color = '#856404';
+                background = '#fff3cd';
+                break;
+            default:
+                color = 'blue';
+                background = '#d1ecf1';
+        }
+        
+        var mensajeDiv = document.createElement('div');
+        mensajeDiv.className = 'mensaje-temp ' + tipo;
+        mensajeDiv.style.cssText = 'color: ' + color + '; background: ' + background + '; padding: 10px; border-radius: 5px; margin: 10px 0; position: fixed; top: 20px; right: 20px; z-index: 1000; max-width: 300px; border: 1px solid ' + (tipo === 'warning' ? '#ffeaa7' : 'transparent') + ';';
+        mensajeDiv.textContent = mensaje;
+        
+        document.body.appendChild(mensajeDiv);
+        
+        setTimeout(function() {
+            if (mensajeDiv.parentNode) {
+                mensajeDiv.remove();
+            }
+        }, 5000); // Aumentado a 5 segundos para mensajes de advertencia
+    }
+    
+    // Función para calcular área aproximada del polígono
+    function calcularAreaPoligono(coordenadas) {
+        var area = 0;
+        var n = coordenadas.length;
+        for (var i = 0; i < n; i++) {
+            var j = (i + 1) % n;
+            area += coordenadas[i][0] * coordenadas[j][1];
+            area -= coordenadas[j][0] * coordenadas[i][1];
+        }
+        return Math.abs(area) / 2;
+    }
+    
+    // Manejo del botón USUARIOS
+    document.addEventListener('DOMContentLoaded', function() {
+        var usuariosBtn = document.querySelector('button[value="usuarios"]');
+        if (usuariosBtn) {
+            usuariosBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                var confirmacion = confirm('⚠️ ADVERTENCIA\n\n¿Estás seguro de que quieres acceder al módulo de gestión de usuarios?\n\nEsta funcionalidad está en desarrollo y puede no estar completamente implementada.\n\n¿Deseas continuar?');
+                
+                if (confirmacion) {
+                    // Crear un formulario temporal para enviar la acción
+                    var form = document.getElementById('main-form');
+                    var input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = 'action';
+                    input.value = 'usuarios';
+                    form.appendChild(input);
+                    
+                    // Enviar el formulario
+                    form.submit();
+                }
+            });
+        }
     });
 </script>
 </body>
 </html>
-
