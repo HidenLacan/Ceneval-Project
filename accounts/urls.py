@@ -15,7 +15,12 @@ from .views import (user_login,
                     procesar_usuarios_masivos,
                     cargar_colonia_staff,
                     guardar_configuracion_rutas,
-                    listar_rutas_staff)
+                    listar_rutas_staff,
+                    dividir_poligono_para_empleados,
+                    consultar_rutas_staff,
+                    obtener_mapa_calculado,
+                    enviar_rutas_por_email,
+                    enviar_rutas_desde_dashboard)
 
 urlpatterns = [
     path('login/', user_login, name='user_login'),
@@ -33,4 +38,9 @@ urlpatterns = [
     path('cargar_colonia_staff/', cargar_colonia_staff, name='cargar_colonia_staff'),
     path('guardar_configuracion_rutas/', guardar_configuracion_rutas, name='guardar_configuracion_rutas'),
     path('listar_rutas_staff/', listar_rutas_staff, name='listar_rutas_staff'),
+    path('dividir_poligono_para_empleados/', dividir_poligono_para_empleados, name='dividir_poligono_para_empleados'),
+    path('consultar_rutas/', consultar_rutas_staff, name='consultar_rutas_staff'),
+    path('obtener_mapa_calculado/', obtener_mapa_calculado, name='obtener_mapa_calculado'),
+    path('enviar_rutas_por_email/', enviar_rutas_por_email, name='enviar_rutas_por_email'),
+    path('enviar_rutas_desde_dashboard/', enviar_rutas_desde_dashboard, name='enviar_rutas_desde_dashboard'),
 ]

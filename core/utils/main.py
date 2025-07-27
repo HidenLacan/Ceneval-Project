@@ -1,6 +1,6 @@
 import osmnx as ox
 import networkx as nx
-from networkx.algorithms.community import kernighan_lin_bisection
+from networkx.algorithms.community.kernighan_lin import kernighan_lin_bisection
 import folium
 from shapely.geometry import shape, Polygon
 import json
@@ -48,9 +48,24 @@ def download_bbox(place_name: str):
 
     return cache_file
 
-def split_graph(G):
-    print("Dividiendo grafo en dos zonas...")
-    part1, part2 = kernighan_lin_bisection(G)
+def split_graph(G, num_employees=2):
+    """
+    Divide el grafo en zonas según el número de empleados
+    - Si num_employees = 1: toda la ruta va a part1
+    - Si num_employees >= 2: divide en dos usando kernighan_lin_bisection
+    """
+    print(f"Dividiendo grafo para {num_employees} empleado(s)...")
+    
+    if num_employees == 1:
+        # Si solo hay un empleado, asignar toda la ruta
+        part1 = set(G.nodes())
+        part2 = set()  # Vacío
+        print("✅ Asignando toda la ruta al empleado único")
+    else:
+        # Si hay múltiples empleados, dividir en dos
+        part1, part2 = kernighan_lin_bisection(G)
+        print(f"✅ Dividiendo ruta en dos zonas: {len(part1)} y {len(part2)} nodos")
+    
     return part1, part2
 
 def draw_partitioned_graph(G, part1, part2):
@@ -69,6 +84,8 @@ def calcular_longitud_por_zona(G, part1, part2):
         elif u in part2 and v in part2:
             total_part2 += length
     return total_part1, total_part2
+
+
 
 def calcular_area_por_zona(G, part1, part2):
     def area_de_particion(nodos):
@@ -90,21 +107,30 @@ def draw_graph_folium(G, part1, part2, place_name="colonia", output_html=None):
     centro = list(G.nodes(data=True))[0][1]
     m = folium.Map(location=[centro['y'], centro['x']], zoom_start=16)
 
+    # Dibujar calles respetando la geometría real
     for u, v, data in G.edges(data=True):
-        coords = [(pt[1], pt[0]) for pt in data['geometry'].coords] if 'geometry' in data else [
-            (G.nodes[u]['y'], G.nodes[u]['x']),
-            (G.nodes[v]['y'], G.nodes[v]['x'])
-        ]
-        color = 'red' if u in part1 and v in part1 else 'blue' if u in part2 and v in part2 else 'gray'
+        if 'geometry' in data:
+            coords = [(pt[1], pt[0]) for pt in data['geometry'].coords]
+        else:
+            coords = [(G.nodes[u]['y'], G.nodes[u]['x']), (G.nodes[v]['y'], G.nodes[v]['x'])]
+
+        # Colorear calles según la zona
+        if u in part1 and v in part1:
+            color = 'red'
+        elif u in part2 and v in part2:
+            color = 'blue'
+        else:
+            color = 'gray'
+
         folium.PolyLine(coords, color=color, weight=3, opacity=0.7).add_to(m)
 
     m.save(nombre_archivo)
-    return os.path.abspath(nombre_archivo)  # ✅ retorna ruta absoluta correcta
+    return os.path.abspath(nombre_archivo)
 
 
 from osmnx.distance import add_edge_lengths
 
-def procesar_poligono_completo(nombre_archivo: str):
+def procesar_poligono_completo(nombre_archivo: str, num_employees=2):
     ruta = os.path.join("core", "polygons", nombre_archivo)
     if not os.path.exists(ruta):
         raise FileNotFoundError(f"No se encontró el archivo: {ruta}")
@@ -117,7 +143,8 @@ def procesar_poligono_completo(nombre_archivo: str):
     G = add_edge_lengths(G)
     G = nx.Graph(G)  # convertir a grafo no dirigido
 
-    part1, part2 = split_graph(G)
+    part1, part2 = split_graph(G, num_employees)
+    
     long1, long2 = calcular_longitud_por_zona(G, part1, part2)
     area1, area2 = calcular_area_por_zona(G, part1, part2)
 
@@ -127,6 +154,27 @@ def procesar_poligono_completo(nombre_archivo: str):
     dens_calles2 = long2 / area2 if area2 else 0
 
     mapa_path = draw_graph_folium(G, part1, part2, place_name=nombre_archivo.replace(".json", ""))
+
+
+       
+       # Estadísticas de nodos
+    print(f"📊 Total de nodos: {len(G.nodes)}")
+    print(f"🔴 Zona 1 (vendedor A): {len(part1)} nodos")
+    print(f"🔵 Zona 2 (vendedor B): {len(part2)} nodos")
+
+    # Estadísticas de longitud
+    print(f"🛣️ Longitud total zona 1 (rojo): {long1:.2f} m")
+    print(f"🛣️ Longitud total zona 2 (azul): {long2:.2f} m")
+    
+    
+    print(f"📐 Área zona 1 (rojo): {area1:.2f} m²")
+    print(f"📐 Área zona 2 (azul): {area2:.2f} m²")
+    
+   
+    print(f"🔗 Densidad de nodos zona 1: {dens_nodos1:.2f} nodos/km²")
+    print(f"🔗 Densidad de nodos zona 2: {dens_nodos2:.2f} nodos/km²")
+    print(f"🚏 Densidad de calles zona 1: {dens_calles1:.2f} m/km²")
+    print(f"🚏 Densidad de calles zona 2: {dens_calles2:.2f} m/km²")
 
     return {
         "status": "ok",
@@ -149,5 +197,8 @@ def procesar_poligono_completo(nombre_archivo: str):
             "nodos_por_km2_z2": round(dens_nodos2, 2),
             "calles_m_por_km2_z1": round(dens_calles1, 2),
             "calles_m_por_km2_z2": round(dens_calles2, 2)
-        }
+        },
+        "part1_nodes": part1,
+        "part2_nodes": part2,
+        "graph": G
     }

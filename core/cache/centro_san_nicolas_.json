@@ -1,0 +1,60 @@
+[
+  {
+    "place_id": 4704747,
+    "licence": "Data \u00a9 OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+    "osm_type": "way",
+    "osm_id": 832630840,
+    "lat": "-31.3548774",
+    "lon": "-64.3458642",
+    "class": "highway",
+    "type": "residential",
+    "place_rank": 26,
+    "importance": 0.053383334859235486,
+    "addresstype": "road",
+    "name": "San Nicolas",
+    "display_name": "San Nicolas, Barrio Doctor Cocca, La Calera, Pedan\u00eda Calera Norte, Departamento Col\u00f3n, Provincia de C\u00f3rdoba, X5111, Argentina",
+    "boundingbox": [
+      "-31.3549416",
+      "-31.3548409",
+      "-64.3468716",
+      "-64.3448564"
+    ],
+    "geojson": {
+      "type": "LineString",
+      "coordinates": [
+        [
+          -64.3448564,
+          -31.3548588
+        ],
+        [
+          -64.3450907,
+          -31.3548446
+        ],
+        [
+          -64.345192,
+          -31.3548409
+        ],
+        [
+          -64.3455021,
+          -31.354848
+        ],
+        [
+          -64.3455893,
+          -31.3548561
+        ],
+        [
+          -64.3463453,
+          -31.3549146
+        ],
+        [
+          -64.3464562,
+          -31.3549202
+        ],
+        [
+          -64.3468716,
+          -31.3549416
+        ]
+      ]
+    }
+  }
+]

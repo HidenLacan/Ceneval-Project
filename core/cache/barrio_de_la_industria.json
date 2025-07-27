@@ -1,0 +1,78 @@
+[
+  {
+    "place_id": 297044291,
+    "licence": "Data \u00a9 OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+    "osm_type": "way",
+    "osm_id": 887727278,
+    "lat": "25.7910587",
+    "lon": "-100.3851436",
+    "class": "landuse",
+    "type": "residential",
+    "place_rank": 22,
+    "importance": 0.10673603341725793,
+    "addresstype": "residential",
+    "name": "Barrio de la Industria",
+    "display_name": "Barrio de la Industria, Monterrey, Nuevo Le\u00f3n, M\u00e9xico",
+    "boundingbox": [
+      "25.7880820",
+      "25.7954390",
+      "-100.3875829",
+      "-100.3829576"
+    ],
+    "geojson": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            -100.3875829,
+            25.7951696
+          ],
+          [
+            -100.3856566,
+            25.7891806
+          ],
+          [
+            -100.3843379,
+            25.789519
+          ],
+          [
+            -100.3838634,
+            25.788082
+          ],
+          [
+            -100.3829576,
+            25.7883483
+          ],
+          [
+            -100.3833273,
+            25.788942
+          ],
+          [
+            -100.3845351,
+            25.7925983
+          ],
+          [
+            -100.3849726,
+            25.7946178
+          ],
+          [
+            -100.3851143,
+            25.7954168
+          ],
+          [
+            -100.3864823,
+            25.7950451
+          ],
+          [
+            -100.386624,
+            25.795439
+          ],
+          [
+            -100.3875829,
+            25.7951696
+          ]
+        ]
+      ]
+    }
+  }
+]

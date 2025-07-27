@@ -554,6 +554,10 @@
                 💾 Guardar
             </button>
             
+            <a href="{% url 'consultar_rutas_staff' %}" class="btn btn-info" id="consultar-ruta-btn">
+                🔍 Consultar Ruta
+            </a>
+            
             <button class="btn btn-warning" id="mandar-info-btn">
                 📤 MANDAR INFORMACIÓN
             </button>
@@ -749,8 +753,54 @@
             }, 2000);
         }
         
-        // Mostrar rutas en el mapa dividido
+        // Mostrar rutas en el mapa dividido usando algoritmo real
         function displayRoutes() {
+            if (!selectedColonia || selectedEmployees.length === 0) {
+                showMessage('Debes seleccionar colonia y empleados', 'warning');
+                return;
+            }
+            
+            showMessage('Procesando división de rutas con algoritmo de grafos...', 'info');
+            
+            // Llamar a tu algoritmo real con información de empleados
+            const employeeIds = selectedEmployees.map(emp => emp.id);
+            fetch('/accounts/dividir_poligono_para_empleados/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({
+                    colonia_id: selectedColonia.id,
+                    employee_ids: employeeIds
+                })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        if (data.ruta2) {
+                            // Múltiples empleados
+                            mostrarRutasReales(data.ruta1, data.ruta2);
+                            actualizarInformacionRutas(data);
+                            showMessage(`✅ Rutas divididas exitosamente: ${data.ruta1.nodos} y ${data.ruta2.nodos} nodos`, 'success');
+                        } else {
+                            // Un solo empleado
+                            mostrarRutaUnica(data.ruta1);
+                            actualizarInformacionRutaUnica(data);
+                            showMessage(`✅ Ruta completa asignada: ${data.ruta1.nodos} nodos`, 'success');
+                        }
+                    } else {
+                        showMessage('❌ Error al dividir rutas: ' + data.error, 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showMessage('❌ Error al procesar rutas', 'error');
+                });
+        }
+        
+        // Mostrar rutas reales basadas en el algoritmo
+        function mostrarRutasReales(ruta1, ruta2) {
             // Limpiar mapa dividido
             dividedMap.eachLayer((layer) => {
                 if (layer instanceof L.Marker || layer instanceof L.Polyline) {
@@ -758,28 +808,77 @@
                 }
             });
             
-            // Simular rutas para cada empleado
-            selectedEmployees.forEach((employee, index) => {
-                // Punto de inicio (centro del polígono)
+            // Mostrar ruta 1 (primer empleado)
+            if (selectedEmployees[0]) {
+                mostrarRutaEmpleado(ruta1, selectedEmployees[0], ruta1.color, 1);
+            }
+            
+            // Mostrar ruta 2 (segundo empleado) - solo si existe
+            if (selectedEmployees[1] && ruta2) {
+                mostrarRutaEmpleado(ruta2, selectedEmployees[1], ruta2.color, 2);
+            }
+            
+            // Centrar mapa en las rutas
+            dividedMap.fitBounds(coloniaPolygon.getBounds());
+        }
+        
+        // Mostrar ruta individual para un empleado
+        function mostrarRutaEmpleado(ruta, empleado, color, numeroRuta) {
+            // Usar calles reales del algoritmo
+            if (ruta.calles && ruta.calles.length > 0) {
+                // Dibujar cada calle de la zona
+                ruta.calles.forEach((calle, index) => {
+                    const routeLine = L.polyline(calle, {
+                        color: color,
+                        weight: 4,
+                        opacity: 0.8
+                    }).addTo(dividedMap);
+                    
+                    // Popup para cada calle
+                    routeLine.bindPopup(`
+                        <strong>Ruta ${numeroRuta} - Calle ${index + 1}</strong><br>
+                        <strong>Empleado:</strong> ${empleado.username}<br>
+                        <strong>Nodos:</strong> ${ruta.nodos}<br>
+                        <strong>Distancia:</strong> ${(ruta.longitud/1000).toFixed(2)} km<br>
+                        <strong>Área:</strong> ${ruta.area.toFixed(2)} km²
+                    `);
+                });
+                
+                // Marcador de inicio (primer punto de la primera calle)
+                if (ruta.calles[0] && ruta.calles[0].length > 0) {
+                    L.marker(ruta.calles[0][0], {
+                        icon: L.divIcon({
+                            className: 'route-start',
+                            html: '🏁',
+                            iconSize: [20, 20]
+                        })
+                    }).addTo(dividedMap);
+                }
+                
+                // Marcador de fin (último punto de la última calle)
+                const ultimaCalle = ruta.calles[ruta.calles.length - 1];
+                if (ultimaCalle && ultimaCalle.length > 0) {
+                    L.marker(ultimaCalle[ultimaCalle.length - 1], {
+                        icon: L.divIcon({
+                            className: 'route-end',
+                            html: '🎯',
+                            iconSize: [20, 20]
+                        })
+                    }).addTo(dividedMap);
+                }
+            } else {
+                // Fallback: usar puntos simulados si no hay calles reales
                 const center = coloniaPolygon.getBounds().getCenter();
+                const puntosRuta = generarPuntosRuta(center, ruta.nodos, color);
                 
-                // Punto de destino (aleatorio dentro del polígono)
-                const bounds = coloniaPolygon.getBounds();
-                const destLat = bounds.getSouth() + Math.random() * (bounds.getNorth() - bounds.getSouth());
-                const destLng = bounds.getWest() + Math.random() * (bounds.getEast() - bounds.getWest());
-                
-                // Crear ruta
-                const route = L.polyline([
-                    [center.lat, center.lng],
-                    [destLat, destLng]
-                ], {
-                    color: getRouteColor(index),
+                const routeLine = L.polyline(puntosRuta, {
+                    color: color,
                     weight: 4,
                     opacity: 0.8
                 }).addTo(dividedMap);
                 
                 // Marcadores
-                L.marker([center.lat, center.lng], {
+                L.marker(puntosRuta[0], {
                     icon: L.divIcon({
                         className: 'route-start',
                         html: '🏁',
@@ -787,7 +886,7 @@
                     })
                 }).addTo(dividedMap);
                 
-                L.marker([destLat, destLng], {
+                L.marker(puntosRuta[puntosRuta.length - 1], {
                     icon: L.divIcon({
                         className: 'route-end',
                         html: '🎯',
@@ -795,16 +894,64 @@
                     })
                 }).addTo(dividedMap);
                 
-                // Popup con información
-                route.bindPopup(`
-                    <strong>Ruta ${index + 1}</strong><br>
-                    Empleado: ${employee.username}<br>
-                    Distancia: ${(Math.random() * 5 + 1).toFixed(2)} km
+                routeLine.bindPopup(`
+                    <strong>Ruta ${numeroRuta} (Simulada)</strong><br>
+                    <strong>Empleado:</strong> ${empleado.username}<br>
+                    <strong>Nodos:</strong> ${ruta.nodos}<br>
+                    <strong>Distancia:</strong> ${(ruta.longitud/1000).toFixed(2)} km<br>
+                    <strong>Área:</strong> ${ruta.area.toFixed(2)} km²
                 `);
+            }
+        }
+        
+        // Generar puntos de ruta basados en datos reales
+        function generarPuntosRuta(centro, numNodos, color) {
+            // Simular puntos de ruta basados en el número de nodos
+            const puntos = [centro];
+            const bounds = coloniaPolygon.getBounds();
+            
+            for (let i = 0; i < Math.min(numNodos, 10); i++) {
+                const lat = bounds.getSouth() + Math.random() * (bounds.getNorth() - bounds.getSouth());
+                const lng = bounds.getWest() + Math.random() * (bounds.getEast() - bounds.getWest());
+                puntos.push([lat, lng]);
+            }
+            
+            return puntos;
+        }
+        
+        // Actualizar información de empleados con datos reales
+        function actualizarInformacionRutas(data) {
+            const employeesList = document.getElementById('employees-list');
+            
+            let html = '';
+            selectedEmployees.forEach((employee, index) => {
+                const ruta = index === 0 ? data.ruta1 : data.ruta2;
+                
+                html += `
+                    <div class="employee-item selected" data-employee-id="${employee.id}">
+                        <div class="employee-name">${employee.username}</div>
+                        <div class="employee-email">${employee.email}</div>
+                        <div class="employee-details">
+                            <div class="employee-info">
+                                <div class="employee-status status-assigned">
+                                    Ruta ${index + 1} - ${ruta.nodos} nodos
+                                </div>
+                                <div style="font-size: 11px; color: #666; margin-top: 3px;">
+                                    Distancia: ${(ruta.longitud/1000).toFixed(2)} km | 
+                                    Área: ${ruta.area.toFixed(2)} km²
+                                </div>
+                            </div>
+                            <div class="employee-actions">
+                                <button class="btn-small btn-remove" onclick="removeEmployee('${employee.id}')">
+                                    ✕ Remover
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
             });
             
-            // Centrar mapa en las rutas
-            dividedMap.fitBounds(coloniaPolygon.getBounds());
+            employeesList.innerHTML = html;
         }
         
         // Obtener color para ruta
@@ -862,10 +1009,35 @@
             
             showMessage('Enviando información...', 'success');
             
-            // Simulación de envío
-            setTimeout(() => {
-                showMessage('Información enviada exitosamente a los empleados', 'success');
-            }, 1500);
+            // Preparar datos para envío
+            const formData = new FormData();
+            formData.append('colonia_id', selectedColonia.id);
+            
+            // Agregar IDs de empleados
+            selectedEmployees.forEach(empleado => {
+                formData.append('employee_ids[]', empleado.id);
+            });
+            
+            // Enviar request
+            fetch('/accounts/enviar_rutas_desde_dashboard/', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showMessage(data.message, 'success');
+                } else {
+                    showMessage('Error al enviar información: ' + data.error, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showMessage('Error al enviar información', 'error');
+            });
         }
         
         // Mostrar mensajes
@@ -884,6 +1056,76 @@
                     messageDiv.remove();
                 }
             }, 5000);
+        }
+        
+        // Función para obtener CSRF token
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+        
+        // Mostrar ruta única para un solo empleado
+        function mostrarRutaUnica(ruta) {
+            // Limpiar mapa dividido
+            dividedMap.eachLayer((layer) => {
+                if (layer instanceof L.Marker || layer instanceof L.Polyline) {
+                    dividedMap.removeLayer(layer);
+                }
+            });
+            
+            // Mostrar ruta completa para el empleado único
+            if (selectedEmployees[0]) {
+                mostrarRutaEmpleado(ruta, selectedEmployees[0], ruta.color, 1);
+            }
+            
+            // Centrar mapa en las rutas
+            dividedMap.fitBounds(coloniaPolygon.getBounds());
+        }
+        
+        // Actualizar información para ruta única
+        function actualizarInformacionRutaUnica(data) {
+            const infoDiv = document.getElementById('route-info');
+            if (infoDiv) {
+                infoDiv.innerHTML = `
+                    <h3>📊 Información de Ruta Completa</h3>
+                    <div class="route-stats">
+                        <div class="stat-item">
+                            <span class="stat-label">Empleado:</span>
+                            <span class="stat-value">${selectedEmployees[0] ? selectedEmployees[0].username : 'N/A'}</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Nodos:</span>
+                            <span class="stat-value">${data.ruta1.nodos}</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Distancia:</span>
+                            <span class="stat-value">${(data.ruta1.longitud/1000).toFixed(2)} km</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Área:</span>
+                            <span class="stat-value">${(data.ruta1.area/1000000).toFixed(2)} km²</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Densidad de nodos:</span>
+                            <span class="stat-value">${data.ruta1.densidad_nodos.toFixed(2)} nodos/km²</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Densidad de calles:</span>
+                            <span class="stat-value">${data.ruta1.densidad_calles.toFixed(2)} m/km²</span>
+                        </div>
+                    </div>
+                `;
+            }
         }
         
         // Event listeners

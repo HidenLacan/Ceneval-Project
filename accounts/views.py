@@ -9,7 +9,10 @@ from django.http import HttpResponseForbidden, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 import json
 from core.models import ColoniaProcesada
+from shapely.geometry import shape
 # Create your views here.
+import os
+
 
 class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
@@ -563,8 +566,8 @@ def guardar_configuracion_rutas(request):
         from datetime import timedelta
         import random
         
-        # Calcular tiempo estimado (simulación)
-        tiempo_estimado = timedelta(minutes=random.randint(30, 120))
+        # Calcular tiempo estimado basado en datos reales (se calculará después de procesar el polígono)
+        tiempo_estimado = timedelta(minutes=0)  # Inicializar, se actualizará después
         
         # Preparar información detallada de empleados
         informacion_empleados = []
@@ -578,34 +581,100 @@ def guardar_configuracion_rutas(request):
                 'estado_asignacion': 'activo'
             })
         
-        # Simular datos de ruta calculada
-        datos_ruta = {
-            'fecha_creacion_frontend': data.get('fecha_creacion'),
-            'empleados_ids': [e.id for e in empleados_validos],
-            'empleados_usernames': [e.username for e in empleados_validos],
-            'distancia_total': round(random.uniform(5.0, 25.0), 2),
-            'puntos_parada': random.randint(8, 20),
-            'tipo_ruta': 'optimizada'
-        }
+        # Calcular rutas reales usando el algoritmo de división
+        from core.utils.main import procesar_poligono_completo
+        import os
         
-        # Simular mapa calculado
-        mapa_calculado = {
-            'rutas': [],
-            'centro_colonia': colonia.get_configuracion_centro(),
-            'poligono_colonia': colonia.poligono_geojson
-        }
+        # Crear archivo temporal con el polígono
+        nombre_archivo = f"temp_{colonia.id}.json"
+        ruta_temp = os.path.join("core", "polygons", nombre_archivo)
         
-        # Crear rutas simuladas para cada empleado
-        for i, empleado in enumerate(empleados_validos):
-            ruta_empleado = {
-                'empleado_id': empleado.id,
-                'empleado_nombre': empleado.username,
-                'color_ruta': ['#e74c3c', '#3498db', '#2ecc71'][i % 3],
-                'puntos': [],
-                'distancia': round(random.uniform(2.0, 8.0), 2),
-                'tiempo_estimado': random.randint(15, 45)
+        with open(ruta_temp, "w", encoding="utf-8") as f:
+            json.dump(colonia.poligono_geojson, f)
+        
+        try:
+            # Procesar con el algoritmo real
+            num_employees = len(empleados_validos)
+            resultado = procesar_poligono_completo(nombre_archivo, num_employees)
+            
+            # Extraer coordenadas reales de las calles
+            G = resultado['graph']
+            part1 = resultado['part1_nodes']
+            part2 = resultado['part2_nodes']
+            
+            # Extraer calles para cada zona
+            calles_ruta1 = []
+            for u, v, data in G.edges(data=True):
+                if u in part1 and v in part1:
+                    if 'geometry' in data:
+                        coords = [(pt[1], pt[0]) for pt in data['geometry'].coords]
+                    else:
+                        coords = [(G.nodes[u]['y'], G.nodes[u]['x']), (G.nodes[v]['y'], G.nodes[v]['x'])]
+                    calles_ruta1.append(coords)
+            
+            calles_ruta2 = []
+            if num_employees > 1:
+                for u, v, data in G.edges(data=True):
+                    if u in part2 and v in part2:
+                        if 'geometry' in data:
+                            coords = [(pt[1], pt[0]) for pt in data['geometry'].coords]
+                        else:
+                            coords = [(G.nodes[u]['y'], G.nodes[u]['x']), (G.nodes[v]['y'], G.nodes[v]['x'])]
+                        calles_ruta2.append(coords)
+            
+            # Crear datos de ruta reales
+            datos_ruta = {
+                'fecha_creacion_frontend': data.get('fecha_creacion'),
+                'empleados_ids': [e.id for e in empleados_validos],
+                'empleados_usernames': [e.username for e in empleados_validos],
+                'distancia_total': (resultado['longitudes']['zona1_m'] + resultado['longitudes']['zona2_m']) / 1000,  # Convertir a km
+                'puntos_parada': resultado['nodos']['total'],
+                'tipo_ruta': 'algoritmo_grafos'
             }
-            mapa_calculado['rutas'].append(ruta_empleado)
+            
+            # Crear mapa calculado con datos reales
+            mapa_calculado = {
+                'rutas': [],
+                'centro_colonia': colonia.get_configuracion_centro(),
+                'poligono_colonia': colonia.poligono_geojson
+            }
+            
+            # Crear rutas reales para cada empleado
+            colores_rutas = ['#e74c3c', '#3498db', '#2ecc71']
+            for i, empleado in enumerate(empleados_validos):
+                if i == 0:  # Primer empleado - ruta 1
+                    ruta_empleado = {
+                        'empleado_id': empleado.id,
+                        'empleado_nombre': empleado.username,
+                        'color_ruta': colores_rutas[i],
+                        'puntos': calles_ruta1,  # Coordenadas reales
+                        'distancia': resultado['longitudes']['zona1_m'] / 1000,  # Convertir a km
+                        'tiempo_estimado': int((resultado['longitudes']['zona1_m'] / 1000) * 15),  # Estimación: 15 min/km
+                        'nodos': resultado['nodos']['zona1'],
+                        'area': resultado['areas']['zona1_m2']
+                    }
+                elif i == 1 and num_employees > 1:  # Segundo empleado - ruta 2
+                    ruta_empleado = {
+                        'empleado_id': empleado.id,
+                        'empleado_nombre': empleado.username,
+                        'color_ruta': colores_rutas[i],
+                        'puntos': calles_ruta2,  # Coordenadas reales
+                        'distancia': resultado['longitudes']['zona2_m'] / 1000,  # Convertir a km
+                        'tiempo_estimado': int((resultado['longitudes']['zona2_m'] / 1000) * 15),  # Estimación: 15 min/km
+                        'nodos': resultado['nodos']['zona2'],
+                        'area': resultado['areas']['zona2_m2']
+                    }
+                
+                mapa_calculado['rutas'].append(ruta_empleado)
+            
+            # Calcular tiempo total estimado basado en las rutas reales
+            tiempo_total_minutos = sum(ruta['tiempo_estimado'] for ruta in mapa_calculado['rutas'])
+            tiempo_estimado = timedelta(minutes=tiempo_total_minutos)
+                
+        finally:
+            # Limpiar archivo temporal
+            if os.path.exists(ruta_temp):
+                os.remove(ruta_temp)
         
         configuracion_ruta = ConfiguracionRuta.objects.create(
             colonia=colonia,
@@ -682,3 +751,346 @@ def listar_rutas_staff(request):
     except Exception as e:
         print(f"ERROR en listar_rutas_staff: {str(e)}")
         return JsonResponse({'error': str(e)}, status=500)
+
+
+@login_required
+@csrf_exempt
+def dividir_poligono_para_empleados(request):
+    """
+    Usa el algoritmo existente de división de grafos para crear
+    rutas reales para los empleados seleccionados
+    """
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            colonia_id = data.get('colonia_id')
+            employee_ids = data.get('employee_ids', [])
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'Datos JSON inválidos'}, status=400)
+    else:
+        colonia_id = request.GET.get('colonia_id')
+        employee_ids = []
+    
+    try:
+        # 1. Obtener la colonia de la base de datos
+        colonia = ColoniaProcesada.objects.get(id=colonia_id)
+        
+        # 2. Verificar que tiene polígono
+        if not colonia.poligono_geojson:
+            return JsonResponse({
+                'error': 'La colonia no tiene polígono definido'
+            }, status=400)
+        
+        # 3. Determinar número de empleados y validar límite
+        num_employees = len(employee_ids) if employee_ids else 2  # Default a 2 si no se especifica
+        
+        # Validar que no se exceda el límite de 2 empleados
+        if num_employees > 2:
+            return JsonResponse({
+                'error': f'El sistema solo permite asignar rutas a 1 o 2 empleados máximo. Se recibieron {num_employees} empleados.'
+            }, status=400)
+        
+        # 4. Usar tu algoritmo existente con el número correcto de empleados
+        from core.utils.main import procesar_poligono_completo
+        
+        # 5. Crear archivo temporal con el polígono
+        nombre_archivo = f"temp_{colonia.id}.json"
+        ruta_temp = os.path.join("core", "polygons", nombre_archivo)
+        
+        with open(ruta_temp, "w", encoding="utf-8") as f:
+            json.dump(colonia.poligono_geojson, f)
+        
+        # 6. Procesar con tu algoritmo existente
+        resultado = procesar_poligono_completo(nombre_archivo, num_employees)
+        
+        # 7. Limpiar archivo temporal
+        os.remove(ruta_temp)
+        
+        # 8. Extraer coordenadas reales de las calles para cada zona
+        from core.utils.main import ox, nx
+        from networkx.algorithms.community.kernighan_lin import kernighan_lin_bisection
+        
+        # Usar el grafo y nodos ya procesados
+        G = resultado['graph']
+        part1 = resultado['part1_nodes']
+        part2 = resultado['part2_nodes']
+        
+        # Extraer coordenadas de calles para zona 1 (roja)
+        calles_ruta1 = []
+        for u, v, data in G.edges(data=True):
+            if u in part1 and v in part1:
+                if 'geometry' in data:
+                    coords = [(pt[1], pt[0]) for pt in data['geometry'].coords]
+                else:
+                    coords = [(G.nodes[u]['y'], G.nodes[u]['x']), (G.nodes[v]['y'], G.nodes[v]['x'])]
+                calles_ruta1.append(coords)
+        
+        # Extraer coordenadas de calles para zona 2 (azul) - solo si hay más de un empleado
+        calles_ruta2 = []
+        if num_employees > 1:
+            for u, v, data in G.edges(data=True):
+                if u in part2 and v in part2:
+                    if 'geometry' in data:
+                        coords = [(pt[1], pt[0]) for pt in data['geometry'].coords]
+                    else:
+                        coords = [(G.nodes[u]['y'], G.nodes[u]['x']), (G.nodes[v]['y'], G.nodes[v]['x'])]
+                    calles_ruta2.append(coords)
+        
+        # 9. Preparar respuesta para el frontend con calles reales
+        response_data = {
+            'success': True,
+            'ruta1': {
+                'nodos': resultado['nodos']['zona1'],
+                'longitud': resultado['longitudes']['zona1_m'],
+                'area': resultado['areas']['zona1_m2'],
+                'densidad_nodos': resultado['densidades']['nodos_por_km2_z1'],
+                'densidad_calles': resultado['densidades']['calles_m_por_km2_z1'],
+                'color': '#e74c3c',  # Rojo
+                'calles': calles_ruta1  # Coordenadas reales de calles
+            },
+            'metricas_totales': {
+                'nodos_total': resultado['nodos']['total'],
+                'longitud_total': resultado['longitudes']['zona1_m'] + resultado['longitudes']['zona2_m'],
+                'area_total': resultado['areas']['zona1_m2'] + resultado['areas']['zona2_m2']
+            }
+        }
+        
+        # Solo incluir ruta2 si hay más de un empleado
+        if num_employees > 1:
+            response_data['ruta2'] = {
+                'nodos': resultado['nodos']['zona2'],
+                'longitud': resultado['longitudes']['zona2_m'],
+                'area': resultado['areas']['zona2_m2'],
+                'densidad_nodos': resultado['densidades']['nodos_por_km2_z2'],
+                'densidad_calles': resultado['densidades']['calles_m_por_km2_z2'],
+                'color': '#3498db',  # Azul
+                'calles': calles_ruta2  # Coordenadas reales de calles
+            }
+        
+        return JsonResponse(response_data)
+        
+    except ColoniaProcesada.DoesNotExist:
+        return JsonResponse({'error': 'Colonia no encontrada'}, status=404)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+@login_required
+def consultar_rutas_staff(request):
+    """Vista para que el staff consulte las rutas guardadas y acceda al mapa_calculado"""
+    if request.user.role != 'staff':
+        return HttpResponseForbidden('Acceso denegado: No eres staff.')
+    
+    from core.models import ConfiguracionRuta
+    from django.contrib.auth import get_user_model
+    User = get_user_model()
+    
+    context = {}
+    
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        
+        if action == 'consultar_ruta':
+            configuracion_id = request.POST.get('configuracion_id')
+            if configuracion_id:
+                try:
+                    configuracion = ConfiguracionRuta.objects.get(
+                        id=configuracion_id,
+                        creado_por=request.user  # Solo rutas creadas por el usuario actual
+                    )
+                    context['configuracion_seleccionada'] = configuracion
+                    context['mapa_calculado'] = configuracion.mapa_calculado
+                    context['empleados_info'] = configuracion.get_empleados_info()
+                    
+                except ConfiguracionRuta.DoesNotExist:
+                    context['error'] = 'Configuración de ruta no encontrada'
+                except Exception as e:
+                    context['error'] = f'Error al consultar la ruta: {str(e)}'
+        
+        elif action == 'eliminar_ruta':
+            configuracion_id = request.POST.get('configuracion_id')
+            if configuracion_id:
+                try:
+                    configuracion = ConfiguracionRuta.objects.get(
+                        id=configuracion_id,
+                        creado_por=request.user
+                    )
+                    colonia_nombre = configuracion.colonia.nombre
+                    configuracion.delete()
+                    context['success'] = f'Ruta para "{colonia_nombre}" eliminada exitosamente'
+                    
+                except ConfiguracionRuta.DoesNotExist:
+                    context['error'] = 'Configuración de ruta no encontrada'
+                except Exception as e:
+                    context['error'] = f'Error al eliminar la ruta: {str(e)}'
+        
+        elif action == 'enviar_informacion':
+            configuracion_id = request.POST.get('configuracion_id')
+            if configuracion_id:
+                try:
+                    from .utils import send_route_email
+                    
+                    configuracion = ConfiguracionRuta.objects.get(
+                        id=configuracion_id,
+                        creado_por=request.user
+                    )
+                    
+                    # Obtener información de empleados
+                    empleados_info_raw = configuracion.get_empleados_info()
+                    
+                    if not empleados_info_raw:
+                        context['error'] = 'No hay empleados asignados para enviar emails'
+                    else:
+                        # Convertir al formato esperado por send_route_email
+                        empleados_info = []
+                        for empleado in empleados_info_raw:
+                            empleados_info.append({
+                                'id': empleado['id'],
+                                'nombre': empleado['username'],
+                                'email': empleado['email']
+                            })
+                        
+                        # Enviar emails
+                        success, message = send_route_email(configuracion, empleados_info)
+                        
+                        if success:
+                            context['success'] = f'Emails enviados exitosamente a {len(empleados_info)} empleado(s) para la ruta de "{configuracion.colonia.nombre}"'
+                        else:
+                            context['error'] = f'Error al enviar emails: {message}'
+                    
+                    context['configuracion_seleccionada'] = configuracion
+                    
+                except ConfiguracionRuta.DoesNotExist:
+                    context['error'] = 'Configuración de ruta no encontrada'
+                except Exception as e:
+                    context['error'] = f'Error al enviar información: {str(e)}'
+    
+    # Obtener todas las rutas creadas por el usuario actual
+    rutas = ConfiguracionRuta.objects.filter(creado_por=request.user).order_by('-fecha_creacion')
+    context['rutas'] = rutas
+    
+    return render(request, 'consultar_rutas_staff.html', context)
+
+
+@login_required
+def obtener_mapa_calculado(request):
+    """Endpoint AJAX para obtener datos del mapa_calculado"""
+    if request.user.role != 'staff':
+        return JsonResponse({'error': 'Acceso denegado'}, status=403)
+    
+    configuracion_id = request.GET.get('configuracion_id')
+    if not configuracion_id:
+        return JsonResponse({'error': 'ID de configuración requerido'}, status=400)
+    
+    try:
+        from core.models import ConfiguracionRuta
+        configuracion = ConfiguracionRuta.objects.get(
+            id=configuracion_id,
+            creado_por=request.user
+        )
+        
+        return JsonResponse({
+            'success': True,
+            'mapa_calculado': configuracion.mapa_calculado,
+            'datos_ruta': configuracion.datos_ruta,
+            'empleados_info': configuracion.get_empleados_info(),
+            'colonia_nombre': configuracion.colonia.nombre,
+            'fecha_creacion': configuracion.fecha_creacion.isoformat(),
+            'tiempo_calculado': configuracion.get_tiempo_formateado(),
+            'estado': configuracion.estado
+        })
+        
+    except ConfiguracionRuta.DoesNotExist:
+        return JsonResponse({'error': 'Configuración no encontrada'}, status=404)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@login_required
+@csrf_exempt
+def enviar_rutas_por_email(request):
+    """Enviar rutas por email a los empleados asignados"""
+    if request.user.role != 'staff':
+        return JsonResponse({'error': 'Acceso denegado'}, status=403)
+    
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Método no permitido'}, status=405)
+    
+    try:
+        from .utils import send_route_email
+        from core.models import ConfiguracionRuta
+        
+        configuracion_id = request.POST.get('configuracion_id')
+        if not configuracion_id:
+            return JsonResponse({'error': 'ID de configuración requerido'}, status=400)
+        
+        # Obtener configuración
+        configuracion = ConfiguracionRuta.objects.get(
+            id=configuracion_id,
+            creado_por=request.user
+        )
+        
+        # Obtener información de empleados
+        empleados_info_raw = configuracion.get_empleados_info()
+        
+        if not empleados_info_raw:
+            return JsonResponse({'error': 'No hay empleados asignados para enviar emails'}, status=400)
+        
+        # Convertir al formato esperado por send_route_email
+        empleados_info = []
+        for empleado in empleados_info_raw:
+            empleados_info.append({
+                'id': empleado['id'],
+                'nombre': empleado['username'],
+                'email': empleado['email']
+            })
+        
+        # Enviar emails
+        success, message = send_route_email(configuracion, empleados_info)
+        
+        if success:
+            return JsonResponse({
+                'success': True,
+                'message': message,
+                'empleados_enviados': len(empleados_info)
+            })
+        else:
+            return JsonResponse({'error': message}, status=500)
+            
+    except ConfiguracionRuta.DoesNotExist:
+        return JsonResponse({'error': 'Configuración no encontrada'}, status=404)
+    except Exception as e:
+        return JsonResponse({'error': f'Error al enviar emails: {str(e)}'}, status=500)
+
+
+@login_required
+@csrf_exempt
+def enviar_rutas_desde_dashboard(request):
+    """Enviar rutas desde el dashboard principal del staff"""
+    if request.user.role != 'staff':
+        return JsonResponse({'error': 'Acceso denegado'}, status=403)
+    
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Método no permitido'}, status=405)
+    
+    try:
+        from .utils import send_route_email_from_staff_dashboard
+        
+        colonia_id = request.POST.get('colonia_id')
+        employee_ids = request.POST.getlist('employee_ids[]')
+        
+        if not colonia_id or not employee_ids:
+            return JsonResponse({'error': 'Colonia y empleados son requeridos'}, status=400)
+        
+        # Enviar emails
+        success, message = send_route_email_from_staff_dashboard(colonia_id, employee_ids)
+        
+        if success:
+            return JsonResponse({
+                'success': True,
+                'message': message
+            })
+        else:
+            return JsonResponse({'error': message}, status=500)
+            
+    except Exception as e:
+        return JsonResponse({'error': f'Error al enviar emails: {str(e)}'}, status=500)

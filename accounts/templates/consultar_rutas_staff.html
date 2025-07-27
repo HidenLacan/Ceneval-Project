@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consultar Rutas - Staff</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+</head>
+<body>
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-2 sidebar">
+            <div class="sidebar-header">
+                <h4>STAFF</h4>
+                <p>Consulta de rutas</p>
+            </div>
+            
+            <!-- Navigation -->
+            <nav class="sidebar-nav">
+                <a href="{% url 'staff_dashboard' %}" class="nav-item">
+                    <i class="fas fa-home"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="{% url 'consultar_rutas_staff' %}" class="nav-item active">
+                    <i class="fas fa-route"></i>
+                    <span>Consultar Rutas</span>
+                </a>
+            </nav>
+        </div>
+
+        <!-- Main Content -->
+        <div class="col-md-10 main-content">
+            <div class="content-header">
+                <h2>Consulta de Rutas Guardadas</h2>
+                <p>Accede a los datos del mapa calculado almacenados en la base de datos</p>
+            </div>
+
+            <!-- Messages -->
+            {% if success %}
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                {{ success }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endif %}
+
+            {% if error %}
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                {{ error }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endif %}
+
+            <div class="row">
+                <!-- Left Panel: Route Selection -->
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5>Selección de Colonia</h5>
+                        </div>
+                        <div class="card-body">
+                            <form method="POST" id="consultarForm">
+                                {% csrf_token %}
+                                <div class="mb-3">
+                                    <label for="configuracion_id" class="form-label">Ruta Guardada:</label>
+                                    <select class="form-select" id="configuracion_id" name="configuracion_id" required>
+                                        <option value="">Selecciona una ruta...</option>
+                                        {% for ruta in rutas %}
+                                        <option value="{{ ruta.id }}" 
+                                                data-colonia="{{ ruta.colonia.nombre }}"
+                                                data-fecha="{{ ruta.fecha_creacion|date:'d/m/Y H:i' }}"
+                                                data-empleados="{{ ruta.get_empleados_count }}">
+                                            {{ ruta.colonia.nombre }} - {{ ruta.fecha_creacion|date:'d/m/Y H:i' }}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label">Fecha que se generó el mapa:</label>
+                                    <div id="fecha_generacion" class="form-control-plaintext">-</div>
+                                </div>
+
+                                <div class="d-grid gap-2">
+                                    <button type="submit" name="action" value="consultar_ruta" class="btn btn-primary">
+                                        <i class="fas fa-search"></i> Consultar Ruta
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Route Actions -->
+                    {% if configuracion_seleccionada %}
+                    <div class="card mt-3">
+                        <div class="card-header">
+                            <h5>Acciones</h5>
+                        </div>
+                        <div class="card-body">
+                            <form method="POST">
+                                {% csrf_token %}
+                                <input type="hidden" name="configuracion_id" value="{{ configuracion_seleccionada.id }}">
+                                <div class="d-grid gap-2">
+                                    <button type="button" id="mandar-info-btn" class="btn btn-success">
+                                        <i class="fas fa-envelope"></i> Mandar información
+                                    </button>
+                                    <button type="submit" name="action" value="eliminar_ruta" class="btn btn-danger"
+                                            onclick="return confirm('¿Estás seguro de que quieres eliminar esta ruta?')">
+                                        <i class="fas fa-trash"></i> Eliminar
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Right Panel: Map Display -->
+                <div class="col-md-8">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5>Mapa Dividido</h5>
+                        </div>
+                        <div class="card-body">
+                            <div id="mapa_dividido" style="height: 400px; width: 100%;"></div>
+                        </div>
+                    </div>
+
+                    <!-- Employee Information -->
+                    {% if configuracion_seleccionada %}
+                    <div class="card mt-3">
+                        <div class="card-header">
+                            <h5>Información de los empleados asignados</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                {% for empleado in empleados_info %}
+                                <div class="col-md-6 mb-3">
+                                    <div class="card border-primary">
+                                        <div class="card-body">
+                                            <h6 class="card-title">{{ empleado.username }}</h6>
+                                            <p class="card-text">
+                                                <strong>Email:</strong> {{ empleado.email }}<br>
+                                                <strong>Ruta:</strong> 
+                                                {% for ruta in mapa_calculado.rutas %}
+                                                    {% if ruta.empleado_id == empleado.id %}
+                                                        Ruta {{ forloop.counter }} - {{ ruta.nodos }} nodos<br>
+                                                        <strong>Distancia:</strong> {{ ruta.distancia|floatformat:2 }} km<br>
+                                                        <strong>Área:</strong> {{ ruta.area|floatformat:2 }} km²<br>
+                                                        <strong>Tiempo estimado:</strong> {{ ruta.tiempo_estimado }} min
+                                                    {% endif %}
+                                                {% endfor %}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Leaflet CSS and JS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+
+<script>
+let map = null;
+
+// Initialize map
+function initMap() {
+    if (map) {
+        map.remove();
+    }
+    
+    map = L.map('mapa_dividido').setView([25.8033, -100.3218], 15);
+    
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+}
+
+// Load route data
+function loadRouteData(configuracionId) {
+    fetch(`/accounts/obtener_mapa_calculado/?configuracion_id=${configuracionId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                displayMap(data.mapa_calculado);
+                displayEmployeeInfo(data.empleados_info);
+            } else {
+                alert('Error: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error al cargar los datos de la ruta');
+        });
+}
+
+// Display map with routes
+function displayMap(mapaCalculado) {
+    initMap();
+    
+    // Add polygon
+    if (mapaCalculado.poligono_colonia) {
+        L.geoJSON(mapaCalculado.poligono_colonia, {
+            style: {
+                color: '#ff7800',
+                weight: 2,
+                fillOpacity: 0.1
+            }
+        }).addTo(map);
+    }
+    
+    // Add routes
+    if (mapaCalculado.rutas) {
+        mapaCalculado.rutas.forEach((ruta, index) => {
+            if (ruta.puntos && ruta.puntos.length > 0) {
+                ruta.puntos.forEach(punto => {
+                    if (punto.length >= 2) {
+                        L.polyline(punto, {
+                            color: ruta.color_ruta,
+                            weight: 4,
+                            opacity: 0.8
+                        }).addTo(map);
+                    }
+                });
+            }
+        });
+    }
+    
+    // Fit map to bounds
+    if (mapaCalculado.centro_colonia) {
+        const center = mapaCalculado.centro_colonia;
+        map.setView([center.center_lat, center.center_lon], 15);
+    }
+}
+
+// Update date display
+document.getElementById('configuracion_id').addEventListener('change', function() {
+    const selectedOption = this.options[this.selectedIndex];
+    const fechaDiv = document.getElementById('fecha_generacion');
+    
+    if (this.value) {
+        fechaDiv.textContent = selectedOption.getAttribute('data-fecha');
+    } else {
+        fechaDiv.textContent = '-';
+    }
+});
+
+// Initialize map on page load
+document.addEventListener('DOMContentLoaded', function() {
+    initMap();
+    
+    {% if configuracion_seleccionada %}
+        loadRouteData({{ configuracion_seleccionada.id }});
+    {% endif %}
+    
+    // Add event listener for "Mandar información" button
+    const mandarInfoBtn = document.getElementById('mandar-info-btn');
+    if (mandarInfoBtn) {
+        mandarInfoBtn.addEventListener('click', function() {
+            sendRouteInformation();
+        });
+    }
+});
+
+// Function to send route information via email
+function sendRouteInformation() {
+    const configuracionId = document.querySelector('input[name="configuracion_id"]').value;
+    
+    if (!configuracionId) {
+        alert('No hay configuración seleccionada');
+        return;
+    }
+    
+    // Show loading state
+    const btn = document.getElementById('mandar-info-btn');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
+    btn.disabled = true;
+    
+    // Prepare form data
+    const formData = new FormData();
+    formData.append('configuracion_id', configuracionId);
+    
+    // Send request
+    fetch('/accounts/enviar_rutas_por_email/', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('✅ ' + data.message);
+        } else {
+            alert('❌ Error: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('❌ Error al enviar la información');
+    })
+    .finally(() => {
+        // Restore button state
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    });
+}
+</script>
+
+<style>
+.sidebar {
+    background: #2c3e50;
+    color: white;
+    min-height: 100vh;
+    padding: 0;
+}
+
+.sidebar-header {
+    padding: 20px;
+    border-bottom: 1px solid #34495e;
+}
+
+.sidebar-nav {
+    padding: 20px 0;
+}
+
+.nav-item {
+    display: flex;
+    align-items: center;
+    padding: 15px 20px;
+    color: #ecf0f1;
+    text-decoration: none;
+    transition: background-color 0.3s;
+}
+
+.nav-item:hover, .nav-item.active {
+    background-color: #34495e;
+    color: white;
+    text-decoration: none;
+}
+
+.nav-item i {
+    margin-right: 10px;
+    width: 20px;
+}
+
+.main-content {
+    padding: 20px;
+    background: #f8f9fa;
+    min-height: 100vh;
+}
+
+.content-header {
+    margin-bottom: 30px;
+}
+
+.card {
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    border: none;
+}
+
+.card-header {
+    background: #3498db;
+    color: white;
+    border: none;
+}
+
+.btn {
+    border-radius: 5px;
+}
+
+.form-control, .form-select {
+    border-radius: 5px;
+}
+    </style>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+</body>
+</html> 

@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rutas Asignadas</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .email-container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            color: #2c3e50;
+            margin: 0;
+            font-size: 24px;
+        }
+        .section {
+            margin-bottom: 25px;
+        }
+        .section-title {
+            color: #3498db;
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            border-left: 4px solid #3498db;
+            padding-left: 10px;
+        }
+        .info-item {
+            margin-bottom: 10px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+        }
+        .info-label {
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        .employee-list {
+            list-style: none;
+            padding: 0;
+        }
+        .employee-item {
+            background-color: #e8f4fd;
+            margin-bottom: 10px;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #3498db;
+        }
+        .route-details {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 5px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+            color: #666;
+            font-size: 14px;
+        }
+        .highlight {
+            background-color: #d4edda;
+            color: #155724;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="header">
+            <h1>🗺️ Rutas Asignadas</h1>
+            <p>Sistema de Gestión de Rutas</p>
+        </div>
+
+        <div class="section">
+            <div class="section-title">📋 Información de la Colonia</div>
+            <div class="info-item">
+                <span class="info-label">Colonia:</span> {{ colonia_nombre }}
+            </div>
+            <div class="info-item">
+                <span class="info-label">Fecha de configuración:</span> {{ configuracion_ruta.fecha_creacion|date:"d/m/Y H:i" }}
+            </div>
+            <div class="info-item">
+                <span class="info-label">Configurado por:</span> {{ configuracion_ruta.configurado_por.username }}
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">👥 Empleados Asignados</div>
+            <ul class="employee-list">
+                {% for empleado in empleados_info %}
+                <li class="employee-item">
+                    <strong>{{ empleado.nombre }}</strong><br>
+                    <span style="color: #666;">{{ empleado.email }}</span>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        {% if configuracion_ruta.mapa_calculado and configuracion_ruta.mapa_calculado.rutas %}
+        <div class="section">
+            <div class="section-title">🗺️ Detalles de Rutas</div>
+            {% for ruta in configuracion_ruta.mapa_calculado.rutas %}
+            <div class="route-details">
+                <strong>Ruta para {{ ruta.empleado_nombre }}:</strong><br>
+                • Distancia: {{ ruta.distancia|floatformat:2 }} km<br>
+                • Tiempo estimado: {{ ruta.tiempo_estimado }} minutos
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if configuracion_ruta.tiempo_calculado %}
+        <div class="section">
+            <div class="section-title">📊 Estadísticas Generales</div>
+            <div class="info-item">
+                <span class="info-label">Tiempo total estimado:</span> {{ configuracion_ruta.tiempo_calculado }}
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="highlight">
+            <strong>📎 Archivo adjunto:</strong> Se ha adjuntado un PDF con información detallada de las rutas asignadas.
+        </div>
+
+        <div class="footer">
+            <p>Este es un mensaje automático del Sistema de Gestión de Rutas.</p>
+            <p>Si tienes alguna pregunta, contacta al administrador del sistema.</p>
+        </div>
+    </div>
+</body>
+</html> 

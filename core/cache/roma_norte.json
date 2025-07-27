@@ -1,0 +1,30 @@
+[
+  {
+    "place_id": 219036430,
+    "licence": "Data \u00a9 OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+    "osm_type": "node",
+    "osm_id": 2164008272,
+    "lat": "17.5259771",
+    "lon": "121.6882655",
+    "class": "place",
+    "type": "village",
+    "place_rank": 19,
+    "importance": 0.146712003509575,
+    "addresstype": "village",
+    "name": "Roma Norte",
+    "display_name": "Roma Norte, Cagayan, Cagayan Valley, Philippines",
+    "boundingbox": [
+      "17.5059771",
+      "17.5459771",
+      "121.6682655",
+      "121.7082655"
+    ],
+    "geojson": {
+      "type": "Point",
+      "coordinates": [
+        121.6882655,
+        17.5259771
+      ]
+    }
+  }
+]
