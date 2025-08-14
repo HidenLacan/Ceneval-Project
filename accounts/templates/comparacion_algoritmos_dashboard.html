@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comparación de Algoritmos - Researcher Dashboard</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .dashboard-container {
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .main-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .main-header h1 {
+            margin: 0;
+            font-size: 2.5rem;
+            font-weight: bold;
+        }
+        
+        .nav-tabs {
+            border-bottom: 2px solid #dee2e6;
+            margin-bottom: 30px;
+        }
+        
+        .nav-tabs .nav-link {
+            border: none;
+            color: #6c757d;
+            font-weight: 500;
+            padding: 15px 25px;
+            border-radius: 10px 10px 0 0;
+            margin-right: 5px;
+        }
+        
+        .nav-tabs .nav-link.active {
+            background-color: #667eea;
+            color: white;
+            border: none;
+        }
+        
+        .comparison-panel {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 25px;
+            margin-bottom: 20px;
+        }
+        
+        .algorithm-card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+            transition: transform 0.3s ease;
+            border-left: 4px solid #3498db;
+        }
+        
+        .algorithm-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .algorithm-card.dbscan {
+            border-left-color: #e74c3c;
+        }
+        
+        .algorithm-card.spectral {
+            border-left-color: #9b59b6;
+        }
+        
+        .algorithm-card.kmeans {
+            border-left-color: #f39c12;
+        }
+        
+        .algorithm-card.current {
+            border-left-color: #27ae60;
+        }
+        
+        .metric-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .metric-item {
+            text-align: center;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .metric-value {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .metric-label {
+            font-size: 0.8rem;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+        
+        .score-badge {
+            font-size: 0.9rem;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-weight: bold;
+        }
+        
+        .score-excellent { background-color: #d4edda; color: #155724; }
+        .score-good { background-color: #d1ecf1; color: #0c5460; }
+        .score-fair { background-color: #fff3cd; color: #856404; }
+        .score-poor { background-color: #f8d7da; color: #721c24; }
+        
+        .logout-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 400px;
+            margin: 20px 0;
+        }
+        
+        .filter-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .best-performance {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Logout Button -->
+    <button class="btn btn-danger logout-btn" onclick="confirmLogout()">
+        <i class="fas fa-sign-out-alt"></i> Logout
+    </button>
+
+    <div class="dashboard-container">
+        <!-- Header -->
+        <div class="main-header">
+            <h1><i class="fas fa-chart-line"></i> Comparación de Algoritmos</h1>
+            <p class="mb-0">Análisis Comparativo de Eficiencia de Algoritmos de Clustering</p>
+            <small>Usuario: {{ researcher_user.username }} | Última actualización: <span id="lastUpdate"></span></small>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <ul class="nav nav-tabs" id="comparisonTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="overview-tab" data-bs-toggle="tab" data-bs-target="#overview" type="button" role="tab">
+                    <i class="fas fa-chart-bar"></i> Vista General
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="comparison-tab" data-bs-toggle="tab" data-bs-target="#comparison" type="button" role="tab">
+                    <i class="fas fa-balance-scale"></i> Comparación Detallada
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="history-tab" data-bs-toggle="tab" data-bs-target="#history" type="button" role="tab">
+                    <i class="fas fa-history"></i> Historial
+                </button>
+            </li>
+        </ul>
+
+        <!-- Tab Content -->
+        <div class="tab-content" id="comparisonTabContent">
+            <!-- Overview Tab -->
+            <div class="tab-pane fade show active" id="overview" role="tabpanel">
+                <div class="row">
+                    <!-- Best Performances -->
+                    <div class="col-12 mb-4">
+                        <h4><i class="fas fa-trophy"></i> Mejores Rendimientos</h4>
+                        <div class="row">
+                            {% if mejor_balance %}
+                            <div class="col-md-3 mb-3">
+                                <div class="best-performance">
+                                    <h6><i class="fas fa-balance-scale"></i> Mejor Balance</h6>
+                                    <div class="h4">{{ mejor_balance.balance_zonas_porcentaje }}%</div>
+                                    <small>{{ mejor_balance.algoritmo_tipo|title }} - {{ mejor_balance.colonia.nombre }}</small>
+                                </div>
+                            </div>
+                            {% endif %}
+                            
+                            {% if mejor_eficiencia %}
+                            <div class="col-md-3 mb-3">
+                                <div class="best-performance">
+                                    <h6><i class="fas fa-route"></i> Mejor Eficiencia</h6>
+                                    <div class="h4">{{ mejor_eficiencia.eficiencia_rutas_porcentaje }}%</div>
+                                    <small>{{ mejor_eficiencia.algoritmo_tipo|title }} - {{ mejor_eficiencia.colonia.nombre }}</small>
+                                </div>
+                            </div>
+                            {% endif %}
+                            
+                            {% if mejor_equidad %}
+                            <div class="col-md-3 mb-3">
+                                <div class="best-performance">
+                                    <h6><i class="fas fa-users"></i> Mejor Equidad</h6>
+                                    <div class="h4">{{ mejor_equidad.equidad_cargas_porcentaje }}%</div>
+                                    <small>{{ mejor_equidad.algoritmo_tipo|title }} - {{ mejor_equidad.colonia.nombre }}</small>
+                                </div>
+                            </div>
+                            {% endif %}
+                            
+                            {% if mejor_compacidad %}
+                            <div class="col-md-3 mb-3">
+                                <div class="best-performance">
+                                    <h6><i class="fas fa-compress-arrows-alt"></i> Mejor Compacidad</h6>
+                                    <div class="h4">{{ mejor_compacidad.compacidad_porcentaje }}%</div>
+                                    <small>{{ mejor_compacidad.algoritmo_tipo|title }} - {{ mejor_compacidad.colonia.nombre }}</small>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Algorithm Cards -->
+                    <div class="col-12">
+                        <h4><i class="fas fa-cogs"></i> Rendimiento por Algoritmo</h4>
+                        <div class="row">
+                            {% for algoritmo, stats in stats_por_algoritmo.items %}
+                            <div class="col-md-6 col-lg-4 mb-4">
+                                <div class="algorithm-card {{ algoritmo }}">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <h5 class="mb-0">{{ algoritmo|title }}</h5>
+                                        <span class="score-badge score-{{ stats.score_general|floatformat:0|add:0|divisibleby:20|yesno:'excellent,good,fair,poor' }}">
+                                            {{ stats.score_general }}%
+                                        </span>
+                                    </div>
+                                    
+                                    <div class="metric-grid">
+                                        <div class="metric-item">
+                                            <div class="metric-value">{{ stats.total_ejecuciones }}</div>
+                                            <div class="metric-label">Ejecuciones</div>
+                                        </div>
+                                        <div class="metric-item">
+                                            <div class="metric-value">{{ stats.promedio_tiempo }}s</div>
+                                            <div class="metric-label">Tiempo</div>
+                                        </div>
+                                        <div class="metric-item">
+                                            <div class="metric-value">{{ stats.promedio_memoria }}MB</div>
+                                            <div class="metric-label">Memoria</div>
+                                        </div>
+                                        <div class="metric-item">
+                                            <div class="metric-value">{{ stats.promedio_balance }}%</div>
+                                            <div class="metric-label">Balance</div>
+                                        </div>
+                                        <div class="metric-item">
+                                            <div class="metric-value">{{ stats.promedio_eficiencia }}%</div>
+                                            <div class="metric-label">Eficiencia</div>
+                                        </div>
+                                        <div class="metric-item">
+                                            <div class="metric-value">{{ stats.promedio_equidad }}%</div>
+                                            <div class="metric-label">Equidad</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Comparison Tab -->
+            <div class="tab-pane fade" id="comparison" role="tabpanel">
+                <div class="comparison-panel">
+                    <h4><i class="fas fa-balance-scale"></i> Comparación Interactiva</h4>
+                    
+                    <!-- Filters -->
+                    <div class="filter-section">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <label for="algoritmoSelect1" class="form-label">Algoritmo 1</label>
+                                <select class="form-select" id="algoritmoSelect1">
+                                    <option value="">Seleccionar algoritmo...</option>
+                                    {% for algoritmo in algoritmos_disponibles %}
+                                    <option value="{{ algoritmo }}">{{ algoritmo|title }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="algoritmoSelect2" class="form-label">Algoritmo 2</label>
+                                <select class="form-select" id="algoritmoSelect2">
+                                    <option value="">Seleccionar algoritmo...</option>
+                                    {% for algoritmo in algoritmos_disponibles %}
+                                    <option value="{{ algoritmo }}">{{ algoritmo|title }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="coloniaSelect" class="form-label">Colonia (Opcional)</label>
+                                <select class="form-select" id="coloniaSelect">
+                                    <option value="">Todas las colonias</option>
+                                    {% for colonia in colonias_disponibles %}
+                                    <option value="{{ colonia.id }}">{{ colonia.nombre }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col-12">
+                                <button class="btn btn-primary" id="compararBtn">
+                                    <i class="fas fa-chart-bar"></i> Comparar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Comparison Results -->
+                    <div id="comparisonResults" style="display: none;">
+                        <div class="chart-container">
+                            <canvas id="comparisonChart"></canvas>
+                        </div>
+                        
+                        <div class="row mt-4" id="comparisonDetails">
+                            <!-- Details will be populated by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- History Tab -->
+            <div class="tab-pane fade" id="history" role="tabpanel">
+                <div class="comparison-panel">
+                    <h4><i class="fas fa-history"></i> Historial de Análisis</h4>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Algoritmo</th>
+                                    <th>Colonia</th>
+                                    <th>Empleados</th>
+                                    <th>Tiempo</th>
+                                    <th>Score</th>
+                                    <th>Usuario</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for analisis in ultimos_analisis %}
+                                <tr>
+                                    <td>{{ analisis.fecha_ejecucion|date:"d/m/Y H:i" }}</td>
+                                    <td>
+                                        <span class="badge bg-primary">{{ analisis.algoritmo_tipo|title }}</span>
+                                    </td>
+                                    <td>{{ analisis.colonia.nombre }}</td>
+                                    <td>{{ analisis.num_empleados }}</td>
+                                    <td>{{ analisis.tiempo_ejecucion_segundos }}s</td>
+                                    <td>
+                                        <span class="score-badge score-{{ analisis.get_score_general|floatformat:0|add:0|divisibleby:20|yesno:'excellent,good,fair,poor' }}">
+                                            {{ analisis.get_score_general }}%
+                                        </span>
+                                    </td>
+                                    <td>{{ analisis.usuario_ejecutor.username }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // CSRF Token
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🔬 Inicializando Dashboard de Comparación');
+            
+            // Update timestamp
+            document.getElementById('lastUpdate').textContent = new Date().toLocaleString();
+            
+            // Event listeners
+            document.getElementById('compararBtn').addEventListener('click', compararAlgoritmos);
+            
+            console.log('✅ Dashboard de comparación inicializado correctamente');
+        });
+
+        // Compare algorithms
+        function compararAlgoritmos() {
+            const algoritmo1 = document.getElementById('algoritmoSelect1').value;
+            const algoritmo2 = document.getElementById('algoritmoSelect2').value;
+            const colonia = document.getElementById('coloniaSelect').value;
+            
+            console.log('🔍 DEBUG FRONTEND: Iniciando comparación');
+            console.log('🔍 DEBUG FRONTEND: algoritmo1 =', algoritmo1);
+            console.log('🔍 DEBUG FRONTEND: algoritmo2 =', algoritmo2);
+            console.log('🔍 DEBUG FRONTEND: colonia =', colonia);
+            
+            if (!algoritmo1 || !algoritmo2) {
+                console.log('❌ DEBUG FRONTEND: Faltan algoritmos seleccionados');
+                alert('Por favor selecciona dos algoritmos para comparar');
+                return;
+            }
+            
+            console.log('🔄 Comparando algoritmos:', { algoritmo1, algoritmo2, colonia });
+            
+            // Show loading
+            document.getElementById('comparisonResults').style.display = 'none';
+            
+            const requestData = {
+                'algoritmo1': algoritmo1,
+                'algoritmo2': algoritmo2,
+                'colonia_id': colonia || null
+            };
+            
+            console.log('🔍 DEBUG FRONTEND: Datos a enviar:', requestData);
+            console.log('🔍 DEBUG FRONTEND: CSRF Token:', getCookie('csrftoken'));
+            
+            fetch('/accounts/api/comparar_algoritmos/', {
+                method: 'POST',
+                body: JSON.stringify(requestData),
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => {
+                console.log('🔍 DEBUG FRONTEND: Response status:', response.status);
+                console.log('🔍 DEBUG FRONTEND: Response headers:', response.headers);
+                return response.json();
+            })
+            .then(data => {
+                console.log('📊 Resultados de comparación:', data);
+                console.log('🔍 DEBUG FRONTEND: Tipo de data:', typeof data);
+                console.log('🔍 DEBUG FRONTEND: Data.success:', data.success);
+                
+                if (data.success) {
+                    console.log('✅ DEBUG FRONTEND: Mostrando comparación');
+                    mostrarComparacion(data);
+                } else {
+                    console.log('❌ DEBUG FRONTEND: Error en respuesta:', data.error);
+                    alert('Error: ' + data.error);
+                }
+            })
+            .catch(error => {
+                console.error('❌ Error en comparación:', error);
+                console.log('🔍 DEBUG FRONTEND: Error completo:', error);
+                console.log('🔍 DEBUG FRONTEND: Error name:', error.name);
+                console.log('🔍 DEBUG FRONTEND: Error message:', error.message);
+                alert('Error de conexión: ' + error.message);
+            });
+        }
+
+        // Show comparison results
+        function mostrarComparacion(data) {
+            console.log('🔍 DEBUG FRONTEND: Iniciando mostrarComparacion');
+            console.log('🔍 DEBUG FRONTEND: Data recibida:', data);
+            
+            // Create chart
+            const ctx = document.getElementById('comparisonChart').getContext('2d');
+            console.log('🔍 DEBUG FRONTEND: Canvas context obtenido');
+            
+            // Safely destroy existing chart
+            if (window.comparisonChart && typeof window.comparisonChart.destroy === 'function') {
+                console.log('🔍 DEBUG FRONTEND: Destruyendo chart anterior');
+                try {
+                    window.comparisonChart.destroy();
+                } catch (error) {
+                    console.log('🔍 DEBUG FRONTEND: Error al destruir chart anterior:', error);
+                }
+            } else {
+                console.log('🔍 DEBUG FRONTEND: No hay chart anterior o no es válido');
+            }
+            
+            console.log('🔍 DEBUG FRONTEND: Creando nuevo chart');
+            try {
+                window.comparisonChart = new Chart(ctx, {
+                    type: 'radar',
+                    data: {
+                        labels: ['Balance', 'Eficiencia', 'Equidad', 'Compacidad', 'Tiempo', 'Memoria'],
+                        datasets: [
+                            {
+                                label: data.algoritmo1,
+                                data: [
+                                    data.algoritmo1_stats.balance_zonas,
+                                    data.algoritmo1_stats.eficiencia_rutas,
+                                    data.algoritmo1_stats.equidad_cargas,
+                                    data.algoritmo1_stats.compacidad,
+                                    100 - (data.algoritmo1_stats.tiempo_ejecucion * 10), // Invertir tiempo
+                                    100 - (data.algoritmo1_stats.memoria_usada * 2) // Invertir memoria
+                                ],
+                                borderColor: 'rgb(255, 99, 132)',
+                                backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                                pointBackgroundColor: 'rgb(255, 99, 132)',
+                                pointBorderColor: '#fff',
+                                pointHoverBackgroundColor: '#fff',
+                                pointHoverBorderColor: 'rgb(255, 99, 132)'
+                            },
+                            {
+                                label: data.algoritmo2,
+                                data: [
+                                    data.algoritmo2_stats.balance_zonas,
+                                    data.algoritmo2_stats.eficiencia_rutas,
+                                    data.algoritmo2_stats.equidad_cargas,
+                                    data.algoritmo2_stats.compacidad,
+                                    100 - (data.algoritmo2_stats.tiempo_ejecucion * 10),
+                                    100 - (data.algoritmo2_stats.memoria_usada * 2)
+                                ],
+                                borderColor: 'rgb(54, 162, 235)',
+                                backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                                pointBackgroundColor: 'rgb(54, 162, 235)',
+                                pointBorderColor: '#fff',
+                                pointHoverBackgroundColor: '#fff',
+                                pointHoverBorderColor: 'rgb(54, 162, 235)'
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            r: {
+                                beginAtZero: true,
+                                max: 100
+                            }
+                        }
+                    }
+                });
+                
+                console.log('🔍 DEBUG FRONTEND: Chart creado exitosamente');
+                
+                // Show results
+                document.getElementById('comparisonResults').style.display = 'block';
+                console.log('✅ DEBUG FRONTEND: Resultados mostrados correctamente');
+            } catch (error) {
+                console.error('❌ DEBUG FRONTEND: Error al crear chart:', error);
+                alert('Error al crear el gráfico: ' + error.message);
+            }
+        }
+
+        // Logout function
+        function confirmLogout() {
+            if (confirm('¿Estás seguro de que quieres cerrar sesión?')) {
+                window.location.href = '/accounts/logout/';
+            }
+        }
+    </script>
+</body>
+</html>

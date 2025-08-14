@@ -33,9 +33,14 @@
 
         <!-- Main Content -->
         <div class="col-md-10 main-content">
-            <div class="content-header">
-                <h2>Consulta de Rutas Guardadas</h2>
-                <p>Accede a los datos del mapa calculado almacenados en la base de datos</p>
+            <div class="content-header d-flex justify-content-between align-items-center">
+                <div>
+                    <h2>Consulta de Rutas Guardadas</h2>
+                    <p>Accede a los datos del mapa calculado almacenados en la base de datos</p>
+                </div>
+                <button class="btn btn-danger" onclick="confirmLogout()" title="Cerrar Sesión">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </button>
             </div>
 
             <!-- Messages -->
@@ -189,88 +194,276 @@ function initMap() {
 
 // Load route data
 function loadRouteData(configuracionId) {
-    fetch(`/accounts/obtener_mapa_calculado/?configuracion_id=${configuracionId}`)
-        .then(response => response.json())
+    console.log('🔄 Cargando datos para configuración ID:', configuracionId);
+    
+    if (!configuracionId) {
+        console.error('❌ No se proporcionó configuracion_id');
+        alert('Error: No se seleccionó una configuración válida');
+        return;
+    }
+    
+    const url = `/accounts/obtener_mapa_calculado/?configuracion_id=${configuracionId}`;
+    console.log('📤 Haciendo fetch a:', url);
+    
+    fetch(url)
+        .then(response => {
+            console.log('📥 Response status:', response.status);
+            console.log('📥 Response headers:', response.headers);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+            return response.json();
+        })
         .then(data => {
+            console.log('📊 Datos recibidos:', data);
+            
             if (data.success) {
-                displayMap(data.mapa_calculado);
-                displayEmployeeInfo(data.empleados_info);
+                console.log('✅ Datos válidos, mostrando mapa y empleados');
+                console.log('🗺️ mapa_calculado presente:', !!data.mapa_calculado);
+                console.log('👥 empleados_info presente:', !!data.empleados_info);
+                
+                try {
+                    displayMap(data.mapa_calculado);
+                    console.log('✅ Mapa mostrado correctamente');
+                } catch (error) {
+                    console.error('❌ Error al mostrar mapa:', error);
+                }
+                
+                try {
+                    displayEmployeeInfo(data.empleados_info);
+                    console.log('✅ Información de empleados mostrada correctamente');
+                } catch (error) {
+                    console.error('❌ Error al mostrar empleados:', error);
+                }
             } else {
-                alert('Error: ' + data.error);
+                console.error('❌ Error en respuesta del servidor:', data.error);
+                alert('Error del servidor: ' + (data.error || 'Error desconocido'));
             }
         })
         .catch(error => {
-            console.error('Error:', error);
-            alert('Error al cargar los datos de la ruta');
+            console.error('❌ Error en fetch completo:', error);
+            console.error('❌ Error stack:', error.stack);
+            alert('Error al cargar los datos de la ruta: ' + error.message);
         });
 }
 
 // Display map with routes
 function displayMap(mapaCalculado) {
-    initMap();
+    console.log('🗺️ Iniciando displayMap');
+    console.log('📊 mapaCalculado recibido:', mapaCalculado);
+    
+    try {
+        initMap();
+        console.log('✅ Mapa reinicializado');
+    } catch (error) {
+        console.error('❌ Error al inicializar mapa:', error);
+        return;
+    }
+    
+    if (!mapaCalculado) {
+        console.warn('⚠️ No hay datos de mapa disponibles');
+        return;
+    }
     
     // Add polygon
     if (mapaCalculado.poligono_colonia) {
-        L.geoJSON(mapaCalculado.poligono_colonia, {
-            style: {
-                color: '#ff7800',
-                weight: 2,
-                fillOpacity: 0.1
-            }
-        }).addTo(map);
+        try {
+            console.log('🔶 Agregando polígono de colonia');
+            L.geoJSON(mapaCalculado.poligono_colonia, {
+                style: {
+                    color: '#ff7800',
+                    weight: 2,
+                    fillOpacity: 0.1
+                }
+            }).addTo(map);
+            console.log('✅ Polígono agregado correctamente');
+        } catch (error) {
+            console.error('❌ Error al agregar polígono:', error);
+        }
+    } else {
+        console.warn('⚠️ No hay polígono de colonia disponible');
     }
     
     // Add routes
-    if (mapaCalculado.rutas) {
+    if (mapaCalculado.rutas && mapaCalculado.rutas.length > 0) {
+        console.log(`🛣️ Agregando ${mapaCalculado.rutas.length} rutas al mapa`);
+        
         mapaCalculado.rutas.forEach((ruta, index) => {
+            console.log(`📍 Procesando ruta ${index + 1}:`, {
+                empleado_nombre: ruta.empleado_nombre,
+                tiene_puntos: !!(ruta.puntos && ruta.puntos.length > 0),
+                num_puntos: ruta.puntos ? ruta.puntos.length : 0,
+                color: ruta.color_ruta
+            });
+            
             if (ruta.puntos && ruta.puntos.length > 0) {
-                ruta.puntos.forEach(punto => {
-                    if (punto.length >= 2) {
-                        L.polyline(punto, {
-                            color: ruta.color_ruta,
-                            weight: 4,
-                            opacity: 0.8
-                        }).addTo(map);
-                    }
-                });
+                try {
+                    ruta.puntos.forEach((punto, pointIndex) => {
+                        if (punto.length >= 2) {
+                            L.polyline(punto, {
+                                color: ruta.color_ruta || (index === 0 ? '#e74c3c' : '#3498db'),
+                                weight: 4,
+                                opacity: 0.8
+                            }).addTo(map);
+                        } else {
+                            console.warn(`⚠️ Punto ${pointIndex} de ruta ${index + 1} no tiene coordenadas válidas`);
+                        }
+                    });
+                    console.log(`✅ Ruta ${index + 1} agregada correctamente`);
+                } catch (error) {
+                    console.error(`❌ Error al agregar ruta ${index + 1}:`, error);
+                }
+            } else {
+                console.warn(`⚠️ Ruta ${index + 1} no tiene puntos válidos`);
             }
         });
+    } else {
+        console.warn('⚠️ No hay rutas disponibles en mapaCalculado');
     }
     
     // Fit map to bounds
     if (mapaCalculado.centro_colonia) {
-        const center = mapaCalculado.centro_colonia;
-        map.setView([center.center_lat, center.center_lon], 15);
+        try {
+            const center = mapaCalculado.centro_colonia;
+            console.log('📍 Centrando mapa en:', center);
+            
+            if (center.center_lat && center.center_lon) {
+                map.setView([center.center_lat, center.center_lon], 15);
+                console.log('✅ Mapa centrado correctamente');
+            } else {
+                console.warn('⚠️ Centro de colonia sin coordenadas válidas');
+            }
+        } catch (error) {
+            console.error('❌ Error al centrar mapa:', error);
+        }
+    } else {
+        console.warn('⚠️ No hay información de centro de colonia');
     }
+    
+    console.log('✅ displayMap completado');
 }
 
-// Update date display
+// Display employee information
+function displayEmployeeInfo(empleadosInfo) {
+    console.log('Displaying employee info:', empleadosInfo);
+    
+    if (!empleadosInfo || empleadosInfo.length === 0) {
+        console.log('No employee info to display');
+        return;
+    }
+    
+    // Find or create employee info container
+    let employeeContainer = document.querySelector('.employee-info-dynamic');
+    if (!employeeContainer) {
+        // Create a new container if it doesn't exist
+        const mapContainer = document.getElementById('map').parentElement.parentElement;
+        employeeContainer = document.createElement('div');
+        employeeContainer.className = 'col-md-12 mt-3';
+        employeeContainer.innerHTML = `
+            <div class="card">
+                <div class="card-header">
+                    <h5>Información de los empleados asignados</h5>
+                </div>
+                <div class="card-body employee-info-dynamic">
+                    <div class="row" id="employee-cards-container"></div>
+                </div>
+            </div>
+        `;
+        mapContainer.appendChild(employeeContainer);
+        employeeContainer = employeeContainer.querySelector('.employee-info-dynamic');
+    }
+    
+    // Clear existing content
+    const cardsContainer = document.getElementById('employee-cards-container') || employeeContainer;
+    cardsContainer.innerHTML = '';
+    
+    // Add employee cards
+    empleadosInfo.forEach((empleado, index) => {
+        const employeeCard = document.createElement('div');
+        employeeCard.className = 'col-md-6 mb-3';
+        employeeCard.innerHTML = `
+            <div class="card border-primary">
+                <div class="card-body">
+                    <h6 class="card-title">${empleado.username}</h6>
+                    <p class="card-text">
+                        <strong>Email:</strong> ${empleado.email}<br>
+                        <strong>Role:</strong> ${empleado.role}<br>
+                        <strong>ID:</strong> ${empleado.id}
+                    </p>
+                </div>
+            </div>
+        `;
+        cardsContainer.appendChild(employeeCard);
+    });
+}
+
+// Update date display and load route data when selection changes
 document.getElementById('configuracion_id').addEventListener('change', function() {
     const selectedOption = this.options[this.selectedIndex];
     const fechaDiv = document.getElementById('fecha_generacion');
     
     if (this.value) {
         fechaDiv.textContent = selectedOption.getAttribute('data-fecha');
+        // Automatically load the route data when a configuration is selected
+        loadRouteData(this.value);
     } else {
         fechaDiv.textContent = '-';
+        // Clear map and employee info when no configuration is selected
+        if (window.map) {
+            map.eachLayer(layer => {
+                if (layer !== window.baseLayer) {
+                    map.removeLayer(layer);
+                }
+            });
+        }
+        // Clear employee info
+        const employeeContainer = document.querySelector('.employee-info-dynamic');
+        if (employeeContainer) {
+            employeeContainer.innerHTML = '';
+        }
     }
 });
 
 // Initialize map on page load
 document.addEventListener('DOMContentLoaded', function() {
-    initMap();
+    console.log('🚀 Inicializando consultar_rutas_staff');
+    
+    try {
+        initMap();
+        console.log('✅ Mapa inicializado correctamente');
+    } catch (error) {
+        console.error('❌ Error al inicializar mapa:', error);
+    }
     
     {% if configuracion_seleccionada %}
-        loadRouteData({{ configuracion_seleccionada.id }});
+        console.log('🔄 Cargando configuración seleccionada: {{ configuracion_seleccionada.id }}');
+        try {
+            loadRouteData({{ configuracion_seleccionada.id }});
+        } catch (error) {
+            console.error('❌ Error al cargar ruta inicial:', error);
+        }
+    {% else %}
+        console.log('ℹ️ No hay configuración seleccionada inicialmente');
     {% endif %}
-    
+     
     // Add event listener for "Mandar información" button
     const mandarInfoBtn = document.getElementById('mandar-info-btn');
     if (mandarInfoBtn) {
         mandarInfoBtn.addEventListener('click', function() {
-            sendRouteInformation();
+            try {
+                sendRouteInformation();
+            } catch (error) {
+                console.error('❌ Error al enviar información:', error);
+                alert('Error al enviar información de la ruta');
+            }
         });
+    } else {
+        console.log('ℹ️ Botón "Mandar información" no encontrado');
     }
+    
+    console.log('✅ Inicialización completa');
 });
 
 // Function to send route information via email
@@ -389,5 +582,14 @@ function sendRouteInformation() {
     
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    
+    <script>
+        // Función para confirmar logout
+        function confirmLogout() {
+            if (confirm('¿Estás seguro de que quieres cerrar sesión?')) {
+                window.location.href = '/accounts/logout/';
+            }
+        }
+    </script>
 </body>
 </html> 

@@ -480,6 +480,11 @@
             <div class="toolbar-icon" title="Chat">💬</div>
             <div class="toolbar-icon" title="Ayuda">❓</div>
             <div class="toolbar-icon" title="Nuevo">➕</div>
+            
+            <!-- Logout al final -->
+            <div style="margin-top: auto;">
+                <div class="toolbar-icon" title="Cerrar Sesión" style="background: #e74c3c;">🚪</div>
+            </div>
         </div>
         
         <!-- Panel superior -->
@@ -1177,10 +1182,22 @@
             document.getElementById('mandar-info-btn').addEventListener('click', sendInformation);
             
             // Toolbar
-            document.querySelectorAll('.toolbar-icon').forEach(icon => {
+            document.querySelectorAll('.toolbar-icon').forEach((icon, index) => {
                 icon.addEventListener('click', function() {
                     document.querySelectorAll('.toolbar-icon').forEach(i => i.classList.remove('active'));
                     this.classList.add('active');
+                    
+                    // Funcionalidad específica para cada ícono
+                    const title = this.getAttribute('title');
+                    if (title === 'Chat') {
+                        // Redirigir al dashboard de chats
+                        window.location.href = '/accounts/chat_dashboard/';
+                    } else if (title === 'Cerrar Sesión') {
+                        // Confirmar logout
+                        if (confirm('¿Estás seguro de que quieres cerrar sesión?')) {
+                            window.location.href = '/accounts/logout/';
+                        }
+                    }
                 });
             });
         });

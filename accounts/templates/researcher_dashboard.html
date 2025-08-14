@@ -2,10 +2,452 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Dashboard Researcher</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Researcher Dashboard - Análisis de Algoritmos</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .dashboard-container {
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .main-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .main-header h1 {
+            margin: 0;
+            font-size: 2.5rem;
+            font-weight: bold;
+        }
+        
+        .stats-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #3498db;
+        }
+        
+        .stat-label {
+            color: #6c757d;
+            font-size: 0.9rem;
+            margin-top: 5px;
+        }
+        
+        .analysis-panel {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 25px;
+            margin-bottom: 20px;
+        }
+        
+        .panel-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e9ecef;
+        }
+        
+        .panel-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin: 0;
+        }
+        
+        .algorithm-controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr auto;
+            gap: 15px;
+            align-items: end;
+            margin-bottom: 20px;
+        }
+        
+        .metrics-display {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .metric-box {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #3498db;
+        }
+        
+        .metric-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .metric-label {
+            font-size: 0.85rem;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+        
+        .logout-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+        
+        .loading-spinner {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .loading-spinner.show {
+            display: block;
+        }
+    </style>
 </head>
 <body>
-    <h2>Bienvenido, Researcher</h2>
-    <p>Este es el dashboard del investigador.</p>
+    <!-- Logout Button -->
+    <button class="btn btn-danger logout-btn" onclick="confirmLogout()">
+        <i class="fas fa-sign-out-alt"></i> Logout
+    </button>
+
+    <div class="dashboard-container">
+        <!-- Header -->
+        <div class="main-header">
+            <h1><i class="fas fa-microscope"></i> Researcher Dashboard</h1>
+            <p class="mb-0">Análisis de Eficiencia del Algoritmo de División de Rutas</p>
+            <small>Usuario: {{ researcher_user.username }} | Última actualización: <span id="lastUpdate"></span></small>
+            <div class="mt-3">
+                <a href="{% url 'comparacion_algoritmos_dashboard' %}" class="btn btn-outline-light">
+                    <i class="fas fa-chart-line"></i> Dashboard de Comparación
+                </a>
+            </div>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="stats-cards">
+            <div class="stat-card">
+                <div class="stat-number">{{ total_rutas }}</div>
+                <div class="stat-label">Rutas Analizadas</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">{{ total_colonias }}</div>
+                <div class="stat-label">Colonias Procesadas</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">{{ promedio_tiempo }}s</div>
+                <div class="stat-label">Tiempo Promedio</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="totalEjecuciones">0</div>
+                <div class="stat-label">Ejecuciones Hoy</div>
+            </div>
+        </div>
+
+        <!-- Analysis Panel -->
+        <div class="analysis-panel">
+            <div class="panel-header">
+                <h3 class="panel-title">
+                    <i class="fas fa-play-circle"></i> Ejecutar Análisis del Algoritmo
+                </h3>
+            </div>
+            
+            <div class="algorithm-controls">
+                <div>
+                    <label for="coloniaSelect" class="form-label">Seleccionar Colonia</label>
+                    <select class="form-select" id="coloniaSelect">
+                        <option value="">Selecciona una colonia...</option>
+                        {% for colonia_data in colonias_data %}
+                        <option value="{{ colonia_data.colonia.id }}" data-nombre="{{ colonia_data.colonia.nombre }}">
+                            {{ colonia_data.colonia.nombre }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label for="numEmpleados" class="form-label">Número de Empleados</label>
+                    <select class="form-select" id="numEmpleados">
+                        <option value="2">2 Empleados</option>
+                        <option value="3">3 Empleados</option>
+                        <option value="4">4 Empleados</option>
+                        <option value="5">5 Empleados</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="algoritmoTipo" class="form-label">Algoritmo</label>
+                    <select class="form-select" id="algoritmoTipo">
+                        <option value="current">Algoritmo Actual</option>
+                        <option value="kmeans">K-Means Clustering</option>
+                        <option value="voronoi">Voronoi Diagram</option>
+                        <option value="random">División Aleatoria</option>
+                        <option value="dbscan">DBSCAN Clustering</option>
+                        <option value="spectral">Spectral Clustering</option>
+                    </select>
+                </div>
+                <div>
+                    <button class="btn btn-primary btn-lg" id="ejecutarAnalisis">
+                        <i class="fas fa-rocket"></i> Ejecutar
+                    </button>
+                </div>
+            </div>
+
+            <!-- Loading Spinner -->
+            <div class="loading-spinner" id="loadingSpinner">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Analizando...</span>
+                </div>
+                <p class="mt-2">Ejecutando análisis del algoritmo...</p>
+            </div>
+
+            <!-- Results Display -->
+            <div id="analysisResults" style="display: none;">
+                <h5 id="resultTitle">Resultados del Análisis</h5>
+                
+                <!-- Performance Metrics -->
+                <div class="metrics-display">
+                    <div class="metric-box">
+                        <div class="metric-value" id="tiempoEjecucion">-</div>
+                        <div class="metric-label">⏱️ Tiempo de Ejecución (s)</div>
+                    </div>
+                    <div class="metric-box">
+                        <div class="metric-value" id="memoriaUsada">-</div>
+                        <div class="metric-label">💾 Memoria Usada (MB)</div>
+                    </div>
+                    <div class="metric-box">
+                        <div class="metric-value" id="balanceZonas">-</div>
+                        <div class="metric-label">⚖️ Balance de Zonas (%)</div>
+                    </div>
+                    <div class="metric-box">
+                        <div class="metric-value" id="eficienciaRutas">-</div>
+                        <div class="metric-label">🛣️ Eficiencia de Rutas (%)</div>
+                    </div>
+                </div>
+
+                <!-- Quality Metrics Progress Bars -->
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label>Equidad de Cargas</label>
+                        <div class="progress">
+                            <div class="progress-bar bg-success" id="progressEquidad" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label>Compacidad</label>
+                        <div class="progress">
+                            <div class="progress-bar bg-info" id="progressCompacidad" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Generated Zones -->
+                <h6 class="mt-4 mb-3">Zonas Generadas</h6>
+                <div class="row" id="zonasGeneradas">
+                    <!-- Zones will be populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // CSRF Token
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🔬 Inicializando Researcher Dashboard');
+            
+            // Update timestamp
+            document.getElementById('lastUpdate').textContent = new Date().toLocaleString();
+            
+            // Event listeners
+            document.getElementById('ejecutarAnalisis').addEventListener('click', ejecutarAnalisis);
+            
+            console.log('✅ Dashboard inicializado correctamente');
+        });
+
+        // Execute algorithm analysis
+        function ejecutarAnalisis() {
+            const coloniaId = document.getElementById('coloniaSelect').value;
+            const numEmpleados = document.getElementById('numEmpleados').value;
+            const algoritmoTipo = document.getElementById('algoritmoTipo').value;
+            
+            if (!coloniaId) {
+                alert('Por favor selecciona una colonia');
+                return;
+            }
+            
+            console.log('🚀 Ejecutando análisis:', { coloniaId, numEmpleados, algoritmoTipo });
+            
+            // Show loading
+            document.getElementById('loadingSpinner').classList.add('show');
+            document.getElementById('analysisResults').style.display = 'none';
+            
+            fetch('/accounts/api/analizar_algoritmo/', {
+                method: 'POST',
+                body: JSON.stringify({
+                    'colonia_id': coloniaId,
+                    'num_empleados': parseInt(numEmpleados),
+                    'algoritmo_tipo': algoritmoTipo
+                }),
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('📊 Resultados recibidos:', data);
+                
+                if (data.success) {
+                    displayAnalysisResults(data);
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            })
+            .catch(error => {
+                console.error('❌ Error en análisis:', error);
+                alert('Error de conexión');
+            })
+            .finally(() => {
+                document.getElementById('loadingSpinner').classList.remove('show');
+            });
+        }
+
+        // Display analysis results
+        function displayAnalysisResults(data) {
+            console.log('📈 Mostrando resultados de análisis');
+            
+            // Update result title
+            document.getElementById('resultTitle').textContent = 
+                `Resultados: ${data.colonia_nombre} - ${data.algoritmo_usado.toUpperCase()}`;
+            
+            // Update performance metrics
+            document.getElementById('tiempoEjecucion').textContent = data.metricas_performance.tiempo_ejecucion;
+            document.getElementById('memoriaUsada').textContent = data.metricas_performance.memoria_usada;
+            document.getElementById('balanceZonas').textContent = data.metricas_calidad.balance_zonas + '%';
+            document.getElementById('eficienciaRutas').textContent = data.metricas_calidad.eficiencia_rutas + '%';
+            
+            // Update progress bars
+            document.getElementById('progressEquidad').style.width = data.metricas_calidad.equidad_cargas + '%';
+            document.getElementById('progressEquidad').textContent = data.metricas_calidad.equidad_cargas + '%';
+            
+            document.getElementById('progressCompacidad').style.width = data.metricas_calidad.compacidad + '%';
+            document.getElementById('progressCompacidad').textContent = data.metricas_calidad.compacidad + '%';
+            
+            // Display generated zones
+            const zonasContainer = document.getElementById('zonasGeneradas');
+            zonasContainer.innerHTML = '';
+            
+            data.zonas_generadas.forEach(zona => {
+                const zoneCard = document.createElement('div');
+                zoneCard.className = 'col-md-6 col-lg-4 mb-3';
+                zoneCard.innerHTML = `
+                    <div class="card">
+                        <div class="card-header bg-primary text-white">
+                            <h6 class="mb-0">Zona ${zona.zona}</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Área:</span>
+                                <span>${zona.area_km2} km²</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Puntos:</span>
+                                <span>${zona.puntos_asignados}</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Tiempo Est.:</span>
+                                <span>${zona.tiempo_estimado}h</span>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <span>Dificultad:</span>
+                                <span><span class="badge ${getDifficultyClass(zona.dificultad)}">${zona.dificultad}</span></span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                zonasContainer.appendChild(zoneCard);
+            });
+            
+            // Show results
+            document.getElementById('analysisResults').style.display = 'block';
+            
+            console.log('✅ Resultados mostrados correctamente');
+        }
+
+        // Helper function for difficulty class
+        function getDifficultyClass(dificultad) {
+            switch(dificultad.toLowerCase()) {
+                case 'baja': return 'bg-success';
+                case 'media': return 'bg-warning';
+                case 'alta': return 'bg-danger';
+                default: return 'bg-secondary';
+            }
+        }
+
+        // Logout function
+        function confirmLogout() {
+            if (confirm('¿Estás seguro de que quieres cerrar sesión?')) {
+                window.location.href = '/accounts/logout/';
+            }
+        }
+    </script>
 </body>
 </html> 

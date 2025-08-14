@@ -8,6 +8,7 @@ from .views import (user_login,
                     staff_dashboard, 
                     employee_dashboard, 
                     researcher_dashboard, 
+                    comparacion_algoritmos_dashboard,
                     admin_map_dashboard, 
                     guardar_poligono_colonia, 
                     cargar_colonia_existente, 
@@ -20,7 +21,17 @@ from .views import (user_login,
                     consultar_rutas_staff,
                     obtener_mapa_calculado,
                     enviar_rutas_por_email,
-                    enviar_rutas_desde_dashboard)
+                    enviar_rutas_desde_dashboard,
+                    obtener_ruta_empleado,
+                    obtener_mensajes_chat,
+                    enviar_mensaje_chat,
+                    verificar_mensajes_nuevos,
+                    chat_dashboard,
+                    user_logout,
+                    researcher_dashboard,
+                    analizar_algoritmo,
+                    comparar_algoritmos,
+                    obtener_historico_algoritmo)
 
 urlpatterns = [
     path('login/', user_login, name='user_login'),
@@ -43,4 +54,23 @@ urlpatterns = [
     path('obtener_mapa_calculado/', obtener_mapa_calculado, name='obtener_mapa_calculado'),
     path('enviar_rutas_por_email/', enviar_rutas_por_email, name='enviar_rutas_por_email'),
     path('enviar_rutas_desde_dashboard/', enviar_rutas_desde_dashboard, name='enviar_rutas_desde_dashboard'),
+    path('obtener_ruta_empleado/', obtener_ruta_empleado, name='obtener_ruta_empleado'),
+    
+    # URLs del sistema de chat
+    path('chat/obtener_mensajes/', obtener_mensajes_chat, name='obtener_mensajes_chat'),
+    path('chat/enviar_mensaje/', enviar_mensaje_chat, name='enviar_mensaje_chat'),
+    path('chat/verificar_nuevos/', verificar_mensajes_nuevos, name='verificar_mensajes_nuevos'),
+    
+    # Dashboard de chats del staff
+    path('chat_dashboard/', chat_dashboard, name='chat_dashboard'),
+    
+    # Logout
+    path('logout/', user_logout, name='user_logout'),
+    
+    # URLs del researcher
+    path('researcher_dashboard/', researcher_dashboard, name='researcher_dashboard'),
+    path('comparacion_algoritmos/', comparacion_algoritmos_dashboard, name='comparacion_algoritmos_dashboard'),
+    path('api/analizar_algoritmo/', analizar_algoritmo, name='analizar_algoritmo'),
+    path('api/comparar_algoritmos/', comparar_algoritmos, name='comparar_algoritmos'),
+    path('api/obtener_historico/', obtener_historico_algoritmo, name='obtener_historico_algoritmo'),
 ]

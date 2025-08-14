@@ -32,8 +32,13 @@
 <body>
 <div class="container">
     <div class="header">
-        <h1>ADMIN</h1>
-        <h2>Creación de polígonos</h2>
+        <div>
+            <h1>ADMIN</h1>
+            <h2>Creación de polígonos</h2>
+        </div>
+        <button type="button" onclick="confirmLogout()" style="background: #dc3545; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 14px;">
+            <span style="margin-right: 5px;">🚪</span> Logout
+        </button>
     </div>
     
     {% if success %}
@@ -431,6 +436,13 @@
             });
         }
     });
+
+    // Función para confirmar logout
+    function confirmLogout() {
+        if (confirm('¿Estás seguro de que quieres cerrar sesión?')) {
+            window.location.href = '/accounts/logout/';
+        }
+    }
 </script>
 </body>
 </html>

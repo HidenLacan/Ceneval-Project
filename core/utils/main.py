@@ -48,23 +48,326 @@ def download_bbox(place_name: str):
 
     return cache_file
 
-def split_graph(G, num_employees=2):
+def split_graph(G, num_employees=2, algorithm='kernighan_lin'):
     """
-    Divide el grafo en zonas según el número de empleados
+    Divide el grafo en zonas según el número de empleados y algoritmo especificado
     - Si num_employees = 1: toda la ruta va a part1
-    - Si num_employees >= 2: divide en dos usando kernighan_lin_bisection
+    - Si num_employees >= 2: divide en dos usando el algoritmo especificado
     """
-    print(f"Dividiendo grafo para {num_employees} empleado(s)...")
+    print("=" * 60)
+    print(f"🚀 INICIANDO DIVISIÓN DE GRAFO")
+    print(f"📊 Grafo: {len(G.nodes())} nodos, {len(G.edges())} aristas")
+    print(f"👥 Empleados: {num_employees}")
+    print(f"🔧 Algoritmo solicitado: '{algorithm}'")
+    print("=" * 60)
     
     if num_employees == 1:
         # Si solo hay un empleado, asignar toda la ruta
         part1 = set(G.nodes())
         part2 = set()  # Vacío
-        print("✅ Asignando toda la ruta al empleado único")
-    else:
-        # Si hay múltiples empleados, dividir en dos
+        print("✅ MODO UN EMPLEADO: Asignando toda la ruta al empleado único")
+        print(f"📈 Resultado: part1={len(part1)} nodos, part2={len(part2)} nodos")
+        return part1, part2
+    
+    print(f"🔄 MODO MÚLTIPLES EMPLEADOS: Ejecutando algoritmo '{algorithm}'")
+    
+    # Algoritmos de división para múltiples empleados
+    if algorithm == 'kernighan_lin' or algorithm == 'current':
+        print("🔥 EJECUTANDO ALGORITMO KERNIGHAN-LIN REAL")
         part1, part2 = kernighan_lin_bisection(G)
-        print(f"✅ Dividiendo ruta en dos zonas: {len(part1)} y {len(part2)} nodos")
+        print(f"✅ Kernighan-Lin completado: {len(part1)} y {len(part2)} nodos")
+    
+    elif algorithm == 'kmeans':
+        part1, part2 = split_graph_kmeans(G)
+    
+    elif algorithm == 'voronoi':
+        part1, part2 = split_graph_voronoi(G)
+    
+    elif algorithm == 'random':
+        part1, part2 = split_graph_random(G)
+    
+    elif algorithm == 'dbscan':
+        part1, part2 = split_graph_dbscan(G)
+    
+    elif algorithm == 'spectral':
+        part1, part2 = split_graph_spectral(G)
+    
+    else:
+        # Fallback al algoritmo por defecto
+        print(f"⚠️ ALGORITMO DESCONOCIDO '{algorithm}' - Usando Kernighan-Lin como fallback")
+        print("🔥 EJECUTANDO ALGORITMO KERNIGHAN-LIN REAL (FALLBACK)")
+        part1, part2 = kernighan_lin_bisection(G)
+        print(f"✅ Fallback Kernighan-Lin completado: {len(part1)} y {len(part2)} nodos")
+    
+    # Validación final
+    total_original = len(G.nodes())
+    total_dividido = len(part1) + len(part2)
+    if total_original != total_dividido:
+        print(f"❌ ERROR: Nodos perdidos! Original={total_original}, Dividido={total_dividido}")
+    else:
+        print(f"✅ VALIDACIÓN: Todos los nodos contabilizados ({total_dividido}/{total_original})")
+    
+    print("=" * 60)
+    return part1, part2
+
+def split_graph_kmeans(G):
+    """División usando K-means clustering en coordenadas de nodos"""
+    print("🔥 EJECUTANDO ALGORITMO K-MEANS REAL")
+    from sklearn.cluster import KMeans
+    import numpy as np
+    
+    # Extraer coordenadas de los nodos
+    coords = []
+    node_list = list(G.nodes())
+    print(f"📊 K-means procesando {len(node_list)} nodos")
+    
+    for node in node_list:
+        if 'x' in G.nodes[node] and 'y' in G.nodes[node]:
+            coords.append([G.nodes[node]['x'], G.nodes[node]['y']])
+        else:
+            # Si no hay coordenadas, usar posición por defecto
+            coords.append([0, 0])
+    
+    coords = np.array(coords)
+    print(f"📍 K-means: Coordenadas extraídas, forma: {coords.shape}")
+    
+    # Aplicar K-means con k=2
+    print("🎯 K-means: Ejecutando clustering con k=2...")
+    kmeans = KMeans(n_clusters=2, random_state=42, n_init=10)
+    labels = kmeans.fit_predict(coords)
+    
+    # Dividir nodos según las etiquetas
+    part1 = set()
+    part2 = set()
+    
+    for i, node in enumerate(node_list):
+        if labels[i] == 0:
+            part1.add(node)
+        else:
+            part2.add(node)
+    
+    print(f"✅ K-means completado: Cluster 1 = {len(part1)} nodos, Cluster 2 = {len(part2)} nodos")
+    print(f"📈 K-means: Centros = {kmeans.cluster_centers_}")
+    
+    return part1, part2
+
+def split_graph_voronoi(G):
+    """División usando diagramas de Voronoi basados en centros de masa"""
+    print("🔥 EJECUTANDO ALGORITMO VORONOI REAL")
+    import numpy as np
+    from scipy.spatial.distance import cdist
+    
+    # Extraer coordenadas de los nodos
+    coords = []
+    node_list = list(G.nodes())
+    print(f"📊 Voronoi procesando {len(node_list)} nodos")
+    
+    for node in node_list:
+        if 'x' in G.nodes[node] and 'y' in G.nodes[node]:
+            coords.append([G.nodes[node]['x'], G.nodes[node]['y']])
+        else:
+            coords.append([0, 0])
+    
+    coords = np.array(coords)
+    print(f"📍 Voronoi: Coordenadas extraídas, forma: {coords.shape}")
+    
+    if len(coords) < 2:
+        print("⚠️ Voronoi: Muy pocos nodos, usando división simple")
+        mid = len(node_list) // 2
+        part1 = set(node_list[:mid])
+        part2 = set(node_list[mid:])
+        return part1, part2
+    
+    # Encontrar dos puntos extremos como semillas de Voronoi
+    print("🎯 Voronoi: Calculando matriz de distancias...")
+    distances = cdist(coords, coords)
+    i, j = np.unravel_index(distances.argmax(), distances.shape)
+    
+    seed1 = coords[i]
+    seed2 = coords[j]
+    max_distance = distances[i, j]
+    
+    print(f"🌱 Voronoi: Semillas seleccionadas - Seed1: {seed1}, Seed2: {seed2}")
+    print(f"📏 Voronoi: Distancia máxima entre semillas: {max_distance:.2f}")
+    
+    # Asignar cada nodo al centro más cercano (Voronoi)
+    part1 = set()
+    part2 = set()
+    
+    for idx, node in enumerate(node_list):
+        coord = coords[idx]
+        dist1 = np.linalg.norm(coord - seed1)
+        dist2 = np.linalg.norm(coord - seed2)
+        
+        if dist1 <= dist2:
+            part1.add(node)
+        else:
+            part2.add(node)
+    
+    print(f"✅ Voronoi completado: Región 1 = {len(part1)} nodos, Región 2 = {len(part2)} nodos")
+    
+    return part1, part2
+
+def split_graph_random(G):
+    """División aleatoria pero balanceada de los nodos"""
+    print("🔥 EJECUTANDO ALGORITMO RANDOM REAL")
+    import random
+    
+    node_list = list(G.nodes())
+    print(f"📊 Random procesando {len(node_list)} nodos")
+    
+    # Establecer semilla para reproducibilidad en logs
+    random.seed(42)
+    print("🎲 Random: Mezclando nodos aleatoriamente con semilla=42")
+    random.shuffle(node_list)  # Mezclar aleatoriamente
+    
+    # Dividir aproximadamente por la mitad
+    mid = len(node_list) // 2
+    part1 = set(node_list[:mid])
+    part2 = set(node_list[mid:])
+    
+    print(f"✅ Random completado: Parte 1 = {len(part1)} nodos, Parte 2 = {len(part2)} nodos")
+    print(f"📝 Random: División en índice {mid} de {len(node_list)} nodos totales")
+    
+    return part1, part2
+
+def split_graph_dbscan(G):
+    """División usando DBSCAN clustering basado en densidad"""
+    print("🔥 EJECUTANDO ALGORITMO DBSCAN REAL")
+    from sklearn.cluster import DBSCAN
+    import numpy as np
+    from sklearn.preprocessing import StandardScaler
+    
+    # Extraer coordenadas de los nodos
+    coords = []
+    node_list = list(G.nodes())
+    print(f"📊 DBSCAN procesando {len(node_list)} nodos")
+    
+    for node in node_list:
+        if 'x' in G.nodes[node] and 'y' in G.nodes[node]:
+            coords.append([G.nodes[node]['x'], G.nodes[node]['y']])
+        else:
+            # Si no hay coordenadas, usar posición por defecto
+            coords.append([0, 0])
+    
+    coords = np.array(coords)
+    print(f"📍 DBSCAN: Coordenadas extraídas, forma: {coords.shape}")
+    
+    # Normalizar coordenadas para mejor rendimiento de DBSCAN
+    scaler = StandardScaler()
+    coords_scaled = scaler.fit_transform(coords)
+    print(f"📏 DBSCAN: Coordenadas normalizadas")
+    
+    # Calcular eps automáticamente basado en la densidad de datos
+    from sklearn.neighbors import NearestNeighbors
+    nbrs = NearestNeighbors(n_neighbors=min(5, len(coords_scaled))).fit(coords_scaled)
+    distances, indices = nbrs.kneighbors(coords_scaled)
+    eps = np.percentile(distances[:, -1], 75)  # 75th percentile
+    min_samples = max(3, len(coords_scaled) // 20)  # Al menos 3, máximo 5% de datos
+    
+    print(f"🎯 DBSCAN: eps={eps:.4f}, min_samples={min_samples}")
+    
+    # Aplicar DBSCAN
+    print("🎯 DBSCAN: Ejecutando clustering basado en densidad...")
+    dbscan = DBSCAN(eps=eps, min_samples=min_samples)
+    labels = dbscan.fit_predict(coords_scaled)
+    
+    # Analizar resultados
+    unique_labels = set(labels)
+    n_clusters = len(unique_labels) - (1 if -1 in labels else 0)
+    n_noise = list(labels).count(-1)
+    
+    print(f"📊 DBSCAN: {n_clusters} clusters detectados, {n_noise} puntos de ruido")
+    
+    # Si DBSCAN detecta más de 2 clusters, usar K-means como fallback
+    if n_clusters > 2:
+        print("⚠️ DBSCAN detectó más de 2 clusters, usando K-means como fallback")
+        return split_graph_kmeans(G)
+    
+    # Si DBSCAN detecta solo 1 cluster, dividir manualmente
+    if n_clusters == 1:
+        print("⚠️ DBSCAN detectó solo 1 cluster, dividiendo manualmente")
+        mid = len(node_list) // 2
+        part1 = set(node_list[:mid])
+        part2 = set(node_list[mid:])
+    else:
+        # Dividir nodos según las etiquetas de DBSCAN
+        part1 = set()
+        part2 = set()
+        
+        for i, node in enumerate(node_list):
+            if labels[i] == 0:
+                part1.add(node)
+            elif labels[i] == 1:
+                part2.add(node)
+            else:
+                # Puntos de ruido (-1) se asignan al cluster más cercano
+                if len(part1) <= len(part2):
+                    part1.add(node)
+                else:
+                    part2.add(node)
+    
+    print(f"✅ DBSCAN completado: Cluster 1 = {len(part1)} nodos, Cluster 2 = {len(part2)} nodos")
+    print(f"📈 DBSCAN: Clusters detectados = {n_clusters}, Puntos de ruido = {n_noise}")
+    
+    return part1, part2
+
+def split_graph_spectral(G):
+    """División usando Spectral Clustering basado en conectividad"""
+    print("🔥 EJECUTANDO ALGORITMO SPECTRAL CLUSTERING REAL")
+    from sklearn.cluster import SpectralClustering
+    import numpy as np
+    from sklearn.metrics.pairwise import rbf_kernel
+    
+    # Extraer coordenadas de los nodos
+    coords = []
+    node_list = list(G.nodes())
+    print(f"📊 Spectral Clustering procesando {len(node_list)} nodos")
+    
+    for node in node_list:
+        if 'x' in G.nodes[node] and 'y' in G.nodes[node]:
+            coords.append([G.nodes[node]['x'], G.nodes[node]['y']])
+        else:
+            # Si no hay coordenadas, usar posición por defecto
+            coords.append([0, 0])
+    
+    coords = np.array(coords)
+    print(f"📍 Spectral: Coordenadas extraídas, forma: {coords.shape}")
+    
+    # Si hay muy pocos nodos, usar K-means como fallback
+    if len(coords) < 10:
+        print("⚠️ Spectral: Muy pocos nodos, usando K-means como fallback")
+        return split_graph_kmeans(G)
+    
+    # Calcular matriz de similitud usando kernel RBF
+    print("🎯 Spectral: Calculando matriz de similitud...")
+    gamma = 1.0 / (coords.var() * coords.shape[1])  # Parámetro gamma automático
+    affinity_matrix = rbf_kernel(coords, gamma=gamma)
+    
+    print(f"📊 Spectral: Matriz de similitud calculada, gamma={gamma:.4f}")
+    
+    # Aplicar Spectral Clustering
+    print("🎯 Spectral: Ejecutando clustering espectral...")
+    spectral = SpectralClustering(
+        n_clusters=2,
+        affinity='precomputed',
+        random_state=42,
+        assign_labels='kmeans'
+    )
+    labels = spectral.fit_predict(affinity_matrix)
+    
+    # Dividir nodos según las etiquetas
+    part1 = set()
+    part2 = set()
+    
+    for i, node in enumerate(node_list):
+        if labels[i] == 0:
+            part1.add(node)
+        else:
+            part2.add(node)
+    
+    print(f"✅ Spectral Clustering completado: Cluster 1 = {len(part1)} nodos, Cluster 2 = {len(part2)} nodos")
+    print(f"📈 Spectral: Eigenvalores calculados, clusters asignados")
     
     return part1, part2
 
@@ -97,6 +400,42 @@ def calcular_area_por_zona(G, part1, part2):
         return hull.area / 1_000_000 if hull.area else 0
     return area_de_particion(part1), area_de_particion(part2)
 
+def generate_route_js(G, part1, part2):
+    """Genera el JavaScript para las rutas del mapa"""
+    js_lines = []
+    
+    # Generar rutas para zona 1 (roja)
+    route1_segments = []
+    for u, v, data in G.edges(data=True):
+        if u in part1 and v in part1:
+            if 'geometry' in data:
+                coords = [[pt[1], pt[0]] for pt in data['geometry'].coords]  # [lat, lon] para Leaflet
+            else:
+                coords = [[G.nodes[u]['y'], G.nodes[u]['x']], [G.nodes[v]['y'], G.nodes[v]['x']]]
+            route1_segments.append(coords)
+    
+    if route1_segments:
+        js_lines.append("// Ruta zona 1 (roja)")
+        for i, segment in enumerate(route1_segments):
+            js_lines.append(f"L.polyline({segment}, {{color: 'red', weight: 3, opacity: 0.7}}).addTo(map);")
+    
+    # Generar rutas para zona 2 (azul)
+    route2_segments = []
+    for u, v, data in G.edges(data=True):
+        if u in part2 and v in part2:
+            if 'geometry' in data:
+                coords = [[pt[1], pt[0]] for pt in data['geometry'].coords]  # [lat, lon] para Leaflet
+            else:
+                coords = [[G.nodes[u]['y'], G.nodes[u]['x']], [G.nodes[v]['y'], G.nodes[v]['x']]]
+            route2_segments.append(coords)
+    
+    if route2_segments:
+        js_lines.append("// Ruta zona 2 (azul)")
+        for i, segment in enumerate(route2_segments):
+            js_lines.append(f"L.polyline({segment}, {{color: 'blue', weight: 3, opacity: 0.7}}).addTo(map);")
+    
+    return "\n        ".join(js_lines)
+
 def draw_graph_folium(G, part1, part2, place_name="colonia", output_html=None):
     print("Generando mapa interactivo con folium...")
     base_mapa_dir = Path(__file__).resolve().parent.parent / "mapas_division"
@@ -124,26 +463,88 @@ def draw_graph_folium(G, part1, part2, place_name="colonia", output_html=None):
 
         folium.PolyLine(coords, color=color, weight=3, opacity=0.7).add_to(m)
 
+    # Guardar el archivo HTML
     m.save(nombre_archivo)
-    return os.path.abspath(nombre_archivo)
+    
+    # Leer el contenido HTML generado y optimizarlo para la base de datos
+    with open(nombre_archivo, 'r', encoding='utf-8') as f:
+        html_content = f.read()
+    
+    # Crear una versión optimizada del HTML para la base de datos
+    # Extraer solo la parte del mapa sin las dependencias externas
+    optimized_html = f"""
+    <div class="folium-map" id="map_{sanitize_filename(place_name)}" style="width: 100%; height: 400px;"></div>
+    <script>
+        // Inicializar mapa
+        var map = L.map("map_{sanitize_filename(place_name)}", {{
+            center: [{centro['y']}, {centro['x']}],
+            zoom: 16,
+            crs: L.CRS.EPSG3857
+        }});
+        
+        // Agregar capa de tiles
+        L.tileLayer("https://tile.openstreetmap.org/{{z}}/{{x}}/{{y}}.png", {{
+            attribution: "© OpenStreetMap contributors",
+            maxZoom: 19
+        }}).addTo(map);
+        
+        // Agregar rutas
+        {generate_route_js(G, part1, part2)}
+    </script>
+    """
+    
+    return {
+        'file_path': os.path.abspath(nombre_archivo),
+        'html_content': optimized_html
+    }
 
 
 from osmnx.distance import add_edge_lengths
 
-def procesar_poligono_completo(nombre_archivo: str, num_employees=2):
-    ruta = os.path.join("core", "polygons", nombre_archivo)
-    if not os.path.exists(ruta):
-        raise FileNotFoundError(f"No se encontró el archivo: {ruta}")
+def procesar_poligono_completo(colonia_id: int, num_employees=2, algorithm='kernighan_lin'):
+    """
+    Procesa un polígono usando datos de la base de datos en lugar de archivos físicos
+    """
+    print("🎯" + "=" * 70)
+    print(f"🌟 PROCESAMIENTO COMPLETO DE POLÍGONO INICIADO")
+    print(f"🆔 Colonia ID: {colonia_id}")
+    print(f"👥 Empleados: {num_employees}")
+    print(f"🔧 Algoritmo: {algorithm}")
+    print("🎯" + "=" * 70)
+    
+    # Importar modelos de Django
+    try:
+        from core.models import ColoniaProcesada
+    except ImportError:
+        print("❌ Error importing Django models")
+        raise
+    
+    try:
+        print(f"🔍 Buscando colonia con ID: {colonia_id}")
+        colonia = ColoniaProcesada.objects.get(id=colonia_id)
+        print(f"✅ Colonia encontrada: {colonia.nombre}")
+        
+        if not colonia.poligono_geojson:
+            print(f"❌ POLÍGONO NO ENCONTRADO en la base de datos para: {colonia.nombre}")
+            raise FileNotFoundError(f"No se encontró polígono GeoJSON para la colonia: {colonia.nombre}")
+        
+        print(f"✅ Polígono GeoJSON encontrado en base de datos")
+        geojson = colonia.poligono_geojson
+        
+    except ColoniaProcesada.DoesNotExist:
+        print(f"❌ COLONIA NO ENCONTRADA con ID: {colonia_id}")
+        raise FileNotFoundError(f"No se encontró la colonia con ID: {colonia_id}")
 
-    with open(ruta, "r", encoding="utf-8") as f:
-        geojson = json.load(f)
-
+    print(f"🗺️ Convirtiendo geometría y descargando grafo de calles...")
     geometry = shape(geojson["geometry"])
     G = ox.graph_from_polygon(geometry, network_type='walk')
     G = add_edge_lengths(G)
     G = nx.Graph(G)  # convertir a grafo no dirigido
+    
+    print(f"🏗️ Grafo construido: {len(G.nodes())} nodos, {len(G.edges())} aristas")
+    print(f"🚀 Iniciando división con algoritmo '{algorithm}'...")
 
-    part1, part2 = split_graph(G, num_employees)
+    part1, part2 = split_graph(G, num_employees, algorithm)
     
     long1, long2 = calcular_longitud_por_zona(G, part1, part2)
     area1, area2 = calcular_area_por_zona(G, part1, part2)
@@ -153,7 +554,7 @@ def procesar_poligono_completo(nombre_archivo: str, num_employees=2):
     dens_calles1 = long1 / area1 if area1 else 0
     dens_calles2 = long2 / area2 if area2 else 0
 
-    mapa_path = draw_graph_folium(G, part1, part2, place_name=nombre_archivo.replace(".json", ""))
+    mapa_result = draw_graph_folium(G, part1, part2, place_name=f"colonia_{colonia_id}")
 
 
        
@@ -178,7 +579,8 @@ def procesar_poligono_completo(nombre_archivo: str, num_employees=2):
 
     return {
         "status": "ok",
-        "mapa_html": mapa_path,
+        "mapa_html": mapa_result['file_path'],
+        "mapa_html_content": mapa_result['html_content'],
         "nodos": {
             "zona1": len(part1),
             "zona2": len(part2),

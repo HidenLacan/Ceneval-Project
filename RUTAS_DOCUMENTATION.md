@@ -69,6 +69,7 @@ class ConfiguracionRuta(models.Model):
     notas = models.TextField(blank=True)
     datos_ruta = models.JSONField(default=dict)
     mapa_calculado = models.JSONField(default=dict)  # Datos del mapa renderizable
+    mapa_html = models.TextField(null=True, blank=True)  # HTML completo del mapa para renderizar
     tiempo_calculado = models.DurationField(null=True, blank=True)
     creado_por = models.ForeignKey(User, on_delete=models.CASCADE, related_name='rutas_creadas')
     tiempo_de_asignacion = models.DateTimeField(auto_now_add=True)
@@ -209,6 +210,29 @@ def generate_route_pdf(configuracion_ruta, empleados_info):
     }
   }
 }
+```
+
+### **mapa_html (ConfiguracionRuta)**
+```html
+<div class="folium-map" id="map_colonia_name" style="width: 100%; height: 400px;"></div>
+<script>
+    // Inicializar mapa
+    var map = L.map("map_colonia_name", {
+        center: [25.7872374, -100.3836412],
+        zoom: 16,
+        crs: L.CRS.EPSG3857
+    });
+    
+    // Agregar capa de tiles
+    L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: "© OpenStreetMap contributors",
+        maxZoom: 19
+    }).addTo(map);
+    
+    // Agregar rutas
+    var route1 = [[25.7872374, -100.3836412], [25.7873374, -100.3837412]];
+    L.polyline(route1, {color: 'red', weight: 3, opacity: 0.7}).addTo(map);
+</script>
 ```
 
 ### **datos_ruta (ConfiguracionRuta)**
@@ -374,6 +398,30 @@ configuracion.get_tiempo_formateado()
 
 # Contar empleados asignados
 configuracion.get_empleados_count()
+```
+
+## 🔧 **Mejoras Implementadas**
+
+### **Almacenamiento de HTML del Mapa**
+- **Problema**: El sistema solo guardaba el polígono en `mapa_calculado`, limitando la renderización
+- **Solución**: Se agregó el campo `mapa_html` para almacenar HTML completo del mapa
+- **Beneficios**: 
+  - Renderización completa de rutas con calles reales
+  - Mejor rendimiento al evitar recálculos
+  - HTML optimizado para la base de datos
+
+### **Funciones de Actualización**
+- **`generate_route_js(G, part1, part2)`**: Genera JavaScript optimizado para las rutas
+- **`draw_graph_folium()`**: Modificada para retornar HTML optimizado
+- **Comando `update_map_html`**: Actualiza rutas existentes con HTML del mapa
+
+### **Migración de Datos**
+```bash
+# Aplicar migración del nuevo campo
+python manage.py migrate
+
+# Actualizar rutas existentes
+python manage.py update_map_html
 ```
 
 ## 🚀 **Despliegue y Mantenimiento**

@@ -2,10 +2,1249 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Dashboard Employee</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Empleado - Sistema de Rutas</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .dashboard-container {
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .main-title {
+            color: #2c3e50;
+            font-weight: bold;
+            font-size: 2.5rem;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .section-container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 25px;
+            margin-bottom: 20px;
+            height: calc(100vh - 200px);
+        }
+        
+        .data-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .data-box h5 {
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+        
+        .data-box p {
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+        }
+        
+        .map-container {
+            background: #f8f9fa;
+            border: 2px dashed #dee2e6;
+            border-radius: 10px;
+            height: 400px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+            position: relative;
+        }
+        
+        .map-container.loading {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+        }
+        
+        @keyframes loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        
+        .route-buttons {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .route-btn {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .route-btn.individual {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            color: white;
+        }
+        
+        .route-btn.shared {
+            background: linear-gradient(135deg, #4ecdc4, #44a08d);
+            color: white;
+        }
+        
+        .route-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+        }
+        
+        .route-btn.active {
+            transform: scale(1.05);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+        }
+        
+        .right-section {
+            border: 2px solid #dc3545;
+            border-radius: 15px;
+            padding: 20px;
+        }
+        
+
+        
+
+        
+        .no-routes {
+            text-align: center;
+            color: #6c757d;
+            font-size: 1.2rem;
+            padding: 50px 20px;
+        }
+        
+        .route-selector {
+            margin-bottom: 20px;
+        }
+        
+        .route-selector select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .status-pendiente { background: #fff3cd; color: #856404; }
+        .status-activa { background: #d1ecf1; color: #0c5460; }
+        .status-completada { background: #d4edda; color: #155724; }
+        .status-cancelada { background: #f8d7da; color: #721c24; }
+        
+        .loading-spinner {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .loading-spinner.show {
+            display: block;
+        }
+        
+        /* Estilos para el chat */
+        .chat-area {
+            height: calc(100vh - 220px);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .chat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #dee2e6;
+            margin-bottom: 15px;
+        }
+        
+        .chat-header h5 {
+            margin: 0;
+            color: #dc3545;
+            font-weight: 600;
+        }
+        
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            min-height: 350px;
+            max-height: 450px;
+        }
+        
+        .message {
+            margin-bottom: 10px;
+            padding: 8px 12px;
+            border-radius: 10px;
+            max-width: 85%;
+            word-wrap: break-word;
+        }
+        
+        .message.own {
+            background: #007bff;
+            color: white;
+            margin-left: auto;
+            text-align: right;
+        }
+        
+        .message.other {
+            background: white;
+            color: #333;
+            border: 1px solid #dee2e6;
+        }
+        
+        .message.system {
+            background: #e9ecef;
+            color: #6c757d;
+            text-align: center;
+            font-style: italic;
+            margin: 5px auto;
+            max-width: 95%;
+        }
+        
+        .message-header {
+            font-size: 0.75rem;
+            opacity: 0.8;
+            margin-bottom: 2px;
+        }
+        
+        .message-time {
+            font-size: 0.7rem;
+            opacity: 0.7;
+            margin-top: 2px;
+        }
+        
+        .quick-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+        
+        .quick-msg-btn {
+            flex: 1;
+            font-size: 0.75rem;
+            padding: 5px 8px;
+            min-width: 70px;
+        }
+        
+        .chat-input .input-group {
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .chat-input .form-control {
+            border-right: none;
+        }
+        
+        .chat-input .btn {
+            border-left: none;
+        }
+    </style>
 </head>
 <body>
-    <h2>Bienvenido, Employee</h2>
-    <p>Este es el dashboard del empleado.</p>
+    <div class="dashboard-container" data-user-id="{{ request.user.id }}">
+        <!-- Header -->
+        <div class="row mb-4">
+            <div class="col-12 d-flex justify-content-between align-items-center">
+                <h1 class="main-title mb-0">
+                    <i class="fas fa-user-tie"></i> EMPLEADO
+                </h1>
+                <button class="btn btn-danger" onclick="confirmLogout()" title="Cerrar Sesión">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </button>
+            </div>
+        </div>
+
+        {% if rutas_asignadas %}
+        <!-- Route Selector -->
+        <div class="row mb-3">
+            <div class="col-12">
+                <div class="route-selector">
+                    <select id="routeSelector" class="form-select">
+                        {% for ruta in rutas_asignadas %}
+                        <option value="{{ ruta.id }}" 
+                                data-colonia="{{ ruta.colonia.nombre }}"
+                                data-estado="{{ ruta.estado }}"
+                                data-empleados="{{ ruta.empleados_asignados.count }}">
+                            {{ ruta.colonia.nombre }} - {{ ruta.fecha_creacion|date:"d/m/Y H:i" }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Left Section - Route Information and Map -->
+            <div class="col-md-8">
+                <div class="section-container">
+                    <!-- Data Display Area -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="data-box">
+                                <h5><i class="fas fa-map-marker-alt"></i> Datos de la colonia</h5>
+                                <p id="coloniaNombre">{{ ruta_actual.colonia.nombre }}</p>
+                                <p><strong>Estado:</strong> <span id="rutaEstado" class="status-badge status-{{ ruta_actual.estado }}">{{ ruta_actual.estado|title }}</span></p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="data-box">
+                                <h5><i class="fas fa-users"></i> Datos de la ruta</h5>
+                                <p><strong>Personas en el equipo:</strong> <span id="empleadosCount">{{ empleados_equipo.count }}</span></p>
+                                <p><strong>Tiempo estimado:</strong> <span id="tiempoEstimado">{{ ruta_actual.tiempo_calculado|default:"No calculado" }}</span></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Map Visualization Area -->
+                    <div class="map-container" id="mapContainer">
+                        <div class="text-center">
+                            <i class="fas fa-map fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">Visualización de mapa de ruta</p>
+                            <p class="text-muted">Selecciona una opción de visualización</p>
+                        </div>
+                    </div>
+
+                    <!-- Route Selection Buttons -->
+                    <div class="route-buttons">
+                        <button class="route-btn individual" id="btnIndividual">
+                            <i class="fas fa-user"></i> Ruta Individual
+                            <br><small>Solo se muestra la ruta del empleado</small>
+                        </button>
+                        <button class="route-btn shared" id="btnShared">
+                            <i class="fas fa-users"></i> Ruta Compartida
+                            <br><small>Se muestran ambas rutas</small>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Section - Rendering and Sending -->
+            <div class="col-md-4">
+                <div class="section-container right-section">
+                    <!-- Chat Area -->
+                    <div class="chat-area" id="chatArea">
+                        <div class="chat-header">
+                            <h5><i class="fas fa-comments"></i> Chat de Equipo</h5>
+                            <span class="badge bg-primary" id="chatBadge" style="display: none;">0</span>
+                        </div>
+                        <div class="chat-messages" id="chatMessages">
+                            <div class="text-center text-muted">
+                                <i class="fas fa-comments fa-2x mb-2"></i>
+                                <p>Selecciona una ruta para ver los mensajes</p>
+                            </div>
+                        </div>
+                        <div class="quick-actions mb-3" id="quickActions" style="display: none;">
+                            <button class="btn btn-sm btn-success quick-msg-btn" data-message="✅ Llegué a mi zona">
+                                <i class="fas fa-check"></i> Llegué
+                            </button>
+                            <button class="btn btn-sm btn-warning quick-msg-btn" data-message="⏸️ Tomando descanso">
+                                <i class="fas fa-pause"></i> Pausa
+                            </button>
+                            <button class="btn btn-sm btn-danger quick-msg-btn" data-message="❌ Tengo un problema">
+                                <i class="fas fa-exclamation"></i> Problema
+                            </button>
+                            <button class="btn btn-sm btn-info quick-msg-btn" data-message="✅ Terminé mi área">
+                                <i class="fas fa-flag-checkered"></i> Terminé
+                            </button>
+                        </div>
+                        <div class="chat-input" id="chatInput" style="display: none;">
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="messageInput" placeholder="Escribe tu mensaje..." maxlength="1000">
+                                <button class="btn btn-primary" id="sendMessageBtn">
+                                    <i class="fas fa-paper-plane"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <!-- No Routes Assigned -->
+        <div class="row">
+            <div class="col-12">
+                <div class="section-container">
+                    <div class="no-routes">
+                        <i class="fas fa-route fa-4x mb-4 text-muted"></i>
+                        <h3>No tienes rutas asignadas</h3>
+                        <p>Contacta con tu supervisor para que te asigne una ruta de trabajo.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Loading Spinner -->
+    <div class="loading-spinner" id="loadingSpinner">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Cargando...</span>
+        </div>
+        <p class="mt-2">Cargando datos de la ruta...</p>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <script>
+        // Global variables
+        let currentMap = null;
+        let currentRouteData = null;
+        let currentViewMode = 'individual'; // 'individual' or 'shared'
+        const currentUserId = parseInt(document.querySelector('.dashboard-container').dataset.userId) || null;
+        
+        // Chat variables
+        let currentChatRouteId = null;
+        let lastMessageId = 0;
+        let chatCheckInterval = null;
+        
+        // CSRF Token
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        // Clean previous map scripts
+        function cleanMapScripts() {
+            console.log('🧹 Limpiando scripts de mapas anteriores');
+            const scripts = document.querySelectorAll('script[data-map-script]');
+            scripts.forEach(script => {
+                script.remove();
+            });
+            console.log('✅ Scripts de mapas anteriores eliminados');
+        }
+
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Inicializando dashboard del empleado');
+            console.log('👤 Usuario actual ID:', currentUserId);
+            console.log('🎯 Modo de vista inicial:', currentViewMode);
+            
+            {% if rutas_asignadas %}
+            console.log('✅ Hay rutas asignadas disponibles');
+            
+            // Set initial route
+            const initialRouteId = document.getElementById('routeSelector').value;
+            console.log('🔄 Ruta inicial seleccionada:', initialRouteId);
+            
+            if (initialRouteId) {
+                loadRouteData(initialRouteId);
+            } else {
+                console.warn('⚠️ No hay ruta inicial seleccionada');
+            }
+            
+            // Set initial button state
+            setViewMode('individual'); // Start with individual mode
+            
+            // Event listeners
+            document.getElementById('routeSelector').addEventListener('change', function() {
+                const routeId = this.value;
+                console.log('🔄 Cambio de ruta seleccionada:', routeId);
+                loadRouteData(routeId);
+            });
+            
+            document.getElementById('btnIndividual').addEventListener('click', function() {
+                console.log('👤 Cambiando a modo individual');
+                setViewMode('individual');
+            });
+            
+            document.getElementById('btnShared').addEventListener('click', function() {
+                console.log('👥 Cambiando a modo compartido');
+                setViewMode('shared');
+            });
+            
+
+            {% else %}
+            console.log('⚠️ No hay rutas asignadas para este empleado');
+            {% endif %}
+            
+            console.log('✅ Dashboard inicializado correctamente');
+        });
+
+        // Load route data
+        function loadRouteData(routeId) {
+            console.log('🔄 Iniciando carga de datos para ruta ID:', routeId);
+            showLoading(true);
+            
+            const formData = new FormData();
+            formData.append('ruta_id', routeId);
+            
+            console.log('📤 Enviando request a /accounts/obtener_ruta_empleado/');
+            
+            fetch('/accounts/obtener_ruta_empleado/', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken')
+                }
+            })
+            .then(response => {
+                console.log('📥 Response status:', response.status);
+                return response.json();
+            })
+            .then(data => {
+                console.log('📊 Datos recibidos:', data);
+                
+                if (data.error) {
+                    console.error('❌ Error en datos:', data.error);
+                    showMessage('Error: ' + data.error, 'error');
+                } else {
+                    console.log('✅ Datos válidos recibidos');
+                    console.log('🗺️ mapa_html presente:', !!data.mapa_html);
+                    console.log('🗺️ mapa_calculado presente:', !!data.mapa_calculado);
+                    
+                    currentRouteData = data;
+                    updateRouteInfo(data);
+                    renderMap(data);
+                    
+                    // Initialize chat for this route
+                    initializeChat(routeId);
+                }
+            })
+            .catch(error => {
+                console.error('❌ Error en fetch:', error);
+                showMessage('Error al cargar datos de la ruta', 'error');
+            })
+            .finally(() => {
+                console.log('🏁 Finalizando carga de datos');
+                showLoading(false);
+            });
+        }
+
+        // Update route information display
+        function updateRouteInfo(data) {
+            console.log('📊 Actualizando información de la ruta');
+            console.log('🏘️ Colonia:', data.colonia);
+            console.log('📈 Estado:', data.estado);
+            console.log('👥 Empleados:', data.empleados);
+            console.log('⏱️ Tiempo calculado:', data.tiempo_calculado);
+            
+            try {
+                document.getElementById('coloniaNombre').textContent = data.colonia.nombre;
+                document.getElementById('rutaEstado').textContent = data.estado;
+                document.getElementById('rutaEstado').className = `status-badge status-${data.estado}`;
+                document.getElementById('empleadosCount').textContent = data.empleados.length;
+                document.getElementById('tiempoEstimado').textContent = data.tiempo_calculado || 'No calculado';
+                
+                console.log('✅ Información de ruta actualizada correctamente');
+            } catch (error) {
+                console.error('❌ Error al actualizar información de ruta:', error);
+            }
+        }
+
+        // Render map
+        function renderMap(data) {
+            console.log('🗺️ Iniciando renderizado del mapa');
+            console.log('📊 Datos recibidos en renderMap:', {
+                tiene_mapa_html: !!data.mapa_html,
+                tiene_mapa_calculado: !!data.mapa_calculado,
+                tiene_centro_colonia: !!(data.mapa_calculado && data.mapa_calculado.centro_colonia),
+                tiene_rutas: !!(data.mapa_calculado && data.mapa_calculado.rutas)
+            });
+            
+            const mapContainer = document.getElementById('mapContainer');
+            console.log('📍 Contenedor del mapa encontrado:', !!mapContainer);
+            
+            // Clear previous map and scripts
+            if (currentMap) {
+                console.log('🧹 Limpiando mapa anterior');
+                currentMap.remove();
+                currentMap = null;
+            }
+            
+            // Clean previous map scripts
+            cleanMapScripts();
+            
+            // Check if we have HTML map content from database
+            if (data.mapa_html && currentViewMode === 'shared') {
+                console.log('✅ Usando mapa HTML desde la base de datos (modo compartido)');
+                console.log('📄 Longitud del HTML:', data.mapa_html.length);
+                console.log('📄 Primeros 200 caracteres del HTML:', data.mapa_html.substring(0, 200));
+                
+                try {
+                    // Limpiar el contenedor primero
+                    mapContainer.innerHTML = '';
+                    
+                    // Crear un elemento temporal para procesar el HTML
+                    const tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = data.mapa_html;
+                    
+                    // Buscar el div del mapa en el HTML
+                    const mapDiv = tempDiv.querySelector('.folium-map');
+                    if (mapDiv) {
+                        console.log('📍 Div del mapa encontrado en HTML');
+                        
+                        // Cambiar el ID para evitar conflictos
+                        const newId = 'map_' + Date.now();
+                        mapDiv.id = newId;
+                        mapDiv.style.width = '100%';
+                        mapDiv.style.height = '400px';
+                        
+                        // Extraer y procesar el JavaScript ANTES de insertar el HTML
+                        const scripts = tempDiv.querySelectorAll('script');
+                        let processedScripts = [];
+                        
+                        scripts.forEach((script, index) => {
+                            console.log(`📜 Procesando script ${index + 1}`);
+                            
+                            // Reemplazar el ID del mapa en el JavaScript de forma más específica
+                            let scriptContent = script.textContent;
+                            // Reemplazar referencias al ID del mapa de forma más precisa
+                            scriptContent = scriptContent.replace(/L\.map\s*\(\s*["'][^"']*["']/g, `L.map("${newId}"`);
+                            scriptContent = scriptContent.replace(/map_[a-zA-Z0-9_]+/g, newId);
+                            
+                            processedScripts.push(scriptContent);
+                            console.log(`✅ Script ${index + 1} procesado con ID: ${newId}`);
+                        });
+                        
+                        // Insertar el div procesado
+                        mapContainer.appendChild(mapDiv);
+                        
+                        // Esperar un momento para asegurar que el DOM esté listo
+                        setTimeout(() => {
+                            console.log('⏳ DOM listo, ejecutando scripts...');
+                            
+                            // Verificar que el elemento del mapa existe
+                            const mapElement = document.getElementById(newId);
+                            if (!mapElement) {
+                                console.error(`❌ Elemento del mapa con ID ${newId} no encontrado`);
+                                return;
+                            }
+                            console.log(`✅ Elemento del mapa encontrado: ${newId}`);
+                            
+                            // Ejecutar los scripts procesados DESPUÉS de insertar el HTML
+                            processedScripts.forEach((scriptContent, index) => {
+                                console.log(`🚀 Ejecutando script procesado ${index + 1}`);
+                                
+                                try {
+                                    const newScript = document.createElement('script');
+                                    newScript.textContent = scriptContent;
+                                    newScript.setAttribute('data-map-script', 'true');
+                                    document.head.appendChild(newScript);
+                                    
+                                    console.log(`✅ Script ${index + 1} ejecutado`);
+                                } catch (scriptError) {
+                                    console.error(`❌ Error ejecutando script ${index + 1}:`, scriptError);
+                                }
+                            });
+                            
+                            console.log('✅ Todos los scripts ejecutados');
+                        }, 100);
+                        
+                        console.log('✅ HTML procesado y renderizado correctamente');
+                    } else {
+                        console.warn('⚠️ No se encontró div del mapa en el HTML optimizado');
+                        console.log('📄 Contenido HTML completo:', data.mapa_html);
+                        
+                        // Fallback mejorado: crear contenedor e insertar script directamente
+                        mapContainer.innerHTML = '';
+                        
+                        // Crear div del mapa manualmente
+                        const mapDiv = document.createElement('div');
+                        mapDiv.id = 'map_' + Date.now();
+                        mapDiv.style.width = '100%';
+                        mapDiv.style.height = '400px';
+                        mapDiv.className = 'folium-map';
+                        mapContainer.appendChild(mapDiv);
+                        
+                        // Extraer y ejecutar scripts
+                        setTimeout(() => {
+                            const scripts = tempDiv.querySelectorAll('script');
+                            scripts.forEach((script, index) => {
+                                try {
+                                    let scriptContent = script.textContent;
+                                    // Reemplazar ID en el script
+                                    scriptContent = scriptContent.replace(/L\.map\s*\(\s*["'][^"']*["']/g, `L.map("${mapDiv.id}"`);
+                                    scriptContent = scriptContent.replace(/map_[a-zA-Z0-9_]+/g, mapDiv.id);
+                                    
+                                    const newScript = document.createElement('script');
+                                    newScript.textContent = scriptContent;
+                                    newScript.setAttribute('data-map-script', 'true');
+                                    document.head.appendChild(newScript);
+                                    
+                                    console.log(`✅ Script fallback ${index + 1} ejecutado`);
+                                } catch (error) {
+                                    console.error(`❌ Error ejecutando script fallback ${index + 1}:`, error);
+                                }
+                            });
+                        }, 200);
+                    }
+                } catch (error) {
+                    console.error('❌ Error al procesar HTML:', error);
+                    // Fallback: insertar HTML directamente
+                    mapContainer.innerHTML = data.mapa_html;
+                }
+            } else if (currentViewMode === 'individual' && data.mapa_calculado && data.mapa_calculado.centro_colonia) {
+                console.log('🎯 Forzando renderizado manual para modo individual');
+                renderManualMap(data);
+            } else if (data.mapa_calculado && data.mapa_calculado.centro_colonia) {
+                console.log('🔄 Usando renderizado manual del mapa');
+                console.log('🎯 Modo de vista actual:', currentViewMode);
+                
+                const center = [
+                    data.mapa_calculado.centro_colonia.center_lat,
+                    data.mapa_calculado.centro_colonia.center_lon
+                ];
+                console.log('📍 Centro del mapa:', center);
+                
+                try {
+                    currentMap = L.map('mapContainer').setView(center, 16);
+                    console.log('✅ Mapa Leaflet inicializado');
+                    
+                    // Add tile layer
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        attribution: '© OpenStreetMap contributors'
+                    }).addTo(currentMap);
+                    console.log('✅ Capa de tiles agregada');
+                    
+                    // Add colony polygon
+                    if (data.mapa_calculado.poligono_colonia) {
+                        console.log('📍 Agregando polígono de colonia');
+                        const polygon = L.geoJSON(data.mapa_calculado.poligono_colonia, {
+                            style: {
+                                color: '#3498db',
+                                weight: 2,
+                                fillColor: '#3498db',
+                                fillOpacity: 0.1
+                            }
+                        }).addTo(currentMap);
+                    }
+                    
+                    // Add routes based on current view mode
+                    if (data.mapa_calculado.rutas) {
+                        console.log('🛣️ Agregando rutas, modo actual:', currentViewMode);
+                        console.log('👥 Rutas disponibles:', data.mapa_calculado.rutas.length);
+                        console.log('👤 Usuario actual ID:', currentUserId);
+                        
+                        data.mapa_calculado.rutas.forEach((ruta, index) => {
+                            console.log(`🛣️ Procesando ruta ${index + 1}:`, {
+                                empleado_id: ruta.empleado_id,
+                                empleado_nombre: ruta.empleado_nombre,
+                                tiene_puntos: !!(ruta.puntos && ruta.puntos.length > 0)
+                            });
+                            
+                            if (currentViewMode === 'individual') {
+                                // Show only current employee's route
+                                if (ruta.empleado_id === currentUserId) {
+                                    console.log('✅ Agregando ruta individual del empleado actual');
+                                    addRouteToMap(ruta);
+                                } else {
+                                    console.log('⏭️ Saltando ruta de otro empleado');
+                                }
+                            } else {
+                                // Show all routes
+                                console.log('✅ Agregando ruta compartida');
+                                addRouteToMap(ruta);
+                            }
+                        });
+                    }
+                } catch (error) {
+                    console.error('❌ Error en renderizado manual:', error);
+                }
+            } else {
+                console.log('❌ No hay datos de mapa disponibles');
+                console.log('📊 Estado de datos:', {
+                    mapa_html: data.mapa_html,
+                    mapa_calculado: data.mapa_calculado,
+                    centro_colonia: data.mapa_calculado?.centro_colonia
+                });
+                
+                mapContainer.innerHTML = `
+                    <div class="text-center">
+                        <i class="fas fa-exclamation-triangle fa-3x text-warning mb-3"></i>
+                        <p class="text-muted">No hay datos de mapa disponibles</p>
+                        <p class="text-muted small">Debug: mapa_html=${!!data.mapa_html}, mapa_calculado=${!!data.mapa_calculado}</p>
+                    </div>
+                `;
+            }
+            
+            console.log('🏁 Renderizado del mapa completado');
+        }
+
+        // Render manual map (separate function for reusability)
+        function renderManualMap(data) {
+            console.log('🔧 Renderizando mapa manual con modo:', currentViewMode);
+            
+            const mapContainer = document.getElementById('mapContainer');
+            mapContainer.innerHTML = '';
+            
+            const center = [
+                data.mapa_calculado.centro_colonia.center_lat,
+                data.mapa_calculado.centro_colonia.center_lon
+            ];
+            console.log('📍 Centro del mapa:', center);
+            
+            try {
+                // Crear nuevo contenedor para el mapa
+                const mapDiv = document.createElement('div');
+                mapDiv.id = 'manual_map_' + Date.now();
+                mapDiv.style.width = '100%';
+                mapDiv.style.height = '400px';
+                mapContainer.appendChild(mapDiv);
+                
+                currentMap = L.map(mapDiv.id).setView(center, 16);
+                console.log('✅ Mapa Leaflet manual inicializado');
+                
+                // Add tile layer
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '© OpenStreetMap contributors'
+                }).addTo(currentMap);
+                console.log('✅ Capa de tiles agregada');
+                
+                // Add colony polygon
+                if (data.mapa_calculado.poligono_colonia) {
+                    console.log('📍 Agregando polígono de colonia');
+                    const polygon = L.geoJSON(data.mapa_calculado.poligono_colonia, {
+                        style: {
+                            color: '#3498db',
+                            weight: 2,
+                            fillColor: '#3498db',
+                            fillOpacity: 0.1
+                        }
+                    }).addTo(currentMap);
+                }
+                
+                // Add routes based on current view mode
+                if (data.mapa_calculado.rutas) {
+                    console.log('🛣️ Agregando rutas manuales, modo actual:', currentViewMode);
+                    console.log('👥 Rutas disponibles:', data.mapa_calculado.rutas.length);
+                    console.log('👤 Usuario actual ID:', currentUserId);
+                    
+                    data.mapa_calculado.rutas.forEach((ruta, index) => {
+                        console.log(`🛣️ Procesando ruta manual ${index + 1}:`, {
+                            empleado_id: ruta.empleado_id,
+                            empleado_nombre: ruta.empleado_nombre,
+                            tiene_puntos: !!(ruta.puntos && ruta.puntos.length > 0)
+                        });
+                        
+                        if (currentViewMode === 'individual') {
+                            // Show only current employee's route
+                            if (ruta.empleado_id === currentUserId) {
+                                console.log('✅ Agregando ruta individual manual del empleado actual');
+                                addRouteToMap(ruta);
+                            } else {
+                                console.log('⏭️ Saltando ruta de otro empleado en modo manual');
+                            }
+                        } else {
+                            // Show all routes
+                            console.log('✅ Agregando ruta compartida manual');
+                            addRouteToMap(ruta);
+                        }
+                    });
+                }
+            } catch (error) {
+                console.error('❌ Error en renderizado manual:', error);
+            }
+        }
+
+        // Add route to map
+        function addRouteToMap(ruta) {
+            console.log('🛣️ Agregando ruta al mapa:', {
+                empleado_nombre: ruta.empleado_nombre,
+                color_ruta: ruta.color_ruta,
+                tiene_puntos: !!(ruta.puntos && ruta.puntos.length > 0),
+                num_puntos: ruta.puntos ? ruta.puntos.length : 0
+            });
+            
+            if (ruta.puntos && ruta.puntos.length > 0) {
+                console.log('📍 Procesando puntos de la ruta');
+                
+                try {
+                    const coordinates = ruta.puntos.map(punto => {
+                        if (Array.isArray(punto)) {
+                            // Si es un array [lat, lon]
+                            return punto;
+                        } else if (punto.lat && punto.lon) {
+                            // Si es un objeto {lat, lon}
+                            return [punto.lat, punto.lon];
+                        } else {
+                            console.warn('⚠️ Formato de punto no reconocido:', punto);
+                            return null;
+                        }
+                    }).filter(coord => coord !== null);
+                    
+                    console.log('📍 Coordenadas procesadas:', coordinates.length);
+                    console.log('📍 Primeras coordenadas:', coordinates.slice(0, 3));
+                    
+                    if (coordinates.length > 0) {
+                        const routeLine = L.polyline(coordinates, {
+                            color: ruta.color_ruta || '#e74c3c',
+                            weight: 4,
+                            opacity: 0.8
+                        }).addTo(currentMap);
+                        console.log('✅ Línea de ruta agregada al mapa');
+                        
+                        // Add markers for start and end points
+                        if (coordinates.length > 0) {
+                            L.marker(coordinates[0]).addTo(currentMap)
+                                .bindPopup(`<b>Inicio - ${ruta.empleado_nombre}</b>`);
+                            console.log('📍 Marcador de inicio agregado');
+                            
+                            L.marker(coordinates[coordinates.length - 1]).addTo(currentMap)
+                                .bindPopup(`<b>Fin - ${ruta.empleado_nombre}</b>`);
+                            console.log('📍 Marcador de fin agregado');
+                        }
+                        
+                        // Fit map to route bounds
+                        currentMap.fitBounds(routeLine.getBounds());
+                        console.log('✅ Mapa ajustado a los límites de la ruta');
+                    } else {
+                        console.warn('⚠️ No hay coordenadas válidas para la ruta');
+                    }
+                } catch (error) {
+                    console.error('❌ Error al agregar ruta al mapa:', error);
+                }
+            } else {
+                console.warn('⚠️ La ruta no tiene puntos o está vacía');
+                console.log('📊 Datos de la ruta:', ruta);
+            }
+        }
+
+        // Set view mode (individual or shared)
+        function setViewMode(mode) {
+            console.log('🔄 Cambiando modo de vista de', currentViewMode, 'a', mode);
+            currentViewMode = mode;
+            
+            // Update button states
+            document.getElementById('btnIndividual').classList.toggle('active', mode === 'individual');
+            document.getElementById('btnShared').classList.toggle('active', mode === 'shared');
+            
+            // Re-render map with new mode
+            if (currentRouteData) {
+                console.log('🗺️ Re-renderizando mapa con nuevo modo:', mode);
+                
+                if (mode === 'individual') {
+                    // Force manual rendering for individual mode to filter routes
+                    console.log('👤 Forzando renderizado manual para modo individual');
+                    renderManualMap(currentRouteData);
+                } else {
+                    // Use optimized HTML for shared mode if available, otherwise manual
+                    console.log('👥 Usando renderizado optimizado/manual para modo compartido');
+                    renderMap(currentRouteData);
+                }
+            } else {
+                console.warn('⚠️ No hay datos de ruta para re-renderizar');
+            }
+        }
+
+
+
+        // Show/hide loading
+        function showLoading(show) {
+            const spinner = document.getElementById('loadingSpinner');
+            if (show) {
+                spinner.classList.add('show');
+            } else {
+                spinner.classList.remove('show');
+            }
+        }
+
+        // Show message
+        function showMessage(message, type) {
+            // Create a simple alert for now
+            alert(`${type.toUpperCase()}: ${message}`);
+        }
+
+        // ============================
+        // FUNCIONES DE CHAT
+        // ============================
+
+        // Initialize chat for a route
+        function initializeChat(routeId) {
+            console.log('💬 Inicializando chat para ruta:', routeId);
+            currentChatRouteId = routeId;
+            
+            // Show chat elements
+            document.getElementById('quickActions').style.display = 'flex';
+            document.getElementById('chatInput').style.display = 'block';
+            
+            // Load chat messages
+            loadChatMessages(routeId);
+            
+            // Start periodic check for new messages
+            startChatPolling();
+            
+            // Setup event listeners
+            setupChatEventListeners();
+        }
+
+        // Load chat messages
+        function loadChatMessages(routeId) {
+            console.log('📥 Cargando mensajes del chat...');
+            
+            fetch('/accounts/chat/obtener_mensajes/', {
+                method: 'POST',
+                body: JSON.stringify({ 'ruta_id': routeId }),
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    console.log('✅ Mensajes cargados:', data.mensajes.length);
+                    displayMessages(data.mensajes);
+                    
+                    // Update last message ID
+                    if (data.mensajes.length > 0) {
+                        lastMessageId = Math.max(...data.mensajes.map(m => m.id));
+                    }
+                } else {
+                    console.error('❌ Error cargando mensajes:', data.error);
+                    showMessage('Error al cargar mensajes del chat', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('❌ Error en fetch de mensajes:', error);
+                showMessage('Error de conexión al cargar chat', 'error');
+            });
+        }
+
+        // Display messages in chat
+        function displayMessages(mensajes) {
+            const chatMessages = document.getElementById('chatMessages');
+            
+            if (mensajes.length === 0) {
+                chatMessages.innerHTML = `
+                    <div class="text-center text-muted">
+                        <i class="fas fa-comments fa-2x mb-2"></i>
+                        <p>No hay mensajes aún. ¡Sé el primero en escribir!</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            let messagesHTML = '';
+            mensajes.forEach(mensaje => {
+                messagesHTML += createMessageHTML(mensaje);
+            });
+            
+            chatMessages.innerHTML = messagesHTML;
+            scrollToBottom();
+        }
+
+        // Create HTML for a single message
+        function createMessageHTML(mensaje) {
+            const messageClass = mensaje.tipo_mensaje === 'sistema' ? 'system' : 
+                                mensaje.es_propio ? 'own' : 'other';
+            
+            const userIcon = mensaje.usuario.role === 'staff' ? '👨‍💼' : '👨‍🔧';
+            const userName = mensaje.es_propio ? 'Tú' : mensaje.usuario.username;
+            
+            let messageHeader = '';
+            if (mensaje.tipo_mensaje !== 'sistema') {
+                messageHeader = `<div class="message-header">${userIcon} ${userName}</div>`;
+            }
+            
+            return `
+                <div class="message ${messageClass}" data-message-id="${mensaje.id}">
+                    ${messageHeader}
+                    <div class="message-content">${mensaje.contenido}</div>
+                    <div class="message-time">${mensaje.tiempo_relativo}</div>
+                </div>
+            `;
+        }
+
+        // Send message
+        function sendMessage(contenido, tipo = 'texto') {
+            if (!contenido.trim() || !currentChatRouteId) {
+                return;
+            }
+            
+            console.log('📤 Enviando mensaje:', contenido);
+            
+            fetch('/accounts/chat/enviar_mensaje/', {
+                method: 'POST',
+                body: JSON.stringify({
+                    'ruta_id': currentChatRouteId,
+                    'contenido': contenido.trim(),
+                    'tipo_mensaje': tipo
+                }),
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    console.log('✅ Mensaje enviado correctamente');
+                    appendMessage(data.mensaje);
+                    lastMessageId = Math.max(lastMessageId, data.mensaje.id);
+                    
+                    // Clear input
+                    const messageInput = document.getElementById('messageInput');
+                    if (messageInput) {
+                        messageInput.value = '';
+                    }
+                } else {
+                    console.error('❌ Error enviando mensaje:', data.error);
+                    showMessage('Error al enviar mensaje: ' + data.error, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('❌ Error en fetch de envío:', error);
+                showMessage('Error de conexión al enviar mensaje', 'error');
+            });
+        }
+
+        // Append new message to chat
+        function appendMessage(mensaje) {
+            const chatMessages = document.getElementById('chatMessages');
+            
+            // Remove "no messages" placeholder if exists
+            const placeholder = chatMessages.querySelector('.text-center.text-muted');
+            if (placeholder) {
+                placeholder.remove();
+            }
+            
+            // Add new message
+            chatMessages.insertAdjacentHTML('beforeend', createMessageHTML(mensaje));
+            scrollToBottom();
+        }
+
+        // Scroll to bottom of chat
+        function scrollToBottom() {
+            const chatMessages = document.getElementById('chatMessages');
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        // Start polling for new messages
+        function startChatPolling() {
+            // Clear existing interval
+            if (chatCheckInterval) {
+                clearInterval(chatCheckInterval);
+            }
+            
+            // Check for new messages every 5 seconds
+            chatCheckInterval = setInterval(() => {
+                if (currentChatRouteId) {
+                    checkForNewMessages();
+                }
+            }, 5000);
+        }
+
+        // Check for new messages
+        function checkForNewMessages() {
+            fetch('/accounts/chat/verificar_nuevos/', {
+                method: 'POST',
+                body: JSON.stringify({
+                    'ruta_id': currentChatRouteId,
+                    'ultimo_mensaje_id': lastMessageId
+                }),
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.hay_nuevos) {
+                    console.log('📨 Nuevos mensajes recibidos:', data.mensajes_nuevos.length);
+                    
+                    // Append new messages
+                    data.mensajes_nuevos.forEach(mensaje => {
+                        appendMessage(mensaje);
+                        lastMessageId = Math.max(lastMessageId, mensaje.id);
+                    });
+                    
+                    // Update badge if there are unread messages
+                    updateChatBadge(data.mensajes_no_leidos);
+                }
+            })
+            .catch(error => {
+                console.error('❌ Error verificando mensajes nuevos:', error);
+            });
+        }
+
+        // Update chat badge
+        function updateChatBadge(count) {
+            const badge = document.getElementById('chatBadge');
+            if (count > 0) {
+                badge.textContent = count;
+                badge.style.display = 'inline';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+
+        // Setup chat event listeners
+        function setupChatEventListeners() {
+            // Quick message buttons
+            document.querySelectorAll('.quick-msg-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const message = this.dataset.message;
+                    sendMessage(message, 'rapido');
+                });
+            });
+            
+            // Send message button
+            document.getElementById('sendMessageBtn').addEventListener('click', function() {
+                const messageInput = document.getElementById('messageInput');
+                sendMessage(messageInput.value);
+            });
+            
+            // Enter key in message input
+            document.getElementById('messageInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage(this.value);
+                }
+            });
+        }
+
+        // Función para confirmar logout
+        function confirmLogout() {
+            if (confirm('¿Estás seguro de que quieres cerrar sesión?')) {
+                window.location.href = '/accounts/logout/';
+            }
+        }
+    </script>
 </body>
 </html> 
