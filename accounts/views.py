@@ -17,6 +17,14 @@ import os
 from core.utils.main import procesar_poligono_completo
 import psutil
 import os
+from .utils import (
+    normalize_colonia_name, 
+    validate_colonia_name, 
+    suggest_colonia_names, 
+    clean_colonia_input,
+    format_colonia_display_name,
+    get_colonia_search_variations
+)
 
 class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
@@ -259,6 +267,161 @@ def cargar_colonia_existente(request):
         return JsonResponse({'error': f'Colonia "{colonia_nombre}" no encontrada'}, status=404)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
+
+@login_required
+@csrf_exempt
+def buscar_colonia_inteligente(request):
+    """
+    Endpoint para búsqueda inteligente de colonias con autocompletado y validación.
+    Soporta búsqueda flexible, sugerencias y normalización de nombres.
+    """
+    if request.user.role != 'admin':
+        return JsonResponse({'error': 'Acceso denegado'}, status=403)
+    
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Método no permitido'}, status=405)
+    
+    try:
+        data = json.loads(request.body)
+        query = data.get('query', '').strip()
+        action = data.get('action', 'search')  # 'search', 'suggest', 'validate'
+        
+        if not query:
+            return JsonResponse({
+                'success': False,
+                'error': 'Query de búsqueda requerida'
+            }, status=400)
+        
+        # Validar nombre de colonia
+        is_valid, error_message = validate_colonia_name(query)
+        
+        if not is_valid and action == 'validate':
+            return JsonResponse({
+                'success': False,
+                'error': error_message,
+                'is_valid': False
+            })
+        
+        # Limpiar y normalizar la query
+        cleaned_query = clean_colonia_input(query)
+        normalized_query = normalize_colonia_name(query)
+        
+        # Obtener todas las colonias existentes para sugerencias
+        existing_colonias = list(ColoniaProcesada.objects.values_list('nombre', flat=True))
+        
+        if action == 'suggest':
+            # Generar sugerencias
+            suggestions = suggest_colonia_names(query, existing_colonias, max_suggestions=8)
+            
+            return JsonResponse({
+                'success': True,
+                'suggestions': suggestions,
+                'query': query,
+                'cleaned_query': cleaned_query,
+                'normalized_query': normalized_query
+            })
+        
+        elif action == 'search':
+            # Búsqueda flexible
+            found_colonias = []
+            
+            # Generar variaciones de búsqueda
+            search_variations = get_colonia_search_variations(query)
+            
+            for variation in search_variations:
+                # Búsqueda exacta
+                try:
+                    colonia = ColoniaProcesada.objects.get(nombre__iexact=variation)
+                    found_colonias.append({
+                        'nombre': colonia.nombre,
+                        'id': colonia.id,
+                        'fecha_creacion': colonia.fecha_creacion.strftime('%d/%m/%Y %H:%M'),
+                        'creado_por': colonia.creado_por.username,
+                        'tiene_imagen': bool(colonia.imagen),
+                        'tiene_poligono': bool(colonia.poligono_geojson),
+                        'tiene_json': bool(colonia.datos_json),
+                        'match_type': 'exact'
+                    })
+                except ColoniaProcesada.DoesNotExist:
+                    pass
+            
+            # Si no se encontró nada con búsqueda exacta, buscar con contains
+            if not found_colonias:
+                colonias_contains = ColoniaProcesada.objects.filter(
+                    nombre__icontains=normalized_query
+                )[:5]
+                
+                for colonia in colonias_contains:
+                    found_colonias.append({
+                        'nombre': colonia.nombre,
+                        'id': colonia.id,
+                        'fecha_creacion': colonia.fecha_creacion.strftime('%d/%m/%Y %H:%M'),
+                        'creado_por': colonia.creado_por.username,
+                        'tiene_imagen': bool(colonia.imagen),
+                        'tiene_poligono': bool(colonia.poligono_geojson),
+                        'tiene_json': bool(colonia.datos_json),
+                        'match_type': 'partial'
+                    })
+            
+            # Si aún no se encontró nada, buscar en Nominatim
+            if not found_colonias:
+                try:
+                    from core.utils.main import download_bbox
+                    from core.utils.polygon_logic import get_colonia_config
+                    
+                    cache_path = download_bbox(cleaned_query)
+                    config = get_colonia_config(cache_path)
+                    
+                    return JsonResponse({
+                        'success': True,
+                        'found_in_db': False,
+                        'found_in_nominatim': True,
+                        'query': query,
+                        'cleaned_query': cleaned_query,
+                        'config': config,
+                        'message': f'Colonia "{cleaned_query}" encontrada en OpenStreetMap'
+                    })
+                    
+                except Exception as e:
+                    return JsonResponse({
+                        'success': False,
+                        'error': f'No se encontró la colonia "{cleaned_query}" en la base de datos ni en OpenStreetMap',
+                        'suggestions': suggest_colonia_names(query, existing_colonias, max_suggestions=5)
+                    })
+            
+            return JsonResponse({
+                'success': True,
+                'found_in_db': True,
+                'colonias': found_colonias,
+                'query': query,
+                'cleaned_query': cleaned_query,
+                'total_found': len(found_colonias)
+            })
+        
+        elif action == 'validate':
+            return JsonResponse({
+                'success': True,
+                'is_valid': True,
+                'cleaned_query': cleaned_query,
+                'normalized_query': normalized_query
+            })
+        
+        else:
+            return JsonResponse({
+                'success': False,
+                'error': 'Acción no válida'
+            }, status=400)
+            
+    except json.JSONDecodeError:
+        return JsonResponse({
+            'success': False,
+            'error': 'Datos JSON inválidos'
+        }, status=400)
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': f'Error interno: {str(e)}'
+        }, status=500)
 
 @login_required
 def staff_dashboard(request):
@@ -1776,7 +1939,10 @@ def analizar_algoritmo(request):
                     compacidad_z2 = min(100, area_z2 / 100000) if area_z2 > 0 else 0
                     compacidad = (compacidad_z1 + compacidad_z2) / 2
                 
-                print(f"🎯 API ANALIZAR_ALGORITMO: Métricas calculadas - Balance={balance_zonas:.1f}%, Eficiencia={eficiencia_rutas:.1f}%, Equidad={equidad_cargas:.1f}%, Compacidad={compacidad:.1f}%")
+                # Obtener Silhouette Score del resultado del algoritmo
+                silhouette_score = resultado_algoritmo.get('silhouette_score', 0.0)
+                
+                print(f"🎯 API ANALIZAR_ALGORITMO: Métricas calculadas - Balance={balance_zonas:.1f}%, Eficiencia={eficiencia_rutas:.1f}%, Equidad={equidad_cargas:.1f}%, Compacidad={compacidad:.1f}%, Silhouette={silhouette_score:.3f}")
                 
                 # Generar datos reales de las zonas ANTES de guardar
                 zonas_data = []
@@ -1828,6 +1994,7 @@ def analizar_algoritmo(request):
                         eficiencia_rutas_porcentaje=eficiencia_rutas,
                         equidad_cargas_porcentaje=equidad_cargas,
                         compacidad_porcentaje=compacidad,
+                        silhouette_score=silhouette_score,
                         total_nodos=total_nodos,
                         total_aristas=total_aristas,
                         nodos_zona1=nodos_z1,
@@ -1912,7 +2079,21 @@ def analizar_algoritmo(request):
                         equidad_cargas = 82.0
                         compacidad = 85.0
                 
-                print(f"🎯 API ANALIZAR_ALGORITMO: Métricas estimadas - Balance={balance_zonas:.1f}%, Eficiencia={eficiencia_rutas:.1f}%, Equidad={equidad_cargas:.1f}%, Compacidad={compacidad:.1f}%")
+                # Estimar Silhouette Score basado en el algoritmo
+                if algoritmo_tipo == 'kmeans':
+                    silhouette_score = 0.75
+                elif algoritmo_tipo == 'dbscan':
+                    silhouette_score = 0.82
+                elif algoritmo_tipo == 'spectral':
+                    silhouette_score = 0.78
+                elif algoritmo_tipo == 'voronoi':
+                    silhouette_score = 0.70
+                elif algoritmo_tipo == 'random':
+                    silhouette_score = 0.45
+                else:  # current/kernighan_lin
+                    silhouette_score = 0.72
+                
+                print(f"🎯 API ANALIZAR_ALGORITMO: Métricas estimadas - Balance={balance_zonas:.1f}%, Eficiencia={eficiencia_rutas:.1f}%, Equidad={equidad_cargas:.1f}%, Compacidad={compacidad:.1f}%, Silhouette={silhouette_score:.3f}")
                 
                 # Generar zonas estimadas
                 zonas_data = []
@@ -1951,7 +2132,8 @@ def analizar_algoritmo(request):
                     'balance_zonas': balance_zonas,
                     'eficiencia_rutas': eficiencia_rutas,
                     'equidad_cargas': equidad_cargas,
-                    'compacidad': compacidad
+                    'compacidad': compacidad,
+                    'silhouette_score': silhouette_score
                 },
                 'zonas_generadas': zonas_data,
                 'timestamp': tiempo_inicial

@@ -75,6 +75,7 @@ class EficienciaAlgoritmica(models.Model):
     eficiencia_rutas_porcentaje = models.FloatField(help_text='Eficiencia de las rutas generadas (0-100%)')
     equidad_cargas_porcentaje = models.FloatField(help_text='Equidad en la distribución de cargas (0-100%)')
     compacidad_porcentaje = models.FloatField(help_text='Compacidad de las zonas generadas (0-100%)')
+    silhouette_score = models.FloatField(default=0.0, help_text='Silhouette Score para evaluar calidad del clustering (-1 a 1)')
     
     # Datos detallados del grafo procesado
     total_nodos = models.IntegerField(help_text='Total de nodos en el grafo')
@@ -125,6 +126,19 @@ class EficienciaAlgoritmica(models.Model):
             self.equidad_cargas_porcentaje + 
             self.compacidad_porcentaje
         ) / 4, 2)
+    
+    def get_silhouette_interpretacion(self):
+        """Retorna la interpretación del Silhouette Score"""
+        if self.silhouette_score >= 0.7:
+            return "Excelente clustering"
+        elif self.silhouette_score >= 0.5:
+            return "Buen clustering"
+        elif self.silhouette_score >= 0.25:
+            return "Clustering aceptable"
+        elif self.silhouette_score >= 0:
+            return "Clustering débil"
+        else:
+            return "Clustering incorrecto"
     
     def get_eficiencia_temporal(self):
         """Retorna clasificación de eficiencia temporal"""

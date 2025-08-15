@@ -1,5 +1,6 @@
 import os
 import json
+import re
 from io import BytesIO
 from django.core.mail import EmailMessage
 from django.template.loader import render_to_string
@@ -14,6 +15,7 @@ import folium
 from PIL import Image as PILImage
 import base64
 import tempfile
+from difflib import SequenceMatcher
 
 
 def generate_route_pdf(configuracion_ruta, empleados_info):
@@ -270,3 +272,159 @@ def send_route_email_from_staff_dashboard(colonia_id, employee_ids):
         
     except Exception as e:
         return False, f"Error: {str(e)}" 
+
+def normalize_colonia_name(nombre):
+    """
+    Normaliza el nombre de una colonia para búsquedas consistentes.
+    """
+    if not nombre:
+        return ""
+    
+    # Convertir a minúsculas
+    nombre = nombre.lower().strip()
+    
+    # Remover caracteres especiales y acentos
+    nombre = re.sub(r'[áàäâ]', 'a', nombre)
+    nombre = re.sub(r'[éèëê]', 'e', nombre)
+    nombre = re.sub(r'[íìïî]', 'i', nombre)
+    nombre = re.sub(r'[óòöô]', 'o', nombre)
+    nombre = re.sub(r'[úùüû]', 'u', nombre)
+    nombre = re.sub(r'[ñ]', 'n', nombre)
+    
+    # Remover caracteres especiales excepto espacios y guiones
+    nombre = re.sub(r'[^a-z0-9\s\-]', '', nombre)
+    
+    # Normalizar espacios múltiples
+    nombre = re.sub(r'\s+', ' ', nombre)
+    
+    return nombre.strip()
+
+def validate_colonia_name(nombre):
+    """
+    Valida si el nombre de una colonia es válido.
+    """
+    if not nombre or len(nombre.strip()) < 3:
+        return False, "El nombre debe tener al menos 3 caracteres"
+    
+    if len(nombre.strip()) > 100:
+        return False, "El nombre es demasiado largo"
+    
+    # Verificar que contenga al menos una letra
+    if not re.search(r'[a-zA-Z]', nombre):
+        return False, "El nombre debe contener al menos una letra"
+    
+    return True, "Nombre válido"
+
+def calculate_similarity_score(str1, str2):
+    """
+    Calcula la similitud entre dos strings usando SequenceMatcher.
+    """
+    return SequenceMatcher(None, str1.lower(), str2.lower()).ratio()
+
+def suggest_colonia_names(query, existing_colonias, max_suggestions=5):
+    """
+    Sugiere nombres de colonias basándose en la query y colonias existentes.
+    """
+    if not query or len(query.strip()) < 2:
+        return []
+    
+    query_normalized = normalize_colonia_name(query)
+    suggestions = []
+    
+    for colonia in existing_colonias:
+        colonia_normalized = normalize_colonia_name(colonia)
+        
+        # Calcular similitud
+        similarity = calculate_similarity_score(query_normalized, colonia_normalized)
+        
+        # Si la similitud es mayor a 0.3, agregar a sugerencias
+        if similarity > 0.3:
+            suggestions.append({
+                'nombre': colonia,
+                'similarity': similarity
+            })
+    
+    # Ordenar por similitud y tomar los mejores
+    suggestions.sort(key=lambda x: x['similarity'], reverse=True)
+    return [s['nombre'] for s in suggestions[:max_suggestions]]
+
+def clean_colonia_input(input_text):
+    """
+    Limpia y normaliza el input del usuario para búsqueda de colonias.
+    """
+    if not input_text:
+        return ""
+    
+    # Remover espacios extra al inicio y final
+    cleaned = input_text.strip()
+    
+    # Remover caracteres problemáticos comunes
+    cleaned = re.sub(r'[^\w\s\-áéíóúñÁÉÍÓÚÑ]', '', cleaned)
+    
+    # Normalizar espacios múltiples
+    cleaned = re.sub(r'\s+', ' ', cleaned)
+    
+    return cleaned
+
+def extract_location_info(nombre):
+    """
+    Extrae información de ubicación del nombre de la colonia.
+    """
+    info = {
+        'colonia': nombre,
+        'ciudad': None,
+        'estado': None,
+        'pais': 'México'
+    }
+    
+    # Patrones comunes para extraer información
+    patterns = {
+        'ciudad': r'(?:en|de)\s+([A-ZÁÉÍÓÚÑ][a-záéíóúñ\s]+?)(?:\s*,|\s*$)',
+        'estado': r'(?:,\s*|en\s+)([A-ZÁÉÍÓÚÑ][a-záéíóúñ\s]+?)(?:\s*,|\s*$)'
+    }
+    
+    for key, pattern in patterns.items():
+        match = re.search(pattern, nombre, re.IGNORECASE)
+        if match:
+            info[key] = match.group(1).strip()
+    
+    return info
+
+def format_colonia_display_name(nombre, info=None):
+    """
+    Formatea el nombre de la colonia para mostrar.
+    """
+    if not info:
+        info = extract_location_info(nombre)
+    
+    display_parts = [nombre]
+    
+    if info.get('ciudad'):
+        display_parts.append(f"({info['ciudad']})")
+    
+    return " ".join(display_parts)
+
+def get_colonia_search_variations(nombre):
+    """
+    Genera variaciones de búsqueda para un nombre de colonia.
+    """
+    variations = [nombre]
+    
+    # Variación sin acentos
+    sin_acentos = re.sub(r'[áàäâ]', 'a', nombre.lower())
+    sin_acentos = re.sub(r'[éèëê]', 'e', sin_acentos)
+    sin_acentos = re.sub(r'[íìïî]', 'i', sin_acentos)
+    sin_acentos = re.sub(r'[óòöô]', 'o', sin_acentos)
+    sin_acentos = re.sub(r'[úùüû]', 'u', sin_acentos)
+    sin_acentos = re.sub(r'[ñ]', 'n', sin_acentos)
+    variations.append(sin_acentos)
+    
+    # Variación con "Colonia" al inicio
+    if not nombre.lower().startswith('colonia'):
+        variations.append(f"Colonia {nombre}")
+    
+    # Variación sin "Colonia" al inicio
+    if nombre.lower().startswith('colonia'):
+        variations.append(nombre.replace('Colonia ', '').replace('colonia ', ''))
+    
+    return list(set(variations))  # Remover duplicados 

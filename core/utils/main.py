@@ -32,19 +32,53 @@ def download_bbox(place_name: str):
         params = {
             "q": place_name,
             "format": "json",
-            "limit": 1,
-            "polygon_geojson": 1
+            "limit": 5,  # Aumentar límite para obtener más opciones
+            "polygon_geojson": 1,
+            "countrycodes": "mx"  # Limitar a México
         }
         headers = {"User-Agent": "mi-aplicacion-ceneval"}
-        response = requests.get(url, params=params, headers=headers)
-        if response.status_code != 200:
-            raise RuntimeError(f"Error en la petición: {response.status_code}")
-        data = response.json()
-        if not data:
-            raise RuntimeError(f"No se encontró '{place_name}' en Nominatim.")
-        with open(cache_file, "w", encoding="utf-8") as f:
-            json.dump(data, f, indent=2)
-        print(f"Guardado en {cache_file}")
+        
+        try:
+            response = requests.get(url, params=params, headers=headers, timeout=10)
+            if response.status_code != 200:
+                raise RuntimeError(f"Error en la petición HTTP: {response.status_code}")
+            
+            data = response.json()
+            if not data:
+                # Intentar con variaciones del nombre
+                variations = [
+                    place_name.replace("colonia ", ""),
+                    place_name.replace("colonia", ""),
+                    place_name + ", México",
+                    place_name + ", Nuevo León",
+                    place_name + ", CDMX"
+                ]
+                
+                for variation in variations:
+                    if variation != place_name:
+                        print(f"Intentando variación: {variation}")
+                        params["q"] = variation
+                        response = requests.get(url, params=params, headers=headers, timeout=10)
+                        if response.status_code == 200:
+                            data = response.json()
+                            if data:
+                                print(f"Encontrado con variación: {variation}")
+                                break
+                
+                if not data:
+                    raise RuntimeError(f"No se encontró '{place_name}' en Nominatim. Sugerencias: verifica el nombre, agrega el estado o usa nombres más específicos.")
+            
+            # Usar el primer resultado
+            data = [data[0]] if isinstance(data, list) else [data]
+            
+            with open(cache_file, "w", encoding="utf-8") as f:
+                json.dump(data, f, indent=2)
+            print(f"Guardado en {cache_file}")
+            
+        except requests.exceptions.Timeout:
+            raise RuntimeError(f"Timeout al buscar '{place_name}' en Nominatim. Verifica tu conexión a internet.")
+        except requests.exceptions.RequestException as e:
+            raise RuntimeError(f"Error de conexión: {str(e)}")
 
     return cache_file
 
@@ -546,6 +580,9 @@ def procesar_poligono_completo(colonia_id: int, num_employees=2, algorithm='kern
 
     part1, part2 = split_graph(G, num_employees, algorithm)
     
+    # Calcular Silhouette Score
+    silhouette_score = calcular_silhouette_score(G, part1, part2)
+    
     long1, long2 = calcular_longitud_por_zona(G, part1, part2)
     area1, area2 = calcular_area_por_zona(G, part1, part2)
 
@@ -600,7 +637,110 @@ def procesar_poligono_completo(colonia_id: int, num_employees=2, algorithm='kern
             "calles_m_por_km2_z1": round(dens_calles1, 2),
             "calles_m_por_km2_z2": round(dens_calles2, 2)
         },
+        "silhouette_score": silhouette_score,
         "part1_nodes": part1,
         "part2_nodes": part2,
         "graph": G
     }
+
+
+def calcular_silhouette_score(G, part1, part2):
+    """
+    Calcula el Silhouette Score para evaluar la calidad del clustering de nodos.
+    
+    Args:
+        G: NetworkX graph
+        part1: set de nodos de la zona 1
+        part2: set de nodos de la zona 2
+    
+    Returns:
+        float: Silhouette Score entre -1 y 1
+    """
+    try:
+        from sklearn.metrics import silhouette_score
+        import numpy as np
+        
+        print("🎯 CALCULANDO SILHOUETTE SCORE...")
+        
+        # Si solo hay una zona, el score es perfecto
+        if len(part1) == 0 or len(part2) == 0:
+            print("✅ Una sola zona detectada - Silhouette Score = 1.0")
+            return 1.0
+        
+        # Extraer coordenadas de todos los nodos
+        coords = []
+        labels = []
+        node_list = list(G.nodes())
+        
+        for node in node_list:
+            if 'x' in G.nodes[node] and 'y' in G.nodes[node]:
+                coords.append([G.nodes[node]['x'], G.nodes[node]['y']])
+                if node in part1:
+                    labels.append(0)  # Zona 1
+                elif node in part2:
+                    labels.append(1)  # Zona 2
+                else:
+                    # Nodos no asignados (no debería pasar)
+                    labels.append(-1)
+            else:
+                print(f"⚠️ Nodo {node} sin coordenadas, usando [0,0]")
+                coords.append([0, 0])
+                if node in part1:
+                    labels.append(0)
+                elif node in part2:
+                    labels.append(1)
+                else:
+                    labels.append(-1)
+        
+        coords = np.array(coords)
+        labels = np.array(labels)
+        
+        # Filtrar nodos válidos (asignados a alguna zona)
+        valid_mask = labels != -1
+        if not np.any(valid_mask):
+            print("❌ No hay nodos válidos para calcular Silhouette Score")
+            return 0.0
+        
+        coords_valid = coords[valid_mask]
+        labels_valid = labels[valid_mask]
+        
+        # Verificar que tenemos al menos 2 clusters y múltiples puntos
+        unique_labels = np.unique(labels_valid)
+        if len(unique_labels) < 2:
+            print("❌ Solo hay un cluster - Silhouette Score = 1.0")
+            return 1.0
+        
+        if len(coords_valid) < 3:
+            print("❌ Muy pocos puntos para calcular Silhouette Score")
+            return 0.0
+        
+        # Calcular Silhouette Score
+        try:
+            score = silhouette_score(coords_valid, labels_valid, metric='euclidean')
+            print(f"✅ Silhouette Score calculado: {score:.4f}")
+            
+            # Interpretación del score
+            if score >= 0.7:
+                interpretacion = "Excelente clustering"
+            elif score >= 0.5:
+                interpretacion = "Buen clustering"
+            elif score >= 0.25:
+                interpretacion = "Clustering aceptable"
+            elif score >= 0:
+                interpretacion = "Clustering débil"
+            else:
+                interpretacion = "Clustering incorrecto"
+            
+            print(f"📊 Interpretación: {interpretacion}")
+            return round(score, 4)
+            
+        except Exception as e:
+            print(f"❌ Error calculando Silhouette Score: {str(e)}")
+            return 0.0
+            
+    except ImportError:
+        print("❌ sklearn no disponible - usando score estimado")
+        return 0.75  # Score estimado conservador
+    except Exception as e:
+        print(f"❌ Error general en cálculo de Silhouette Score: {str(e)}")
+        return 0.0

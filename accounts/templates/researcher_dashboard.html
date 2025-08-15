@@ -262,20 +262,30 @@
                         <div class="metric-value" id="eficienciaRutas">-</div>
                         <div class="metric-label">🛣️ Eficiencia de Rutas (%)</div>
                     </div>
+                    <div class="metric-box">
+                        <div class="metric-value" id="silhouetteScore">-</div>
+                        <div class="metric-label">🎯 Silhouette Score</div>
+                    </div>
                 </div>
 
                 <!-- Quality Metrics Progress Bars -->
                 <div class="row mb-3">
-                    <div class="col-md-6">
+                    <div class="col-md-4">
                         <label>Equidad de Cargas</label>
                         <div class="progress">
                             <div class="progress-bar bg-success" id="progressEquidad" style="width: 0%"></div>
                         </div>
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-md-4">
                         <label>Compacidad</label>
                         <div class="progress">
                             <div class="progress-bar bg-info" id="progressCompacidad" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <label>Silhouette Score</label>
+                        <div class="progress">
+                            <div class="progress-bar bg-warning" id="progressSilhouette" style="width: 0%"></div>
                         </div>
                     </div>
                 </div>
@@ -383,6 +393,7 @@
             document.getElementById('memoriaUsada').textContent = data.metricas_performance.memoria_usada;
             document.getElementById('balanceZonas').textContent = data.metricas_calidad.balance_zonas + '%';
             document.getElementById('eficienciaRutas').textContent = data.metricas_calidad.eficiencia_rutas + '%';
+            document.getElementById('silhouetteScore').textContent = data.metricas_calidad.silhouette_score || 'N/A';
             
             // Update progress bars
             document.getElementById('progressEquidad').style.width = data.metricas_calidad.equidad_cargas + '%';
@@ -390,6 +401,12 @@
             
             document.getElementById('progressCompacidad').style.width = data.metricas_calidad.compacidad + '%';
             document.getElementById('progressCompacidad').textContent = data.metricas_calidad.compacidad + '%';
+            
+            // Update Silhouette Score progress bar (convert to percentage)
+            const silhouetteScore = data.metricas_calidad.silhouette_score || 0;
+            const silhouettePercentage = Math.round(silhouetteScore * 100);
+            document.getElementById('progressSilhouette').style.width = silhouettePercentage + '%';
+            document.getElementById('progressSilhouette').textContent = silhouetteScore.toFixed(3);
             
             // Display generated zones
             const zonasContainer = document.getElementById('zonasGeneradas');

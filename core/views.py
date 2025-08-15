@@ -40,13 +40,33 @@ def config_editor(request):
         cache_file_name = f"{sanitize_filename(colonia)}.json"
         base_cache_dir = Path(__file__).resolve().parent / "cache"
         cache_path = base_cache_dir / cache_file_name
+        
+        # Descargar si no existe
         if not cache_path.exists():
-            # Solo descarga si no existe
-            download_bbox(colonia)
+            try:
+                download_bbox(colonia)
+            except Exception as download_error:
+                print(f"Error descargando {colonia}: {str(download_error)}")
+                return JsonResponse({
+                    "error": f"No se encontró '{colonia}' en Nominatim. Intenta con un nombre más específico.",
+                    "details": str(download_error)
+                }, status=404)
+        
+        # Verificar que el archivo existe después de la descarga
+        if not cache_path.exists():
+            return JsonResponse({
+                "error": f"No se pudo obtener información para '{colonia}'",
+                "suggestion": "Verifica el nombre de la colonia e intenta de nuevo"
+            }, status=404)
+        
         config = get_colonia_config(str(cache_path))
         return JsonResponse(config)
     except Exception as e:
-        return JsonResponse({"error": str(e)}, status=500)
+        print(f"Error en config_editor: {str(e)}")
+        return JsonResponse({
+            "error": f"Error interno del servidor: {str(e)}",
+            "suggestion": "Contacta al administrador"
+        }, status=500)
 
 # POST /editor/guardar/
 @csrf_exempt

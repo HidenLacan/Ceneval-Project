@@ -27,6 +27,41 @@
         .status-poligono { background: #17a2b8; color: white; }
         .status-json { background: #ffc107; color: black; }
         .hidden { display: none; }
+        
+        /* Estilos para búsqueda inteligente */
+        .search-container { position: relative; flex: 1; }
+        .suggestions-container { 
+            position: absolute; 
+            top: 100%; 
+            left: 0; 
+            right: 0; 
+            background: white; 
+            border: 1px solid #ddd; 
+            border-top: none; 
+            border-radius: 0 0 5px 5px; 
+            max-height: 200px; 
+            overflow-y: auto; 
+            z-index: 1000; 
+            display: none; 
+        }
+        .suggestion-item { 
+            padding: 10px; 
+            cursor: pointer; 
+            border-bottom: 1px solid #eee; 
+        }
+        .suggestion-item:hover { background: #f5f5f5; }
+        .suggestion-item:last-child { border-bottom: none; }
+        .suggestion-name { font-weight: bold; }
+        .suggestion-info { font-size: 0.8em; color: #666; margin-top: 2px; }
+        .validation-message { 
+            margin-top: 5px; 
+            font-size: 0.9em; 
+            padding: 5px; 
+            border-radius: 3px; 
+        }
+        .validation-error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .validation-success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .validation-warning { background: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
     </style>
 </head>
 <body>
@@ -51,8 +86,12 @@
     
     <form method="post" enctype="multipart/form-data" id="main-form">
         {% csrf_token %}
-        <div style="display: flex; gap: 10px; align-items: center;">
-            <input type="text" name="colonia" id="colonia" placeholder="Escribir Nombre de la colonia" style="flex: 1; padding:10px; font-size:1.1em;" required value="{{ colonia|default:'' }}">
+        <div style="display: flex; gap: 10px; align-items: flex-start;">
+            <div class="search-container">
+                <input type="text" name="colonia" id="colonia" placeholder="Escribir Nombre de la colonia" style="width: 100%; padding:10px; font-size:1.1em;" required value="{{ colonia|default:'' }}">
+                <div id="suggestions-container" class="suggestions-container"></div>
+                <div id="validation-message" class="validation-message hidden"></div>
+            </div>
             <button type="button" id="buscar-btn" style="padding: 10px 20px; font-size: 1.1em; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer;">Buscar</button>
         </div>
         
@@ -113,7 +152,7 @@
 
 {% if config %}
 <script>
-    var coloniaConfig = {{ config|safe }};
+    var coloniaConfig = JSON.parse('{{ config|escapejs }}');
 </script>
 {% endif %}
 
@@ -217,45 +256,92 @@
         this.textContent = 'Buscando...';
         this.disabled = true;
         
-        fetch('/editor/config/?colonia=' + encodeURIComponent(colonia))
-            .then(function(response) {
-                if (!response.ok) {
-                    throw new Error('Error en la búsqueda');
-                }
-                return response.json();
+        // Usar la nueva API inteligente
+        fetch('/accounts/buscar_colonia_inteligente/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            body: JSON.stringify({
+                query: colonia,
+                action: 'search'
             })
-            .then(function(config) {
-                if (config.center_lat && config.center_lon) {
-                    map.setView([config.center_lat, config.center_lon], 15);
-                    
-                    if (boundingBoxLayer) {
-                        map.removeLayer(boundingBoxLayer);
+        })
+        .then(function(response) {
+            if (!response.ok) {
+                throw new Error('Error en la búsqueda');
+            }
+            return response.json();
+        })
+        .then(function(data) {
+            if (data.success && data.found_in_db && data.colonias.length > 0) {
+                // Si se encontró en la base de datos, cargar la colonia existente
+                var coloniaEncontrada = data.colonias[0];
+                return fetch('/accounts/cargar_colonia/?nombre=' + encodeURIComponent(coloniaEncontrada.nombre));
+            } else if (data.success && data.found_in_nominatim) {
+                // Si se encontró en Nominatim, usar la configuración
+                return Promise.resolve({ ok: true, json: () => data.config });
+            } else {
+                // Si no se encontró, intentar con la API antigua como fallback
+                return fetch('/editor/config/?colonia=' + encodeURIComponent(colonia));
+            }
+        })
+        .then(function(response) {
+            if (!response.ok) {
+                throw new Error('Error al cargar la colonia');
+            }
+            return response.json();
+        })
+        .then(function(config) {
+            if (config.center_lat && config.center_lon) {
+                map.setView([config.center_lat, config.center_lon], 15);
+                
+                if (boundingBoxLayer) {
+                    map.removeLayer(boundingBoxLayer);
+                }
+                var bounds = [
+                    [config.bbox[0], config.bbox[2]],
+                    [config.bbox[1], config.bbox[3]]
+                ];
+                boundingBoxLayer = L.rectangle(bounds, { 
+                    color: 'orange', 
+                    weight: 2, 
+                    fillOpacity: 0.2 
+                });
+                boundingBoxLayer.addTo(map);
+                
+                drawnItems.clearLayers();
+                actualizarCamposOcultos();
+            } else {
+                alert('No se encontró información para esta colonia');
+            }
+        })
+        .catch(function(error) {
+            console.error('Error:', error);
+            
+            // Intentar obtener más información del error
+            if (error.response) {
+                error.response.json().then(function(errorData) {
+                    let errorMessage = 'Error al buscar la colonia';
+                    if (errorData.error) {
+                        errorMessage += ': ' + errorData.error;
                     }
-                    var bounds = [
-                        [config.bbox[0], config.bbox[2]],
-                        [config.bbox[1], config.bbox[3]]
-                    ];
-                    boundingBoxLayer = L.rectangle(bounds, { 
-                        color: 'orange', 
-                        weight: 2, 
-                        fillOpacity: 0.2 
-                    });
-                    boundingBoxLayer.addTo(map);
-                    
-                    drawnItems.clearLayers();
-                    actualizarCamposOcultos();
-                } else {
-                    alert('No se encontró información para esta colonia');
-                }
-            })
-            .catch(function(error) {
-                console.error('Error:', error);
+                    if (errorData.suggestion) {
+                        errorMessage += '\n\nSugerencia: ' + errorData.suggestion;
+                    }
+                    alert(errorMessage);
+                }).catch(function() {
+                    alert('Error al buscar la colonia: ' + error.message);
+                });
+            } else {
                 alert('Error al buscar la colonia: ' + error.message);
-            })
-            .finally(function() {
-                this.textContent = 'Buscar';
-                this.disabled = false;
-            }.bind(this));
+            }
+        })
+        .finally(function() {
+            this.textContent = 'Buscar';
+            this.disabled = false;
+        }.bind(this));
     });
     
     // Validación del formulario antes de enviar
@@ -442,6 +528,145 @@
         if (confirm('¿Estás seguro de que quieres cerrar sesión?')) {
             window.location.href = '/accounts/logout/';
         }
+    }
+    
+    // ========================================
+    // BÚSQUEDA INTELIGENTE DE COLONIAS
+    // ========================================
+    
+    let searchTimeout;
+    const coloniaInput = document.getElementById('colonia');
+    const suggestionsContainer = document.getElementById('suggestions-container');
+    const validationMessage = document.getElementById('validation-message');
+    
+    // Event listener para el input de colonia
+    coloniaInput.addEventListener('input', function() {
+        const query = this.value.trim();
+        
+        // Limpiar timeout anterior
+        clearTimeout(searchTimeout);
+        
+        // Ocultar sugerencias si no hay query
+        if (query.length < 2) {
+            hideSuggestions();
+            hideValidationMessage();
+            return;
+        }
+        
+        // Validar input en tiempo real
+        validateInput(query);
+        
+        // Buscar sugerencias después de 300ms de inactividad
+        searchTimeout = setTimeout(() => {
+            searchSuggestions(query);
+        }, 300);
+    });
+    
+    // Event listener para teclas especiales
+    coloniaInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            hideSuggestions();
+        }
+    });
+    
+    // Ocultar sugerencias al hacer clic fuera
+    document.addEventListener('click', function(e) {
+        if (!coloniaInput.contains(e.target) && !suggestionsContainer.contains(e.target)) {
+            hideSuggestions();
+        }
+    });
+    
+    // Función para validar input
+    function validateInput(query) {
+        fetch('/accounts/buscar_colonia_inteligente/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            body: JSON.stringify({
+                query: query,
+                action: 'validate'
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showValidationMessage('Nombre válido', 'success');
+            } else {
+                showValidationMessage(data.error, 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error validando:', error);
+        });
+    }
+    
+    // Función para buscar sugerencias
+    function searchSuggestions(query) {
+        fetch('/accounts/buscar_colonia_inteligente/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            body: JSON.stringify({
+                query: query,
+                action: 'suggest'
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.suggestions.length > 0) {
+                showSuggestions(data.suggestions);
+            } else {
+                hideSuggestions();
+            }
+        })
+        .catch(error => {
+            console.error('Error buscando sugerencias:', error);
+        });
+    }
+    
+    // Función para mostrar sugerencias
+    function showSuggestions(suggestions) {
+        suggestionsContainer.innerHTML = '';
+        
+        suggestions.forEach(suggestion => {
+            const item = document.createElement('div');
+            item.className = 'suggestion-item';
+            item.innerHTML = `
+                <div class="suggestion-name">${suggestion}</div>
+                <div class="suggestion-info">Haz clic para seleccionar</div>
+            `;
+            
+            item.addEventListener('click', () => {
+                coloniaInput.value = suggestion;
+                hideSuggestions();
+                hideValidationMessage();
+            });
+            
+            suggestionsContainer.appendChild(item);
+        });
+        
+        suggestionsContainer.style.display = 'block';
+    }
+    
+    // Función para ocultar sugerencias
+    function hideSuggestions() {
+        suggestionsContainer.style.display = 'none';
+    }
+    
+    // Función para mostrar mensaje de validación
+    function showValidationMessage(message, type) {
+        validationMessage.textContent = message;
+        validationMessage.className = `validation-message validation-${type}`;
+        validationMessage.style.display = 'block';
+    }
+    
+    // Función para ocultar mensaje de validación
+    function hideValidationMessage() {
+        validationMessage.style.display = 'none';
     }
 </script>
 </body>
