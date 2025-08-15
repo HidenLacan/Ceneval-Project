@@ -385,3 +385,54 @@ class ChatParticipant(models.Model):
         from django.utils import timezone
         self.ultimo_visto = timezone.now()
         self.save()
+
+
+class ConfiguracionAlgoritmo(models.Model):
+    """Configuración del algoritmo por defecto para el sistema"""
+    ALGORITMOS_CHOICES = [
+        ('kernighan_lin', 'Kernighan-Lin'),
+        ('kmeans', 'K-Means Clustering'),
+        ('dbscan', 'DBSCAN Clustering'),
+        ('spectral', 'Spectral Clustering'),
+        ('voronoi', 'Voronoi Diagram'),
+        ('random', 'División Aleatoria'),
+    ]
+    
+    algoritmo_por_defecto = models.CharField(
+        max_length=20,
+        choices=ALGORITMOS_CHOICES,
+        default='kernighan_lin',
+        help_text='Algoritmo que se usará por defecto en el sistema'
+    )
+    descripcion = models.TextField(
+        blank=True,
+        help_text='Descripción de por qué se eligió este algoritmo'
+    )
+    activo = models.BooleanField(
+        default=True,
+        help_text='Indica si esta configuración está activa'
+    )
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
+    fecha_modificacion = models.DateTimeField(auto_now=True)
+    modificado_por = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        help_text='Usuario que realizó el último cambio'
+    )
+    
+    class Meta:
+        verbose_name = 'Configuración de Algoritmo'
+        verbose_name_plural = 'Configuraciones de Algoritmos'
+    
+    def __str__(self):
+        return f"Algoritmo por defecto: {self.get_algoritmo_por_defecto_display()}"
+    
+    @classmethod
+    def get_algoritmo_activo(cls):
+        """Obtiene el algoritmo activo por defecto"""
+        config = cls.objects.filter(activo=True).first()
+        if config:
+            return config.algoritmo_por_defecto
+        return 'kernighan_lin'  # Fallback por defecto

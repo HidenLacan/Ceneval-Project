@@ -2326,3 +2326,272 @@ def obtener_historico_algoritmo(request):
             return JsonResponse({'error': f'Error obteniendo histórico: {str(e)}'}, status=500)
     
     return JsonResponse({'error': 'Método no permitido'}, status=405)
+
+@login_required
+def gestion_algoritmos_dashboard(request):
+    """Dashboard para que el researcher gestione algoritmos y vea visualizaciones"""
+    if request.user.role != 'researcher':
+        return redirect('login')
+    
+    from core.models import ConfiguracionAlgoritmo, ColoniaProcesada, EficienciaAlgoritmica
+    
+    # Obtener configuración actual o crear una por defecto
+    config_actual = ConfiguracionAlgoritmo.objects.filter(activo=True).first()
+    if not config_actual:
+        # Crear configuración por defecto si no existe
+        config_actual = ConfiguracionAlgoritmo.objects.create(
+            algoritmo_por_defecto='kernighan_lin',
+            descripcion='Configuración inicial del sistema',
+            activo=True
+        )
+    
+    # Obtener colonias disponibles para visualización
+    colonias_disponibles = ColoniaProcesada.objects.filter(
+        poligono_geojson__isnull=False
+    ).order_by('nombre')
+    
+    # Obtener últimas ejecuciones para visualización
+    ultimas_ejecuciones = EficienciaAlgoritmica.objects.select_related('colonia').order_by('-fecha_ejecucion')[:10]
+    
+    context = {
+        'researcher_user': request.user,
+        'config_actual': config_actual,
+        'colonias_disponibles': colonias_disponibles,
+        'ultimas_ejecuciones': ultimas_ejecuciones,
+        'algoritmos_disponibles': ConfiguracionAlgoritmo.ALGORITMOS_CHOICES,
+    }
+    
+    return render(request, 'gestion_algoritmos_dashboard.html', context)
+
+@login_required
+@csrf_exempt
+def cambiar_algoritmo_defecto(request):
+    """API para cambiar el algoritmo por defecto"""
+    if request.user.role != 'researcher':
+        return JsonResponse({'error': 'Acceso denegado'}, status=403)
+    
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            nuevo_algoritmo = data.get('algoritmo')
+            descripcion = data.get('descripcion', '')
+            
+            if not nuevo_algoritmo:
+                return JsonResponse({'error': 'Algoritmo requerido'}, status=400)
+            
+            from core.models import ConfiguracionAlgoritmo
+            
+            # Desactivar configuración anterior
+            ConfiguracionAlgoritmo.objects.filter(activo=True).update(activo=False)
+            
+            # Crear nueva configuración
+            nueva_config = ConfiguracionAlgoritmo.objects.create(
+                algoritmo_por_defecto=nuevo_algoritmo,
+                descripcion=descripcion,
+                modificado_por=request.user,
+                activo=True
+            )
+            
+            return JsonResponse({
+                'success': True,
+                'message': f'Algoritmo por defecto cambiado a: {nueva_config.get_algoritmo_por_defecto_display()}',
+                'algoritmo': nuevo_algoritmo,
+                'fecha_cambio': nueva_config.fecha_modificacion.strftime('%d/%m/%Y %H:%M')
+            })
+            
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'Formato JSON inválido'}, status=400)
+        except Exception as e:
+            return JsonResponse({'error': f'Error: {str(e)}'}, status=500)
+    
+    return JsonResponse({'error': 'Método no permitido'}, status=405)
+
+@login_required
+@csrf_exempt
+def visualizar_ruta(request):
+    """API para visualizar una ruta específica y guardar métricas en BD"""
+    if request.user.role != 'researcher':
+        return JsonResponse({'error': 'Acceso denegado'}, status=403)
+    
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            colonia_id = data.get('colonia_id')
+            algoritmo = data.get('algoritmo', 'kernighan_lin')
+            num_empleados = data.get('num_empleados', 2)
+            
+            if not colonia_id:
+                return JsonResponse({'error': 'ID de colonia requerido'}, status=400)
+            
+            from core.models import ColoniaProcesada, EficienciaAlgoritmica
+            from core.utils.main import procesar_poligono_completo
+            import time
+            import psutil
+            import os
+            
+            # Medir tiempo y memoria de inicio
+            start_time = time.time()
+            process = psutil.Process(os.getpid())
+            start_memory = process.memory_info().rss / 1024 / 1024  # MB
+            
+            # Procesar la colonia con el algoritmo especificado
+            resultado = procesar_poligono_completo(
+                colonia_id=int(colonia_id),
+                num_employees=int(num_empleados),
+                algorithm=algoritmo
+            )
+            
+            # Medir tiempo y memoria de fin
+            end_time = time.time()
+            end_memory = process.memory_info().rss / 1024 / 1024  # MB
+            tiempo_ejecucion = round(end_time - start_time, 2)
+            memoria_usada = round(end_memory - start_memory, 2)
+            
+            # Obtener colonia para referencia
+            colonia = ColoniaProcesada.objects.get(id=colonia_id)
+            
+            # Calcular métricas adicionales
+            nodos = resultado.get('nodos', {})
+            longitudes = resultado.get('longitudes', {})
+            areas = resultado.get('areas', {})
+            silhouette_score = resultado.get('silhouette_score', 0.0)
+            
+            # Calcular balance de zonas
+            total_nodos = nodos.get('total', 0)
+            nodos_z1 = nodos.get('zona1', 0)
+            nodos_z2 = nodos.get('zona2', 0)
+            balance_zonas = round((min(nodos_z1, nodos_z2) / max(nodos_z1, nodos_z2)) * 100, 2) if max(nodos_z1, nodos_z2) > 0 else 0
+            
+            # Calcular eficiencia de rutas (basado en distribución de longitudes)
+            long_z1 = longitudes.get('zona1_m', 0)
+            long_z2 = longitudes.get('zona2_m', 0)
+            total_long = long_z1 + long_z2
+            eficiencia_rutas = round((min(long_z1, long_z2) / max(long_z1, long_z2)) * 100, 2) if max(long_z1, long_z2) > 0 else 0
+            
+            # Calcular equidad de cargas (basado en áreas)
+            area_z1 = areas.get('zona1_m2', 0)
+            area_z2 = areas.get('zona2_m2', 0)
+            total_area = area_z1 + area_z2
+            equidad_cargas = round((min(area_z1, area_z2) / max(area_z1, area_z2)) * 100, 2) if max(area_z1, area_z2) > 0 else 0
+            
+            # Calcular compacidad (basado en densidad de nodos)
+            dens_nodos_z1 = resultado.get('densidades', {}).get('nodos_por_km2_z1', 0)
+            dens_nodos_z2 = resultado.get('densidades', {}).get('nodos_por_km2_z2', 0)
+            compacidad = round((min(dens_nodos_z1, dens_nodos_z2) / max(dens_nodos_z1, dens_nodos_z2)) * 100, 2) if max(dens_nodos_z1, dens_nodos_z2) > 0 else 0
+            
+            # Preparar datos de zonas
+            zonas_data = {
+                'zona1': {
+                    'nodos': nodos_z1,
+                    'area_m2': area_z1,
+                    'longitud_m': long_z1,
+                    'densidad_nodos_km2': dens_nodos_z1
+                },
+                'zona2': {
+                    'nodos': nodos_z2,
+                    'area_m2': area_z2,
+                    'longitud_m': long_z2,
+                    'densidad_nodos_km2': dens_nodos_z2
+                }
+            }
+            
+            # Guardar métricas en la base de datos
+            try:
+                eficiencia_obj = EficienciaAlgoritmica.objects.create(
+                    colonia=colonia,
+                    usuario_ejecutor=request.user,
+                    algoritmo_tipo=algoritmo,
+                    num_empleados=num_empleados,
+                    tiempo_ejecucion_segundos=tiempo_ejecucion,
+                    memoria_usada_mb=memoria_usada,
+                    balance_zonas_porcentaje=balance_zonas,
+                    eficiencia_rutas_porcentaje=eficiencia_rutas,
+                    equidad_cargas_porcentaje=equidad_cargas,
+                    compacidad_porcentaje=compacidad,
+                    silhouette_score=silhouette_score,
+                    total_nodos=total_nodos,
+                    total_aristas=len(resultado.get('graph', {}).edges()) if resultado.get('graph') else 0,
+                    nodos_zona1=nodos_z1,
+                    nodos_zona2=nodos_z2,
+                    area_total_m2=total_area,
+                    area_zona1_m2=area_z1,
+                    area_zona2_m2=area_z2,
+                    longitud_total_m=total_long,
+                    longitud_zona1_m=long_z1,
+                    longitud_zona2_m=long_z2,
+                    densidad_nodos_zona1_por_km2=dens_nodos_z1,
+                    densidad_nodos_zona2_por_km2=dens_nodos_z2,
+                    densidad_calles_zona1_m_por_km2=resultado.get('densidades', {}).get('calles_m_por_km2_z1', 0),
+                    densidad_calles_zona2_m_por_km2=resultado.get('densidades', {}).get('calles_m_por_km2_z2', 0),
+                    zonas_generadas=zonas_data,
+                    parametros_algoritmo={
+                        'colonia_id': colonia_id,
+                        'algorithm': algoritmo,
+                        'num_employees': num_empleados
+                    },
+                    metadatos_ejecucion={
+                        'fecha_ejecucion': time.strftime('%Y-%m-%d %H:%M:%S'),
+                        'usuario': request.user.username,
+                        'tipo_ejecucion': 'visualizacion_researcher'
+                    },
+                    notas=f"Ejecución desde gestión de algoritmos - {algoritmo}"
+                )
+                print(f"✅ Métricas guardadas en BD - ID: {eficiencia_obj.id}")
+                
+            except Exception as e:
+                print(f"❌ Error guardando métricas: {str(e)}")
+                # Continuar sin fallar la visualización
+            
+            # Extraer datos del mapa para renderizar en frontend
+            G = resultado.get('graph')
+            part1 = resultado.get('part1_nodes', set())
+            part2 = resultado.get('part2_nodes', set())
+            
+            # Obtener centro del mapa
+            if G and len(G.nodes()) > 0:
+                centro = list(G.nodes(data=True))[0][1]
+                center_lat = centro.get('y', 19.4326)  # Default CDMX
+                center_lon = centro.get('x', -99.1332)
+            else:
+                center_lat, center_lon = 19.4326, -99.1332  # Default CDMX
+            
+            # Preparar datos de rutas
+            rutas_data = {
+                'zona1': [],  # Roja
+                'zona2': []   # Azul
+            }
+            
+            if G:
+                for u, v, data in G.edges(data=True):
+                    if 'geometry' in data:
+                        coords = [[pt[1], pt[0]] for pt in data['geometry'].coords]
+                    else:
+                        coords = [[G.nodes[u]['y'], G.nodes[u]['x']], [G.nodes[v]['y'], G.nodes[v]['x']]]
+                    
+                    if u in part1 and v in part1:
+                        rutas_data['zona1'].append(coords)
+                    elif u in part2 and v in part2:
+                        rutas_data['zona2'].append(coords)
+            
+            return JsonResponse({
+                'success': True,
+                'mapa_data': {
+                    'center': [center_lat, center_lon],
+                    'rutas': rutas_data
+                },
+                'metricas': {
+                    'nodos': resultado.get('nodos', {}),
+                    'longitudes': resultado.get('longitudes', {}),
+                    'areas': resultado.get('areas', {}),
+                    'silhouette_score': resultado.get('silhouette_score', 0.0)
+                },
+                'algoritmo_usado': algoritmo,
+                'metricas_guardadas': True
+            })
+            
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'Formato JSON inválido'}, status=400)
+        except Exception as e:
+            return JsonResponse({'error': f'Error: {str(e)}'}, status=500)
+    
+    return JsonResponse({'error': 'Método no permitido'}, status=405)

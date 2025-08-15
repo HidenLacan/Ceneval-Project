@@ -159,8 +159,11 @@
             <p class="mb-0">Análisis de Eficiencia del Algoritmo de División de Rutas</p>
             <small>Usuario: {{ researcher_user.username }} | Última actualización: <span id="lastUpdate"></span></small>
             <div class="mt-3">
-                <a href="{% url 'comparacion_algoritmos_dashboard' %}" class="btn btn-outline-light">
+                <a href="{% url 'comparacion_algoritmos_dashboard' %}" class="btn btn-outline-light me-2">
                     <i class="fas fa-chart-line"></i> Dashboard de Comparación
+                </a>
+                <a href="{% url 'gestion_algoritmos_dashboard' %}" class="btn btn-outline-light">
+                    <i class="fas fa-cogs"></i> Gestión de Algoritmos
                 </a>
             </div>
         </div>

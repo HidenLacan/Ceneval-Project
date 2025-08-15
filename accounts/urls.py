@@ -30,9 +30,12 @@ from .views import (user_login,
                     chat_dashboard,
                     user_logout,
                     researcher_dashboard,
-                    analizar_algoritmo,
-                    comparar_algoritmos,
-                    obtener_historico_algoritmo)
+                                                        analizar_algoritmo,
+                                    comparar_algoritmos,
+                                    obtener_historico_algoritmo,
+                                    gestion_algoritmos_dashboard,
+                                    cambiar_algoritmo_defecto,
+                                    visualizar_ruta)
 
 urlpatterns = [
     path('login/', user_login, name='user_login'),
@@ -75,4 +78,7 @@ urlpatterns = [
     path('api/analizar_algoritmo/', analizar_algoritmo, name='analizar_algoritmo'),
     path('api/comparar_algoritmos/', comparar_algoritmos, name='comparar_algoritmos'),
     path('api/obtener_historico/', obtener_historico_algoritmo, name='obtener_historico_algoritmo'),
+    path('gestion_algoritmos/', gestion_algoritmos_dashboard, name='gestion_algoritmos_dashboard'),
+    path('api/cambiar_algoritmo_defecto/', cambiar_algoritmo_defecto, name='cambiar_algoritmo_defecto'),
+    path('api/visualizar_ruta/', visualizar_ruta, name='visualizar_ruta'),
 ]
