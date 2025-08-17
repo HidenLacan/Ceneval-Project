@@ -124,6 +124,11 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
+_static_dir = BASE_DIR / 'static'
+STATICFILES_DIRS = [_static_dir] if _static_dir.exists() else []
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
+
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
@@ -142,9 +147,7 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 # Static files configuration
-_static_dir = BASE_DIR / 'static'
-STATICFILES_DIRS = [_static_dir] if _static_dir.exists() else []
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
+
 # Email configuration
 EMAIL_BACKEND = os.environ.get('EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')
 EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.gmail.com')
