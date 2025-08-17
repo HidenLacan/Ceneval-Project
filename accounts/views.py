@@ -1777,9 +1777,15 @@ def chat_dashboard(request):
         ultimo_mensaje=Max('mensajes_chat__timestamp')
     ).order_by('-ultimo_mensaje', '-fecha_creacion')
     
+    # Debug: Mostrar información sobre las rutas encontradas
+    print(f"🔍 Usuario staff: {request.user.username}")
+    print(f"🔍 Rutas encontradas: {rutas_con_chat.count()}")
+    
     # Preparar datos de chat para cada ruta
     chats_data = []
     for ruta in rutas_con_chat:
+        print(f"🔍 Procesando ruta: {ruta.id} - {ruta.colonia.nombre}")
+        
         # Obtener último mensaje
         ultimo_mensaje = ChatMessage.objects.filter(
             configuracion_ruta=ruta
@@ -1819,11 +1825,23 @@ def chat_dashboard(request):
         
         chats_data.append(chat_info)
     
+    # Si no hay rutas, mostrar información de debug
+    if not rutas_con_chat.exists():
+        print(f"⚠️ No se encontraron rutas para el usuario {request.user.username}")
+        print(f"⚠️ Total de rutas en el sistema: {ConfiguracionRuta.objects.count()}")
+        print(f"⚠️ Rutas creadas por otros usuarios: {ConfiguracionRuta.objects.exclude(creado_por=request.user).count()}")
+    
     context = {
         'staff_user': request.user,
         'chats_data': chats_data,
         'total_chats': len(chats_data),
-        'chats_con_mensajes_nuevos': len([c for c in chats_data if c['mensajes_no_leidos'] > 0])
+        'chats_con_mensajes_nuevos': len([c for c in chats_data if c['mensajes_no_leidos'] > 0]),
+        'debug_info': {
+            'total_rutas_sistema': ConfiguracionRuta.objects.count(),
+            'rutas_usuario_actual': rutas_con_chat.count(),
+            'total_mensajes_sistema': ChatMessage.objects.count(),
+            'total_participantes_sistema': ChatParticipant.objects.count()
+        }
     }
     
     return render(request, 'staff_chat_dashboard.html', context)

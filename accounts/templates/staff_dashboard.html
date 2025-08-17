@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <title>Staff - Asignación de Rutas</title>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css"/>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-draw@1.0.4/dist/leaflet.draw.css"/>
     <style>
@@ -16,50 +18,15 @@
         
         .dashboard-container {
             display: grid;
-            grid-template-columns: 60px 1fr 1fr 1fr;
+            grid-template-columns: 1fr 1fr 1fr;
             grid-template-rows: auto 1fr auto;
             height: 100vh;
             gap: 0;
         }
         
-        /* Toolbar lateral */
-        .toolbar {
-            grid-column: 1;
-            grid-row: 1 / -1;
-            background: #2c3e50;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 20px 0;
-            gap: 15px;
-        }
-        
-        .toolbar-icon {
-            width: 40px;
-            height: 40px;
-            background: #34495e;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            cursor: pointer;
-            transition: all 0.3s;
-            font-size: 18px;
-        }
-        
-        .toolbar-icon:hover {
-            background: #3498db;
-            transform: scale(1.1);
-        }
-        
-        .toolbar-icon.active {
-            background: #e74c3c;
-        }
-        
         /* Panel superior */
         .top-panel {
-            grid-column: 2 / -1;
+            grid-column: 1 / -1;
             grid-row: 1;
             background: white;
             padding: 20px;
@@ -67,6 +34,34 @@
             display: flex;
             gap: 30px;
             align-items: center;
+            justify-content: space-between;
+        }
+        
+        .top-panel-left {
+            display: flex;
+            gap: 30px;
+            align-items: center;
+        }
+        
+        .logout-btn {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(231, 76, 60, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .logout-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(231, 76, 60, 0.4);
         }
         
         .selection-group {
@@ -97,7 +92,7 @@
         
         /* Panel principal izquierdo - Mapa con polígonos */
         .map-panel {
-            grid-column: 2;
+            grid-column: 1;
             grid-row: 2;
             background: white;
             margin: 20px;
@@ -125,7 +120,7 @@
         
         /* Panel central - Mapa dividido */
         .divided-map-panel {
-            grid-column: 3;
+            grid-column: 2;
             grid-row: 2;
             background: white;
             margin: 20px;
@@ -153,7 +148,7 @@
         
         /* Panel derecho - Información de empleados */
         .employees-panel {
-            grid-column: 4;
+            grid-column: 3;
             grid-row: 2;
             background: white;
             margin: 20px;
@@ -247,21 +242,28 @@
         }
         
         .btn-small {
-            padding: 4px 8px;
+            padding: 6px 12px;
             font-size: 11px;
-            border-radius: 4px;
+            border-radius: 8px;
             border: none;
             cursor: pointer;
             font-weight: 600;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         }
         
         .btn-remove {
-            background: #dc3545;
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
             color: white;
         }
         
         .btn-remove:hover {
-            background: #c82333;
+            background: linear-gradient(135deg, #e55a5a 0%, #d54a14 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3);
         }
         
         .employee-status {
@@ -304,7 +306,7 @@
         
         /* Panel inferior - Botones de acción */
         .action-panel {
-            grid-column: 2 / -1;
+            grid-column: 1 / -1;
             grid-row: 3;
             background: white;
             padding: 20px;
@@ -315,56 +317,91 @@
         }
         
         .btn {
-            padding: 12px 25px;
+            padding: 15px 30px;
             border: none;
-            border-radius: 8px;
+            border-radius: 12px;
             cursor: pointer;
             font-size: 14px;
             font-weight: 600;
-            transition: all 0.3s;
+            transition: all 0.3s ease;
             text-decoration: none;
-            display: inline-block;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
             text-align: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+        
+        .btn:hover::before {
+            left: 100%;
         }
         
         .btn-primary {
-            background: #3498db;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
         }
         
         .btn-primary:hover {
-            background: #2980b9;
-            transform: translateY(-2px);
+            background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
         }
         
         .btn-success {
-            background: #28a745;
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
             color: white;
         }
         
         .btn-success:hover {
-            background: #1e7e34;
-            transform: translateY(-2px);
+            background: linear-gradient(135deg, #0f8a7d 0%, #2dd66e 100%);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(17, 153, 142, 0.4);
+        }
+        
+        .btn-info {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+        }
+        
+        .btn-info:hover {
+            background: linear-gradient(135deg, #3e9bed 0%, #00d8e0 100%);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(79, 172, 254, 0.4);
         }
         
         .btn-warning {
-            background: #ffc107;
-            color: #212529;
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            color: white;
         }
         
         .btn-warning:hover {
-            background: #e0a800;
-            transform: translateY(-2px);
+            background: linear-gradient(135deg, #e95f8a 0%, #e6d130 100%);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(250, 112, 154, 0.4);
         }
         
         .btn-danger {
-            background: #dc3545;
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
             color: white;
         }
         
         .btn-danger:hover {
-            background: #c82333;
-            transform: translateY(-2px);
+            background: linear-gradient(135deg, #e55a5a 0%, #d54a14 100%);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(255, 107, 107, 0.4);
         }
         
         /* Mensajes */
@@ -396,16 +433,11 @@
         /* Responsive */
         @media (max-width: 1200px) {
             .dashboard-container {
-                grid-template-columns: 60px 1fr 1fr;
-            }
-            
-            .divided-map-panel {
-                grid-column: 3;
-                grid-row: 2;
+                grid-template-columns: 1fr 1fr;
             }
             
             .employees-panel {
-                grid-column: 2 / -1;
+                grid-column: 1 / -1;
                 grid-row: 3;
                 margin: 0 20px 20px 20px;
             }
@@ -421,17 +453,14 @@
                 grid-template-rows: auto auto auto auto auto;
             }
             
-            .toolbar {
-                grid-column: 1;
-                grid-row: 1;
-                flex-direction: row;
-                justify-content: center;
-                padding: 10px;
-            }
-            
             .top-panel {
                 grid-column: 1;
-                grid-row: 2;
+                grid-row: 1;
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .top-panel-left {
                 flex-direction: column;
                 gap: 15px;
             }
@@ -442,22 +471,22 @@
             }
             
             .map-panel {
-                grid-row: 3;
+                grid-row: 2;
             }
             
             .divided-map-panel {
-                grid-row: 4;
+                grid-row: 3;
             }
             
             .employees-panel {
                 grid-column: 1;
-                grid-row: 5;
+                grid-row: 4;
                 margin: 10px;
             }
             
             .action-panel {
                 grid-column: 1;
-                grid-row: 6;
+                grid-row: 5;
                 flex-direction: column;
                 gap: 10px;
             }
@@ -468,49 +497,37 @@
     <!-- CSRF Token -->
     {% csrf_token %}
     
-    <div class="dashboard-container">
-        <!-- Toolbar lateral -->
-        <div class="toolbar">
-            <div class="toolbar-icon" title="Inicio">🏠</div>
-            <div class="toolbar-icon active" title="Mapa">🗺️</div>
-            <div class="toolbar-icon" title="Rutas">🛣️</div>
-            <div class="toolbar-icon" title="Empleados">👥</div>
-            <div class="toolbar-icon" title="Reportes">📊</div>
-            <div class="toolbar-icon" title="Configuración">⚙️</div>
-            <div class="toolbar-icon" title="Chat">💬</div>
-            <div class="toolbar-icon" title="Ayuda">❓</div>
-            <div class="toolbar-icon" title="Nuevo">➕</div>
-            
-            <!-- Logout al final -->
-            <div style="margin-top: auto;">
-                <div class="toolbar-icon" title="Cerrar Sesión" style="background: #e74c3c;">🚪</div>
-            </div>
-        </div>
-        
+    <div class="dashboard-container">        
         <!-- Panel superior -->
         <div class="top-panel">
-            <div class="selection-group">
-                <label for="colonia-select">Selección de colonia</label>
-                <select id="colonia-select">
-                    <option value="">Seleccionar colonia...</option>
-                    {% for colonia in colonias %}
-                    <option value="{{ colonia.id }}">{{ colonia.nombre }}</option>
-                    {% endfor %}
-                </select>
+            <div class="top-panel-left">
+                <div class="selection-group">
+                    <label for="colonia-select">Selección de colonia</label>
+                    <select id="colonia-select">
+                        <option value="">Seleccionar colonia...</option>
+                        {% for colonia in colonias %}
+                        <option value="{{ colonia.id }}">{{ colonia.nombre }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="selection-group">
+                    <label for="empleados-select">Selección de empleados para asignar ruta (máximo 2)</label>
+                    <select id="empleados-select">
+                        <option value="">Seleccionar empleado...</option>
+                        {% for empleado in empleados %}
+                        <option value="{{ empleado.id }}" data-username="{{ empleado.username }}" data-email="{{ empleado.email }}">
+                            {{ empleado.username }} - {{ empleado.email }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                    <small style="color: #666; font-size: 12px;">Puedes seleccionar hasta 2 empleados por ruta</small>
+                </div>
             </div>
             
-            <div class="selection-group">
-                <label for="empleados-select">Selección de empleados para asignar ruta (máximo 2)</label>
-                <select id="empleados-select">
-                    <option value="">Seleccionar empleado...</option>
-                    {% for empleado in empleados %}
-                    <option value="{{ empleado.id }}" data-username="{{ empleado.username }}" data-email="{{ empleado.email }}">
-                        {{ empleado.username }} - {{ empleado.email }}
-                    </option>
-                    {% endfor %}
-                </select>
-                <small style="color: #666; font-size: 12px;">Puedes seleccionar hasta 2 empleados por ruta</small>
-            </div>
+            <button class="logout-btn" onclick="confirmLogout()">
+                <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+            </button>
         </div>
         
         <!-- Panel principal izquierdo - Mapa con polígonos -->
@@ -552,19 +569,23 @@
         <!-- Panel inferior - Botones de acción -->
         <div class="action-panel">
             <button class="btn btn-primary" id="generar-rutas-btn">
-                🛣️ Generar rutas
+                <i class="fas fa-route"></i>
+                Generar Rutas
             </button>
             
             <button class="btn btn-success" id="guardar-btn">
-                💾 Guardar
+                <i class="fas fa-save"></i>
+                Guardar
             </button>
             
             <a href="{% url 'consultar_rutas_staff' %}" class="btn btn-info" id="consultar-ruta-btn">
-                🔍 Consultar Ruta
+                <i class="fas fa-search"></i>
+                Consultar Ruta
             </a>
             
             <button class="btn btn-warning" id="mandar-info-btn">
-                📤 MANDAR INFORMACIÓN
+                <i class="fas fa-paper-plane"></i>
+                Enviar Información
             </button>
         </div>
     </div>
@@ -692,7 +713,8 @@
                             </div>
                             <div class="employee-actions">
                                 <button class="btn-small btn-remove" onclick="removeEmployee('${employee.id}')">
-                                    ✕ Remover
+                                    <i class="fas fa-times"></i>
+                                    Remover
                                 </button>
                             </div>
                         </div>
@@ -948,7 +970,8 @@
                             </div>
                             <div class="employee-actions">
                                 <button class="btn-small btn-remove" onclick="removeEmployee('${employee.id}')">
-                                    ✕ Remover
+                                    <i class="fas fa-times"></i>
+                                    Remover
                                 </button>
                             </div>
                         </div>
@@ -1061,6 +1084,13 @@
                     messageDiv.remove();
                 }
             }, 5000);
+        }
+        
+        // Confirmar logout
+        function confirmLogout() {
+            if (confirm('¿Estás seguro de que quieres cerrar sesión?')) {
+                window.location.href = '/accounts/logout/';
+            }
         }
         
         // Función para obtener CSRF token
@@ -1180,26 +1210,6 @@
             document.getElementById('generar-rutas-btn').addEventListener('click', generateRoutes);
             document.getElementById('guardar-btn').addEventListener('click', saveConfiguration);
             document.getElementById('mandar-info-btn').addEventListener('click', sendInformation);
-            
-            // Toolbar
-            document.querySelectorAll('.toolbar-icon').forEach((icon, index) => {
-                icon.addEventListener('click', function() {
-                    document.querySelectorAll('.toolbar-icon').forEach(i => i.classList.remove('active'));
-                    this.classList.add('active');
-                    
-                    // Funcionalidad específica para cada ícono
-                    const title = this.getAttribute('title');
-                    if (title === 'Chat') {
-                        // Redirigir al dashboard de chats
-                        window.location.href = '/accounts/chat_dashboard/';
-                    } else if (title === 'Cerrar Sesión') {
-                        // Confirmar logout
-                        if (confirm('¿Estás seguro de que quieres cerrar sesión?')) {
-                            window.location.href = '/accounts/logout/';
-                        }
-                    }
-                });
-            });
         });
     </script>
 </body>

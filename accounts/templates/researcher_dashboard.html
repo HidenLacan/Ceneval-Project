@@ -5,17 +5,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Researcher Dashboard - Análisis de Algoritmos</title>
     
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
-            background-color: #f8f9fa;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #2c3e50;
         }
         
         .dashboard-container {
@@ -24,18 +30,119 @@
         }
         
         .main-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            color: #2c3e50;
             padding: 30px;
-            border-radius: 15px;
+            border-radius: 20px;
             margin-bottom: 30px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+        
+        .header-content {
+            text-align: center;
+        }
+        
+        .logout-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(231, 76, 60, 0.3);
+        }
+        
+        .logout-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(231, 76, 60, 0.4);
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .main-header {
+                padding: 20px;
+            }
+            
+            .logout-btn {
+                position: relative;
+                top: auto;
+                right: auto;
+                margin-bottom: 15px;
+                align-self: center;
+            }
+            
+            .header-content {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .main-header h1 {
+                font-size: 2rem;
+            }
+            
+            .nav-buttons {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .nav-btn {
+                width: 100%;
+                justify-content: center;
+            }
         }
         
         .main-header h1 {
             margin: 0;
             font-size: 2.5rem;
-            font-weight: bold;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+        }
+        
+        .main-header p {
+            color: #7f8c8d;
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+        }
+        
+        .nav-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .nav-btn {
+            padding: 12px 25px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 12px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .nav-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+            color: white;
+            text-decoration: none;
         }
         
         .stats-cards {
@@ -46,44 +153,49 @@
         }
         
         .stat-card {
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
             text-align: center;
             transition: transform 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
         
         .stat-card:hover {
             transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
         }
         
         .stat-number {
-            font-size: 2rem;
+            font-size: 2.5rem;
             font-weight: bold;
             color: #3498db;
+            margin-bottom: 5px;
         }
         
         .stat-label {
             color: #6c757d;
             font-size: 0.9rem;
-            margin-top: 5px;
+            font-weight: 500;
         }
         
         .analysis-panel {
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            padding: 25px;
-            margin-bottom: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            margin-bottom: 30px;
         }
         
         .panel-header {
             display: flex;
-            justify-content: between;
+            justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
-            padding-bottom: 10px;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
             border-bottom: 2px solid #e9ecef;
         }
         
@@ -92,79 +204,332 @@
             font-weight: 600;
             color: #2c3e50;
             margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
         
         .algorithm-controls {
             display: grid;
             grid-template-columns: 1fr 1fr 1fr auto;
-            gap: 15px;
+            gap: 20px;
             align-items: end;
-            margin-bottom: 20px;
+            margin-bottom: 25px;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .form-label {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+        
+        .form-select {
+            padding: 12px 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            font-size: 14px;
+            background: white;
+            transition: all 0.3s ease;
+        }
+        
+        .form-select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-lg {
+            padding: 15px 30px;
+            font-size: 16px;
         }
         
         .metrics-display {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin-bottom: 20px;
+            gap: 20px;
+            margin-bottom: 25px;
         }
         
         .metric-box {
             background: #f8f9fa;
-            padding: 15px;
-            border-radius: 8px;
+            padding: 20px;
+            border-radius: 12px;
             border-left: 4px solid #3498db;
+            transition: all 0.3s ease;
+        }
+        
+        .metric-box:hover {
+            background: #e8f4fd;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.2);
         }
         
         .metric-value {
-            font-size: 1.5rem;
+            font-size: 1.8rem;
             font-weight: bold;
             color: #2c3e50;
+            margin-bottom: 5px;
         }
         
         .metric-label {
             font-size: 0.85rem;
             color: #6c757d;
-            margin-top: 5px;
+            font-weight: 500;
         }
         
-        .logout-btn {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 1000;
+        .progress-section {
+            margin-bottom: 25px;
+        }
+        
+        .progress-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .progress-item {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .progress-label {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 12px;
+            background: #e9ecef;
+            border-radius: 6px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            border-radius: 6px;
+            transition: width 0.3s ease;
+            position: relative;
+        }
+        
+        .progress-fill.bg-info {
+            background: linear-gradient(135deg, #17a2b8 0%, #20c997 100%);
+        }
+        
+        .progress-fill.bg-warning {
+            background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);
+        }
+        
+        .progress-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 0.7rem;
+            font-weight: bold;
+            color: white;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+        }
+        
+        .zones-section {
+            margin-top: 25px;
+        }
+        
+        .zones-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .zones-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        
+        .zone-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .zone-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+        }
+        
+        .zone-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 20px;
+            font-weight: 600;
+        }
+        
+        .zone-body {
+            padding: 20px;
+        }
+        
+        .zone-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+        }
+        
+        .zone-info:last-child {
+            margin-bottom: 0;
+        }
+        
+        .zone-label {
+            color: #6c757d;
+            font-weight: 500;
+        }
+        
+        .zone-value {
+            color: #2c3e50;
+            font-weight: 600;
+        }
+        
+        .difficulty-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .bg-success {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+        }
+        
+        .bg-warning {
+            background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);
+            color: white;
+        }
+        
+        .bg-danger {
+            background: linear-gradient(135deg, #dc3545 0%, #c0392b 100%);
+            color: white;
+        }
+        
+        .bg-secondary {
+            background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+            color: white;
         }
         
         .loading-spinner {
             display: none;
             text-align: center;
-            padding: 20px;
+            padding: 30px;
         }
         
-        .loading-spinner.show {
-            display: block;
+        .spinner {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 15px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .algorithm-controls {
+                grid-template-columns: 1fr;
+            }
+            
+            .progress-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .zones-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .nav-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .main-header h1 {
+                font-size: 2rem;
+            }
+            
+            .stats-cards {
+                grid-template-columns: repeat(2, 1fr);
+            }
         }
     </style>
 </head>
 <body>
-    <!-- Logout Button -->
-    <button class="btn btn-danger logout-btn" onclick="confirmLogout()">
-        <i class="fas fa-sign-out-alt"></i> Logout
-    </button>
-
     <div class="dashboard-container">
         <!-- Header -->
         <div class="main-header">
-            <h1><i class="fas fa-microscope"></i> Researcher Dashboard</h1>
-            <p class="mb-0">Análisis de Eficiencia del Algoritmo de División de Rutas</p>
-            <small>Usuario: {{ researcher_user.username }} | Última actualización: <span id="lastUpdate"></span></small>
-            <div class="mt-3">
-                <a href="{% url 'comparacion_algoritmos_dashboard' %}" class="btn btn-outline-light me-2">
-                    <i class="fas fa-chart-line"></i> Dashboard de Comparación
-                </a>
-                <a href="{% url 'gestion_algoritmos_dashboard' %}" class="btn btn-outline-light">
-                    <i class="fas fa-cogs"></i> Gestión de Algoritmos
-                </a>
+            <button class="logout-btn" onclick="confirmLogout()" title="Cerrar Sesión">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </button>
+            <div class="header-content">
+                <h1><i class="fas fa-microscope"></i> Researcher Dashboard</h1>
+                <p>Análisis de Eficiencia del Algoritmo de División de Rutas</p>
+                <small>Usuario: {{ researcher_user.username }} | Última actualización: <span id="lastUpdate"></span></small>
+                <div class="nav-buttons">
+                    <a href="{% url 'comparacion_algoritmos_dashboard' %}" class="nav-btn">
+                        <i class="fas fa-chart-line"></i> Dashboard de Comparación
+                    </a>
+                    <a href="{% url 'gestion_algoritmos_dashboard' %}" class="nav-btn">
+                        <i class="fas fa-cogs"></i> Gestión de Algoritmos
+                    </a>
+                </div>
             </div>
         </div>
 
@@ -197,7 +562,7 @@
             </div>
             
             <div class="algorithm-controls">
-                <div>
+                <div class="form-group">
                     <label for="coloniaSelect" class="form-label">Seleccionar Colonia</label>
                     <select class="form-select" id="coloniaSelect">
                         <option value="">Selecciona una colonia...</option>
@@ -208,7 +573,7 @@
                         {% endfor %}
                     </select>
                 </div>
-                <div>
+                <div class="form-group">
                     <label for="numEmpleados" class="form-label">Número de Empleados</label>
                     <select class="form-select" id="numEmpleados">
                         <option value="2">2 Empleados</option>
@@ -217,7 +582,7 @@
                         <option value="5">5 Empleados</option>
                     </select>
                 </div>
-                <div>
+                <div class="form-group">
                     <label for="algoritmoTipo" class="form-label">Algoritmo</label>
                     <select class="form-select" id="algoritmoTipo">
                         <option value="current">Algoritmo Actual</option>
@@ -228,7 +593,7 @@
                         <option value="spectral">Spectral Clustering</option>
                     </select>
                 </div>
-                <div>
+                <div class="form-group">
                     <button class="btn btn-primary btn-lg" id="ejecutarAnalisis">
                         <i class="fas fa-rocket"></i> Ejecutar
                     </button>
@@ -237,15 +602,13 @@
 
             <!-- Loading Spinner -->
             <div class="loading-spinner" id="loadingSpinner">
-                <div class="spinner-border text-primary" role="status">
-                    <span class="visually-hidden">Analizando...</span>
-                </div>
-                <p class="mt-2">Ejecutando análisis del algoritmo...</p>
+                <div class="spinner"></div>
+                <p>Ejecutando análisis del algoritmo...</p>
             </div>
 
             <!-- Results Display -->
             <div id="analysisResults" style="display: none;">
-                <h5 id="resultTitle">Resultados del Análisis</h5>
+                <h5 id="resultTitle" style="color: #2c3e50; margin-bottom: 20px; font-size: 1.3rem;">Resultados del Análisis</h5>
                 
                 <!-- Performance Metrics -->
                 <div class="metrics-display">
@@ -272,38 +635,45 @@
                 </div>
 
                 <!-- Quality Metrics Progress Bars -->
-                <div class="row mb-3">
-                    <div class="col-md-4">
-                        <label>Equidad de Cargas</label>
-                        <div class="progress">
-                            <div class="progress-bar bg-success" id="progressEquidad" style="width: 0%"></div>
+                <div class="progress-section">
+                    <div class="progress-row">
+                        <div class="progress-item">
+                            <label class="progress-label">Equidad de Cargas</label>
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="progressEquidad" style="width: 0%">
+                                    <span class="progress-text">0%</span>
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                    <div class="col-md-4">
-                        <label>Compacidad</label>
-                        <div class="progress">
-                            <div class="progress-bar bg-info" id="progressCompacidad" style="width: 0%"></div>
+                        <div class="progress-item">
+                            <label class="progress-label">Compacidad</label>
+                            <div class="progress-bar">
+                                <div class="progress-fill bg-info" id="progressCompacidad" style="width: 0%">
+                                    <span class="progress-text">0%</span>
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                    <div class="col-md-4">
-                        <label>Silhouette Score</label>
-                        <div class="progress">
-                            <div class="progress-bar bg-warning" id="progressSilhouette" style="width: 0%"></div>
+                        <div class="progress-item">
+                            <label class="progress-label">Silhouette Score</label>
+                            <div class="progress-bar">
+                                <div class="progress-fill bg-warning" id="progressSilhouette" style="width: 0%">
+                                    <span class="progress-text">0.000</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Generated Zones -->
-                <h6 class="mt-4 mb-3">Zonas Generadas</h6>
-                <div class="row" id="zonasGeneradas">
-                    <!-- Zones will be populated by JavaScript -->
+                <div class="zones-section">
+                    <h6 class="zones-title">Zonas Generadas</h6>
+                    <div class="zones-grid" id="zonasGeneradas">
+                        <!-- Zones will be populated by JavaScript -->
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
     <script>
         // CSRF Token
@@ -349,7 +719,7 @@
             console.log('🚀 Ejecutando análisis:', { coloniaId, numEmpleados, algoritmoTipo });
             
             // Show loading
-            document.getElementById('loadingSpinner').classList.add('show');
+            document.getElementById('loadingSpinner').style.display = 'block';
             document.getElementById('analysisResults').style.display = 'none';
             
             fetch('/accounts/api/analizar_algoritmo/', {
@@ -379,7 +749,7 @@
                 alert('Error de conexión');
             })
             .finally(() => {
-                document.getElementById('loadingSpinner').classList.remove('show');
+                document.getElementById('loadingSpinner').style.display = 'none';
             });
         }
 
@@ -399,17 +769,20 @@
             document.getElementById('silhouetteScore').textContent = data.metricas_calidad.silhouette_score || 'N/A';
             
             // Update progress bars
-            document.getElementById('progressEquidad').style.width = data.metricas_calidad.equidad_cargas + '%';
-            document.getElementById('progressEquidad').textContent = data.metricas_calidad.equidad_cargas + '%';
+            const equidadProgress = document.getElementById('progressEquidad');
+            equidadProgress.style.width = data.metricas_calidad.equidad_cargas + '%';
+            equidadProgress.querySelector('.progress-text').textContent = data.metricas_calidad.equidad_cargas + '%';
             
-            document.getElementById('progressCompacidad').style.width = data.metricas_calidad.compacidad + '%';
-            document.getElementById('progressCompacidad').textContent = data.metricas_calidad.compacidad + '%';
+            const compacidadProgress = document.getElementById('progressCompacidad');
+            compacidadProgress.style.width = data.metricas_calidad.compacidad + '%';
+            compacidadProgress.querySelector('.progress-text').textContent = data.metricas_calidad.compacidad + '%';
             
             // Update Silhouette Score progress bar (convert to percentage)
             const silhouetteScore = data.metricas_calidad.silhouette_score || 0;
             const silhouettePercentage = Math.round(silhouetteScore * 100);
-            document.getElementById('progressSilhouette').style.width = silhouettePercentage + '%';
-            document.getElementById('progressSilhouette').textContent = silhouetteScore.toFixed(3);
+            const silhouetteProgress = document.getElementById('progressSilhouette');
+            silhouetteProgress.style.width = silhouettePercentage + '%';
+            silhouetteProgress.querySelector('.progress-text').textContent = silhouetteScore.toFixed(3);
             
             // Display generated zones
             const zonasContainer = document.getElementById('zonasGeneradas');
@@ -417,29 +790,29 @@
             
             data.zonas_generadas.forEach(zona => {
                 const zoneCard = document.createElement('div');
-                zoneCard.className = 'col-md-6 col-lg-4 mb-3';
+                zoneCard.className = 'zone-card';
                 zoneCard.innerHTML = `
-                    <div class="card">
-                        <div class="card-header bg-primary text-white">
-                            <h6 class="mb-0">Zona ${zona.zona}</h6>
+                    <div class="zone-header">
+                        Zona ${zona.zona}
+                    </div>
+                    <div class="zone-body">
+                        <div class="zone-info">
+                            <span class="zone-label">Área:</span>
+                            <span class="zone-value">${zona.area_km2} km²</span>
                         </div>
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between mb-2">
-                                <span>Área:</span>
-                                <span>${zona.area_km2} km²</span>
-                            </div>
-                            <div class="d-flex justify-content-between mb-2">
-                                <span>Puntos:</span>
-                                <span>${zona.puntos_asignados}</span>
-                            </div>
-                            <div class="d-flex justify-content-between mb-2">
-                                <span>Tiempo Est.:</span>
-                                <span>${zona.tiempo_estimado}h</span>
-                            </div>
-                            <div class="d-flex justify-content-between">
-                                <span>Dificultad:</span>
-                                <span><span class="badge ${getDifficultyClass(zona.dificultad)}">${zona.dificultad}</span></span>
-                            </div>
+                        <div class="zone-info">
+                            <span class="zone-label">Puntos:</span>
+                            <span class="zone-value">${zona.puntos_asignados}</span>
+                        </div>
+                        <div class="zone-info">
+                            <span class="zone-label">Tiempo Est.:</span>
+                            <span class="zone-value">${zona.tiempo_estimado}h</span>
+                        </div>
+                        <div class="zone-info">
+                            <span class="zone-label">Dificultad:</span>
+                            <span class="zone-value">
+                                <span class="difficulty-badge ${getDifficultyClass(zona.dificultad)}">${zona.dificultad}</span>
+                            </span>
                         </div>
                     </div>
                 `;
@@ -462,7 +835,7 @@
             }
         }
 
-        // Logout function
+        // Función para confirmar logout
         function confirmLogout() {
             if (confirm('¿Estás seguro de que quieres cerrar sesión?')) {
                 window.location.href = '/accounts/logout/';
