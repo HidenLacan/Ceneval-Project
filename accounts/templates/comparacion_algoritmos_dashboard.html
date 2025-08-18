@@ -360,27 +360,271 @@
         }
         
         /* Responsive Design */
-        @media (max-width: 768px) {
+        @media (max-width: 1200px) {
+            .dashboard-container {
+                padding: 15px;
+            }
+            
+            .main-header {
+                padding: 25px;
+            }
+            
+            .main-header h1 {
+                font-size: 2.2rem;
+            }
+            
             .nav-tabs {
-                flex-direction: column;
-                gap: 10px;
+                padding: 15px;
+                gap: 8px;
+            }
+            
+            .nav-tab {
+                padding: 10px 20px;
+                font-size: 0.9rem;
+            }
+            
+            .comparison-panel {
+                padding: 25px;
             }
             
             .filter-row {
-                grid-template-columns: 1fr;
+                grid-template-columns: 1fr 1fr;
+                gap: 15px;
             }
             
             .metric-grid {
-                grid-template-columns: repeat(2, 1fr);
+                grid-template-columns: repeat(3, 1fr);
+                gap: 12px;
+            }
+            
+            .algorithm-card {
+                padding: 20px;
+            }
+            
+            .chart-container {
+                height: 350px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .dashboard-container {
+                padding: 10px;
+            }
+            
+            .main-header {
+                padding: 20px;
             }
             
             .main-header h1 {
                 font-size: 2rem;
             }
             
+            .main-header p {
+                font-size: 1rem;
+            }
+            
+            .nav-tabs {
+                flex-direction: column;
+                gap: 10px;
+                padding: 15px;
+            }
+            
+            .nav-tab {
+                padding: 12px 20px;
+                font-size: 0.9rem;
+                justify-content: center;
+            }
+            
+            .comparison-panel {
+                padding: 20px;
+            }
+            
+            .panel-title {
+                font-size: 1.3rem;
+            }
+            
+            .filter-row {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            
+            .form-group {
+                margin-bottom: 15px;
+            }
+            
+            .form-label {
+                font-size: 0.9rem;
+            }
+            
+            .form-select {
+                padding: 10px 12px;
+                font-size: 0.9rem;
+            }
+            
+            .btn {
+                padding: 10px 20px;
+                font-size: 0.9rem;
+            }
+            
+            .metric-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+            }
+            
+            .metric-item {
+                padding: 12px;
+            }
+            
+            .metric-value {
+                font-size: 1.1rem;
+            }
+            
+            .metric-label {
+                font-size: 0.75rem;
+            }
+            
+            .algorithm-card {
+                padding: 15px;
+            }
+            
             .algorithm-header {
                 flex-direction: column;
                 gap: 10px;
+            }
+            
+            .algorithm-header h5 {
+                font-size: 1rem;
+            }
+            
+            .score-badge {
+                font-size: 0.8rem;
+                padding: 4px 8px;
+            }
+            
+            .chart-container {
+                height: 300px;
+                padding: 15px;
+            }
+            
+            .table th, .table td {
+                padding: 12px;
+                font-size: 0.9rem;
+            }
+            
+            .badge {
+                font-size: 0.7rem;
+                padding: 3px 6px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .dashboard-container {
+                padding: 5px;
+            }
+            
+            .main-header {
+                padding: 15px;
+            }
+            
+            .main-header h1 {
+                font-size: 1.6rem;
+            }
+            
+            .main-header p {
+                font-size: 0.9rem;
+            }
+            
+            .nav-tabs {
+                padding: 12px;
+                gap: 8px;
+            }
+            
+            .nav-tab {
+                padding: 10px 15px;
+                font-size: 0.8rem;
+            }
+            
+            .comparison-panel {
+                padding: 15px;
+            }
+            
+            .panel-title {
+                font-size: 1.1rem;
+            }
+            
+            .filter-row {
+                gap: 12px;
+            }
+            
+            .form-label {
+                font-size: 0.8rem;
+            }
+            
+            .form-select {
+                padding: 8px 10px;
+                font-size: 0.8rem;
+            }
+            
+            .btn {
+                padding: 8px 15px;
+                font-size: 0.8rem;
+            }
+            
+            .metric-grid {
+                grid-template-columns: 1fr;
+                gap: 8px;
+            }
+            
+            .metric-item {
+                padding: 10px;
+            }
+            
+            .metric-value {
+                font-size: 1rem;
+            }
+            
+            .metric-label {
+                font-size: 0.7rem;
+            }
+            
+            .algorithm-card {
+                padding: 12px;
+            }
+            
+            .algorithm-header h5 {
+                font-size: 0.9rem;
+            }
+            
+            .score-badge {
+                font-size: 0.7rem;
+                padding: 3px 6px;
+            }
+            
+            .chart-container {
+                height: 250px;
+                padding: 10px;
+            }
+            
+            .table th, .table td {
+                padding: 8px;
+                font-size: 0.8rem;
+            }
+            
+            .badge {
+                font-size: 0.6rem;
+                padding: 2px 4px;
+            }
+            
+            .best-performance {
+                padding: 15px;
+            }
+            
+            .best-performance h6 {
+                font-size: 0.9rem;
+            }
+            
+            .best-performance .h4 {
+                font-size: 1.5rem;
             }
         }
     </style>

@@ -388,6 +388,39 @@
         }
 
         /* Responsive Design */
+        @media (max-width: 1200px) {
+            .dashboard-container {
+                grid-template-columns: 250px 1fr;
+                gap: 0;
+            }
+            
+            .sidebar {
+                padding: 0;
+            }
+            
+            .sidebar-header {
+                padding: 25px 15px;
+            }
+            
+            .sidebar-header h4 {
+                font-size: 1.3rem;
+            }
+            
+            .main-content {
+                padding: 25px;
+                margin: 15px 15px 15px 0;
+            }
+            
+            .content-header h2 {
+                font-size: 1.8rem;
+            }
+            
+            .row {
+                grid-template-columns: 1fr 1.5fr;
+                gap: 20px;
+            }
+        }
+        
         @media (max-width: 768px) {
             .dashboard-container {
                 grid-template-columns: 1fr;
@@ -401,6 +434,14 @@
 
             .sidebar-header {
                 padding: 15px;
+            }
+            
+            .sidebar-header h4 {
+                font-size: 1.2rem;
+            }
+            
+            .sidebar-header p {
+                font-size: 0.8rem;
             }
 
             .sidebar-nav {
@@ -422,15 +463,185 @@
                 border-left: none;
                 border-bottom-color: #667eea;
             }
+            
+            .nav-item i {
+                margin-right: 0;
+                margin-bottom: 5px;
+                font-size: 1rem;
+            }
+            
+            .nav-item span {
+                font-size: 0.8rem;
+            }
 
             .main-content {
                 grid-row: 2;
                 margin: 10px;
                 border-radius: 15px;
+                padding: 20px;
             }
 
             .content-header h2 {
                 font-size: 1.5rem;
+            }
+            
+            .content-header p {
+                font-size: 0.9rem;
+            }
+            
+            .row {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .card {
+                margin-bottom: 15px;
+            }
+            
+            .card-header {
+                padding: 15px;
+            }
+            
+            .card-header h5 {
+                font-size: 1rem;
+            }
+            
+            .card-body {
+                padding: 20px;
+            }
+            
+            .form-label {
+                font-size: 0.9rem;
+            }
+            
+            .form-select, .form-control {
+                padding: 10px 12px;
+                font-size: 0.9rem;
+            }
+            
+            .btn {
+                padding: 10px 20px;
+                font-size: 0.9rem;
+            }
+            
+            #mapa_dividido {
+                height: 300px;
+            }
+            
+            .employee-card {
+                padding: 12px;
+            }
+            
+            .employee-card h6 {
+                font-size: 0.9rem;
+            }
+            
+            .employee-card p {
+                font-size: 0.8rem;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .dashboard-container {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto 1fr;
+            }
+            
+            .sidebar {
+                padding: 10px;
+            }
+            
+            .sidebar-header {
+                padding: 12px;
+            }
+            
+            .sidebar-header h4 {
+                font-size: 1.1rem;
+            }
+            
+            .sidebar-header p {
+                font-size: 0.75rem;
+            }
+            
+            .sidebar-nav {
+                gap: 15px;
+                padding: 10px 0;
+            }
+            
+            .nav-item {
+                padding: 8px;
+            }
+            
+            .nav-item i {
+                font-size: 0.9rem;
+            }
+            
+            .nav-item span {
+                font-size: 0.7rem;
+            }
+            
+            .main-content {
+                margin: 5px;
+                padding: 15px;
+            }
+            
+            .content-header h2 {
+                font-size: 1.3rem;
+            }
+            
+            .content-header p {
+                font-size: 0.8rem;
+            }
+            
+            .row {
+                gap: 15px;
+            }
+            
+            .card-header {
+                padding: 12px;
+            }
+            
+            .card-header h5 {
+                font-size: 0.9rem;
+            }
+            
+            .card-body {
+                padding: 15px;
+            }
+            
+            .form-label {
+                font-size: 0.8rem;
+            }
+            
+            .form-select, .form-control {
+                padding: 8px 10px;
+                font-size: 0.8rem;
+            }
+            
+            .btn {
+                padding: 8px 15px;
+                font-size: 0.8rem;
+            }
+            
+            #mapa_dividido {
+                height: 250px;
+            }
+            
+            .employee-card {
+                padding: 10px;
+            }
+            
+            .employee-card h6 {
+                font-size: 0.8rem;
+            }
+            
+            .employee-card p {
+                font-size: 0.7rem;
+            }
+            
+            .logout-btn {
+                padding: 8px 15px;
+                font-size: 0.8rem;
             }
         }
 

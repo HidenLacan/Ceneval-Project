@@ -419,21 +419,208 @@
             border-radius: 6px;
         }
         
+        @media (max-width: 1200px) {
+            .form-grid { 
+                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); 
+                gap: 15px;
+            }
+            
+            .upload-zone {
+                padding: 30px;
+            }
+            
+            .data-preview {
+                padding: 15px;
+            }
+        }
+        
         @media (max-width: 768px) {
+            .admin-container {
+                padding: 15px;
+            }
+            
             .form-grid { 
                 grid-template-columns: 1fr; 
+                gap: 15px;
             }
+            
             .actions-cell { 
                 flex-direction: column; 
+                gap: 8px;
             }
+            
             .users-table { 
                 font-size: 14px; 
             }
+            
             .users-table th, .users-table td { 
                 padding: 10px; 
             }
+            
             .header h1 {
                 font-size: 2rem;
+            }
+            
+            .header p {
+                font-size: 1rem;
+            }
+            
+            .nav-buttons {
+                padding: 15px;
+            }
+            
+            .nav-buttons a {
+                padding: 10px 20px;
+                font-size: 0.9rem;
+                margin-right: 10px;
+            }
+            
+            .content {
+                padding: 20px;
+            }
+            
+            .section {
+                padding: 20px;
+                margin-bottom: 25px;
+            }
+            
+            .section h2 {
+                font-size: 1.3rem;
+            }
+            
+            .form-group input, .form-group select {
+                padding: 10px 12px;
+                font-size: 13px;
+            }
+            
+            .btn {
+                padding: 10px 20px;
+                font-size: 13px;
+            }
+            
+            .upload-zone {
+                padding: 25px;
+            }
+            
+            .upload-zone h3 {
+                font-size: 1.1rem;
+            }
+            
+            .upload-zone p {
+                font-size: 13px;
+            }
+            
+            .data-preview h3 {
+                font-size: 1.1rem;
+            }
+            
+            .data-preview p {
+                font-size: 13px;
+            }
+            
+            .modal-content {
+                width: 95%;
+                padding: 20px;
+                margin: 10% auto;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .admin-container {
+                padding: 10px;
+            }
+            
+            .header {
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 1.6rem;
+            }
+            
+            .header p {
+                font-size: 0.9rem;
+            }
+            
+            .nav-buttons {
+                padding: 12px;
+            }
+            
+            .nav-buttons a {
+                padding: 8px 15px;
+                font-size: 0.8rem;
+                margin-right: 8px;
+                margin-bottom: 8px;
+            }
+            
+            .content {
+                padding: 15px;
+            }
+            
+            .section {
+                padding: 15px;
+                margin-bottom: 20px;
+            }
+            
+            .section h2 {
+                font-size: 1.1rem;
+            }
+            
+            .form-group input, .form-group select {
+                padding: 8px 10px;
+                font-size: 12px;
+            }
+            
+            .btn {
+                padding: 8px 15px;
+                font-size: 12px;
+            }
+            
+            .upload-zone {
+                padding: 20px;
+            }
+            
+            .upload-zone h3 {
+                font-size: 1rem;
+            }
+            
+            .upload-zone p {
+                font-size: 12px;
+            }
+            
+            .data-preview {
+                padding: 12px;
+            }
+            
+            .data-preview h3 {
+                font-size: 1rem;
+            }
+            
+            .data-preview p {
+                font-size: 12px;
+            }
+            
+            .users-table {
+                font-size: 12px;
+            }
+            
+            .users-table th, .users-table td {
+                padding: 8px;
+            }
+            
+            .role-badge {
+                padding: 4px 8px;
+                font-size: 0.7rem;
+            }
+            
+            .modal-content {
+                width: 98%;
+                padding: 15px;
+                margin: 5% auto;
+            }
+            
+            .modal-content h2 {
+                font-size: 1.2rem;
             }
         }
 

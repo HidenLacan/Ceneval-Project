@@ -447,23 +447,170 @@
         }
 
         /* Responsive Design */
-        @media (max-width: 768px) {
+        @media (max-width: 1200px) {
             .panel-row {
                 grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .actions {
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                gap: 15px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .admin-container {
+                padding: 15px;
+            }
+            
+            .panel-row {
+                grid-template-columns: 1fr;
+                gap: 20px;
             }
 
             .actions {
                 grid-template-columns: 1fr;
+                gap: 15px;
             }
 
             .header {
                 flex-direction: column;
                 gap: 20px;
                 text-align: center;
+                padding: 20px;
             }
 
             .header-content h1 {
                 font-size: 2rem;
+            }
+            
+            .header-content h2 {
+                font-size: 1rem;
+            }
+            
+            .search-section {
+                padding: 20px;
+            }
+            
+            .search-container {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .search-input {
+                font-size: 1rem;
+                padding: 12px 15px;
+            }
+            
+            .search-btn {
+                padding: 12px 20px;
+                font-size: 1rem;
+            }
+            
+            .panel {
+                padding: 15px;
+                min-height: 400px;
+            }
+            
+            .panel-title {
+                font-size: 1.1rem;
+            }
+            
+            #map {
+                height: 350px;
+            }
+            
+            #png-preview {
+                height: 350px;
+            }
+            
+            .action-btn {
+                padding: 12px 20px;
+                font-size: 1rem;
+            }
+            
+            .colonias-existentes {
+                padding: 20px;
+            }
+            
+            .colonias-title {
+                font-size: 1.1rem;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .admin-container {
+                padding: 10px;
+            }
+            
+            .header {
+                padding: 15px;
+                gap: 15px;
+            }
+            
+            .header-content h1 {
+                font-size: 1.6rem;
+            }
+            
+            .header-content h2 {
+                font-size: 0.9rem;
+            }
+            
+            .search-section {
+                padding: 15px;
+            }
+            
+            .search-input {
+                font-size: 0.9rem;
+                padding: 10px 12px;
+            }
+            
+            .search-btn {
+                padding: 10px 15px;
+                font-size: 0.9rem;
+            }
+            
+            .panel {
+                padding: 12px;
+                min-height: 300px;
+            }
+            
+            .panel-title {
+                font-size: 1rem;
+            }
+            
+            #map {
+                height: 250px;
+            }
+            
+            #png-preview {
+                height: 250px;
+            }
+            
+            .action-btn {
+                padding: 10px 15px;
+                font-size: 0.9rem;
+            }
+            
+            .colonias-existentes {
+                padding: 15px;
+            }
+            
+            .colonias-title {
+                font-size: 1rem;
+            }
+            
+            .colonia-item {
+                padding: 12px;
+            }
+            
+            .colonia-name {
+                font-size: 0.9rem;
+            }
+            
+            .colonia-info {
+                font-size: 0.8rem;
             }
         }
 

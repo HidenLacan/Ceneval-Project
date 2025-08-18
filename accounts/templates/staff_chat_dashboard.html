@@ -256,6 +256,209 @@
             left: 20px;
             z-index: 1000;
         }
+        
+        /* Responsive Design */
+        @media (max-width: 1200px) {
+            .chats-grid {
+                grid-template-columns: 1fr 1.5fr;
+                gap: 20px;
+            }
+            
+            .stats-cards {
+                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+                gap: 15px;
+            }
+            
+            .stat-number {
+                font-size: 1.5rem;
+            }
+            
+            .main-header h1 {
+                font-size: 2rem;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .chat-dashboard-container {
+                padding: 15px;
+            }
+            
+            .main-header {
+                padding: 20px;
+                margin-bottom: 20px;
+            }
+            
+            .main-header h1 {
+                font-size: 1.5rem;
+            }
+            
+            .stats-cards {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+                margin-bottom: 20px;
+            }
+            
+            .stat-card {
+                padding: 15px;
+            }
+            
+            .stat-number {
+                font-size: 1.2rem;
+            }
+            
+            .stat-label {
+                font-size: 0.8rem;
+            }
+            
+            .chats-grid {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto 1fr;
+                height: auto;
+                gap: 15px;
+            }
+            
+            .chats-list {
+                height: 300px;
+            }
+            
+            .chats-content {
+                height: 250px;
+            }
+            
+            .chat-item {
+                padding: 12px 15px;
+            }
+            
+            .chat-window {
+                height: 400px;
+            }
+            
+            .chat-messages {
+                height: 250px;
+            }
+            
+            .chat-input {
+                padding: 10px;
+            }
+            
+            .chat-input input {
+                padding: 8px 12px;
+                font-size: 14px;
+            }
+            
+            .chat-input button {
+                padding: 8px 15px;
+                font-size: 14px;
+            }
+            
+            .quick-messages {
+                gap: 8px;
+                margin-bottom: 10px;
+            }
+            
+            .quick-msg-btn {
+                padding: 6px 10px;
+                font-size: 0.7rem;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .chat-dashboard-container {
+                padding: 10px;
+            }
+            
+            .main-header {
+                padding: 15px;
+                margin-bottom: 15px;
+            }
+            
+            .main-header h1 {
+                font-size: 1.2rem;
+            }
+            
+            .stats-cards {
+                grid-template-columns: 1fr;
+                gap: 8px;
+            }
+            
+            .stat-card {
+                padding: 12px;
+            }
+            
+            .stat-number {
+                font-size: 1rem;
+            }
+            
+            .stat-label {
+                font-size: 0.7rem;
+            }
+            
+            .chats-list {
+                height: 250px;
+            }
+            
+            .chats-content {
+                height: 200px;
+            }
+            
+            .chat-item {
+                padding: 10px 12px;
+            }
+            
+            .chat-item h6 {
+                font-size: 0.9rem;
+            }
+            
+            .chat-item p {
+                font-size: 0.8rem;
+            }
+            
+            .chat-window {
+                height: 350px;
+            }
+            
+            .chat-messages {
+                height: 200px;
+            }
+            
+            .chat-input {
+                padding: 8px;
+            }
+            
+            .chat-input input {
+                padding: 6px 10px;
+                font-size: 13px;
+            }
+            
+            .chat-input button {
+                padding: 6px 12px;
+                font-size: 13px;
+            }
+            
+            .quick-messages {
+                gap: 6px;
+                margin-bottom: 8px;
+            }
+            
+            .quick-msg-btn {
+                padding: 5px 8px;
+                font-size: 0.6rem;
+            }
+            
+            .message {
+                max-width: 95%;
+                padding: 8px 10px;
+                font-size: 0.8rem;
+            }
+            
+            .message.own {
+                margin-left: 5%;
+            }
+            
+            .message.system {
+                margin: 0 auto;
+            }
+        }
     </style>
 </head>
 <body>

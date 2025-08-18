@@ -431,9 +431,34 @@
         }
         
         /* Responsive */
+        @media (max-width: 1400px) {
+            .dashboard-container {
+                grid-template-columns: 1fr 1fr 1fr;
+                gap: 15px;
+            }
+            
+            .top-panel {
+                padding: 15px;
+            }
+            
+            .selection-group {
+                gap: 8px;
+            }
+            
+            .selection-group label {
+                font-size: 0.9rem;
+            }
+            
+            .selection-group select {
+                font-size: 0.9rem;
+                padding: 8px 12px;
+            }
+        }
+        
         @media (max-width: 1200px) {
             .dashboard-container {
                 grid-template-columns: 1fr 1fr;
+                gap: 15px;
             }
             
             .employees-panel {
@@ -445,12 +470,40 @@
             .action-panel {
                 grid-row: 4;
             }
+            
+            .top-panel {
+                padding: 12px;
+            }
+            
+            .top-panel-left {
+                gap: 12px;
+            }
+            
+            .selection-group {
+                gap: 6px;
+            }
+            
+            .selection-group label {
+                font-size: 0.85rem;
+            }
+            
+            .selection-group select {
+                font-size: 0.85rem;
+                padding: 6px 10px;
+            }
+            
+            .logout-btn {
+                padding: 8px 15px;
+                font-size: 0.85rem;
+            }
         }
         
         @media (max-width: 768px) {
             .dashboard-container {
                 grid-template-columns: 1fr;
                 grid-template-rows: auto auto auto auto auto;
+                gap: 10px;
+                padding: 10px;
             }
             
             .top-panel {
@@ -458,16 +511,42 @@
                 grid-row: 1;
                 flex-direction: column;
                 gap: 15px;
+                padding: 15px;
             }
             
             .top-panel-left {
                 flex-direction: column;
                 gap: 15px;
+                width: 100%;
+            }
+            
+            .selection-group {
+                width: 100%;
+                gap: 8px;
+            }
+            
+            .selection-group label {
+                font-size: 0.9rem;
+                font-weight: 600;
+            }
+            
+            .selection-group select {
+                font-size: 0.9rem;
+                padding: 10px 12px;
+                width: 100%;
+            }
+            
+            .logout-btn {
+                width: 100%;
+                justify-content: center;
+                padding: 12px 20px;
+                font-size: 0.9rem;
             }
             
             .map-panel, .divided-map-panel {
                 grid-column: 1;
                 margin: 10px;
+                padding: 15px;
             }
             
             .map-panel {
@@ -482,6 +561,7 @@
                 grid-column: 1;
                 grid-row: 4;
                 margin: 10px;
+                padding: 15px;
             }
             
             .action-panel {
@@ -489,6 +569,105 @@
                 grid-row: 5;
                 flex-direction: column;
                 gap: 10px;
+                padding: 15px;
+            }
+            
+            .btn {
+                padding: 10px 15px;
+                font-size: 0.9rem;
+            }
+            
+            .panel-title {
+                font-size: 1.1rem;
+            }
+            
+            #map {
+                height: 300px;
+            }
+            
+            #divided-map {
+                height: 300px;
+            }
+            
+            .employee-card {
+                padding: 12px;
+            }
+            
+            .employee-card h6 {
+                font-size: 0.9rem;
+            }
+            
+            .employee-card p {
+                font-size: 0.8rem;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .dashboard-container {
+                padding: 5px;
+                gap: 8px;
+            }
+            
+            .top-panel {
+                padding: 12px;
+                gap: 12px;
+            }
+            
+            .top-panel-left {
+                gap: 12px;
+            }
+            
+            .selection-group {
+                gap: 6px;
+            }
+            
+            .selection-group label {
+                font-size: 0.8rem;
+            }
+            
+            .selection-group select {
+                font-size: 0.8rem;
+                padding: 8px 10px;
+            }
+            
+            .logout-btn {
+                padding: 10px 15px;
+                font-size: 0.8rem;
+            }
+            
+            .map-panel, .divided-map-panel, .employees-panel, .action-panel {
+                padding: 12px;
+                margin: 5px;
+            }
+            
+            .panel-title {
+                font-size: 1rem;
+            }
+            
+            #map, #divided-map {
+                height: 250px;
+            }
+            
+            .btn {
+                padding: 8px 12px;
+                font-size: 0.8rem;
+            }
+            
+            .employee-card {
+                padding: 10px;
+            }
+            
+            .employee-card h6 {
+                font-size: 0.8rem;
+            }
+            
+            .employee-card p {
+                font-size: 0.7rem;
+            }
+            
+            .btn-small {
+                padding: 4px 8px;
+                font-size: 0.7rem;
             }
         }
     </style>

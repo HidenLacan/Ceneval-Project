@@ -349,7 +349,35 @@
         }
         
         /* Responsive Design */
+        @media (max-width: 1200px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 20px;
+            }
+            
+            .data-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 15px;
+            }
+            
+            .main-header {
+                padding: 25px;
+            }
+            
+            .main-title {
+                font-size: 2.2rem;
+            }
+            
+            .section-container {
+                padding: 25px;
+            }
+        }
+        
         @media (max-width: 768px) {
+            .dashboard-container {
+                padding: 15px;
+            }
+            
             .dashboard-grid {
                 grid-template-columns: 1fr;
                 gap: 20px;
@@ -357,24 +385,168 @@
             
             .data-grid {
                 grid-template-columns: 1fr;
+                gap: 15px;
             }
             
             .main-header {
                 flex-direction: column;
                 gap: 20px;
                 text-align: center;
+                padding: 20px;
             }
             
             .main-title {
                 font-size: 2rem;
             }
             
-            .quick-actions {
-                grid-template-columns: 1fr;
+            .logout-btn {
+                padding: 10px 20px;
+                font-size: 0.9rem;
             }
             
             .section-container {
                 padding: 20px;
+                height: auto;
+                min-height: 500px;
+            }
+            
+            .data-box {
+                padding: 15px;
+            }
+            
+            .data-box h5 {
+                font-size: 0.9rem;
+            }
+            
+            .data-box p {
+                font-size: 0.8rem;
+            }
+            
+            .map-container {
+                height: 300px;
+            }
+            
+            .route-buttons {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .route-btn {
+                padding: 12px;
+                font-size: 0.9rem;
+            }
+            
+            .quick-actions {
+                grid-template-columns: 1fr;
+                gap: 8px;
+            }
+            
+            .quick-msg-btn {
+                padding: 6px 10px;
+                font-size: 0.75rem;
+            }
+            
+            .chat-messages {
+                min-height: 250px;
+                max-height: 300px;
+            }
+            
+            .message {
+                max-width: 90%;
+                padding: 10px 12px;
+            }
+            
+            .chat-input input {
+                padding: 10px 12px;
+                font-size: 13px;
+            }
+            
+            .chat-input button {
+                padding: 10px 12px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .dashboard-container {
+                padding: 10px;
+            }
+            
+            .main-header {
+                padding: 15px;
+                gap: 15px;
+            }
+            
+            .main-title {
+                font-size: 1.6rem;
+            }
+            
+            .logout-btn {
+                padding: 8px 15px;
+                font-size: 0.8rem;
+            }
+            
+            .section-container {
+                padding: 15px;
+                min-height: 400px;
+            }
+            
+            .data-box {
+                padding: 12px;
+            }
+            
+            .data-box h5 {
+                font-size: 0.8rem;
+            }
+            
+            .data-box p {
+                font-size: 0.7rem;
+            }
+            
+            .map-container {
+                height: 250px;
+            }
+            
+            .route-btn {
+                padding: 10px;
+                font-size: 0.8rem;
+            }
+            
+            .quick-msg-btn {
+                padding: 5px 8px;
+                font-size: 0.7rem;
+            }
+            
+            .chat-messages {
+                min-height: 200px;
+                max-height: 250px;
+                padding: 10px;
+            }
+            
+            .message {
+                max-width: 95%;
+                padding: 8px 10px;
+                font-size: 0.8rem;
+            }
+            
+            .chat-input input {
+                padding: 8px 10px;
+                font-size: 12px;
+            }
+            
+            .chat-input button {
+                padding: 8px 10px;
+            }
+            
+            .no-routes {
+                padding: 30px 15px;
+            }
+            
+            .no-routes h3 {
+                font-size: 1.1rem;
+            }
+            
+            .no-routes p {
+                font-size: 0.9rem;
             }
         }
         

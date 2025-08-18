@@ -483,20 +483,55 @@
         }
         
         /* Responsive Design */
-        @media (max-width: 768px) {
+        @media (max-width: 1200px) {
+            .dashboard-container {
+                padding: 15px;
+            }
+            
+            .main-header {
+                padding: 25px;
+            }
+            
+            .stats-cards {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 15px;
+            }
+            
             .algorithm-controls {
-                grid-template-columns: 1fr;
+                grid-template-columns: 1fr 1fr;
+                gap: 15px;
             }
             
             .progress-row {
-                grid-template-columns: 1fr;
+                grid-template-columns: 1fr 1fr;
+                gap: 15px;
             }
             
             .zones-grid {
-                grid-template-columns: 1fr;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 15px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .dashboard-container {
+                padding: 10px;
             }
             
-            .nav-buttons {
+            .main-header {
+                padding: 20px;
+            }
+            
+            .logout-btn {
+                position: relative;
+                top: auto;
+                right: auto;
+                margin-bottom: 15px;
+                align-self: center;
+            }
+            
+            .header-content {
+                display: flex;
                 flex-direction: column;
                 align-items: center;
             }
@@ -505,8 +540,187 @@
                 font-size: 2rem;
             }
             
+            .nav-buttons {
+                flex-direction: column;
+                align-items: center;
+                gap: 10px;
+                width: 100%;
+            }
+            
+            .nav-btn {
+                width: 100%;
+                justify-content: center;
+                padding: 10px 20px;
+                font-size: 0.9rem;
+            }
+            
             .stats-cards {
                 grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+            }
+            
+            .stat-card {
+                padding: 15px;
+            }
+            
+            .stat-number {
+                font-size: 1.5rem;
+            }
+            
+            .stat-label {
+                font-size: 0.8rem;
+            }
+            
+            .analysis-panel {
+                padding: 20px;
+            }
+            
+            .algorithm-controls {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            
+            .progress-row {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            
+            .zones-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            
+            .form-group {
+                margin-bottom: 15px;
+            }
+            
+            .form-label {
+                font-size: 0.9rem;
+            }
+            
+            .form-select {
+                padding: 10px 12px;
+                font-size: 0.9rem;
+            }
+            
+            .btn {
+                padding: 10px 20px;
+                font-size: 0.9rem;
+            }
+            
+            .panel-title {
+                font-size: 1.2rem;
+            }
+            
+            .zone-card {
+                padding: 15px;
+            }
+            
+            .zone-title {
+                font-size: 1rem;
+            }
+            
+            .zone-stats {
+                font-size: 0.8rem;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .dashboard-container {
+                padding: 5px;
+            }
+            
+            .main-header {
+                padding: 15px;
+            }
+            
+            .main-header h1 {
+                font-size: 1.6rem;
+            }
+            
+            .main-header p {
+                font-size: 0.9rem;
+            }
+            
+            .logout-btn {
+                padding: 8px 15px;
+                font-size: 0.8rem;
+            }
+            
+            .nav-btn {
+                padding: 8px 15px;
+                font-size: 0.8rem;
+            }
+            
+            .stats-cards {
+                grid-template-columns: 1fr;
+                gap: 8px;
+            }
+            
+            .stat-card {
+                padding: 12px;
+            }
+            
+            .stat-number {
+                font-size: 1.3rem;
+            }
+            
+            .stat-label {
+                font-size: 0.75rem;
+            }
+            
+            .analysis-panel {
+                padding: 15px;
+            }
+            
+            .algorithm-controls {
+                gap: 12px;
+            }
+            
+            .progress-row {
+                gap: 12px;
+            }
+            
+            .zones-grid {
+                gap: 12px;
+            }
+            
+            .form-group {
+                margin-bottom: 12px;
+            }
+            
+            .form-label {
+                font-size: 0.8rem;
+            }
+            
+            .form-select {
+                padding: 8px 10px;
+                font-size: 0.8rem;
+            }
+            
+            .btn {
+                padding: 8px 15px;
+                font-size: 0.8rem;
+            }
+            
+            .panel-title {
+                font-size: 1.1rem;
+            }
+            
+            .zone-card {
+                padding: 12px;
+            }
+            
+            .zone-title {
+                font-size: 0.9rem;
+            }
+            
+            .zone-stats {
+                font-size: 0.75rem;
+            }
+            
+            .progress-bar {
+                height: 8px;
             }
         }
     </style>

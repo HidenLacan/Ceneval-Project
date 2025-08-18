@@ -2,10 +2,49 @@
 <html>
 <head>
   <meta charset='utf-8'/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dibujar Polígono</title>
   <link rel='stylesheet' href='https://unpkg.com/leaflet@1.9.3/dist/leaflet.css'/>
   <link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/leaflet-draw@1.0.4/dist/leaflet.draw.css'/>
-  <style> html, body, #map { height: 100%; margin: 0; } </style>
+  <style> 
+    html, body, #map { 
+      height: 100%; 
+      margin: 0; 
+    }
+    
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      #map {
+        height: calc(100vh - 60px);
+      }
+      
+      .leaflet-control-draw {
+        font-size: 14px;
+      }
+      
+      .leaflet-control-draw a {
+        width: 30px;
+        height: 30px;
+        line-height: 30px;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      #map {
+        height: calc(100vh - 50px);
+      }
+      
+      .leaflet-control-draw {
+        font-size: 12px;
+      }
+      
+      .leaflet-control-draw a {
+        width: 28px;
+        height: 28px;
+        line-height: 28px;
+      }
+    }
+  </style>
 </head>
 <body>
   <div id='map'></div>
