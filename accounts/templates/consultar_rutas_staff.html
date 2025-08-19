@@ -661,6 +661,217 @@
                 grid-template-columns: 1fr;
             }
         }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .modal-title {
+            color: #2c3e50;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #6c757d;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 1rem;
+            resize: vertical;
+            min-height: 100px;
+            transition: all 0.3s ease;
+        }
+
+        .form-textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 15px;
+            justify-content: flex-end;
+        }
+
+        .btn-cancelar {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-confirmar {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-confirmar:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(40, 167, 69, 0.3);
+        }
+
+        /* Supervision Styles */
+        .employee-supervision-card {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .employee-supervision-card:hover {
+            background: #e8f4fd;
+            border-color: #667eea;
+            transform: translateX(5px);
+            box-shadow: 0 3px 10px rgba(102, 126, 234, 0.2);
+        }
+
+        .employee-supervision-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .employee-supervision-name {
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 1rem;
+        }
+
+        .employee-supervision-status {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .employee-supervision-status.pendiente {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .employee-supervision-status.completada {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .employee-supervision-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            font-size: 0.8rem;
+            margin-bottom: 10px;
+        }
+
+        .employee-supervision-info-item {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .employee-supervision-info-label {
+            color: #6c757d;
+        }
+
+        .employee-supervision-info-value {
+            color: #2c3e50;
+            font-weight: 600;
+        }
+
+        .employee-supervision-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-completar-empleado {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-completar-empleado:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 3px 10px rgba(40, 167, 69, 0.3);
+        }
+
+        .btn-completar-empleado:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .loading-placeholder {
+            text-align: center;
+            color: #6c757d;
+            padding: 40px 20px;
+        }
+
+        .loading-placeholder i {
+            font-size: 2rem;
+            margin-bottom: 15px;
+            display: block;
+        }
     </style>
 </head>
 <body>
@@ -773,12 +984,30 @@
                                     <button type="button" id="mandar-info-btn" class="btn btn-success">
                                         <i class="fas fa-envelope"></i> Mandar información
                                     </button>
+                                    <button type="button" id="supervision-btn" class="btn btn-primary">
+                                        <i class="fas fa-eye"></i> Supervisar Rutas
+                                    </button>
                                     <button type="submit" name="action" value="eliminar_ruta" class="btn btn-danger"
                                             onclick="return confirm('¿Estás seguro de que quieres eliminar esta ruta?')">
                                         <i class="fas fa-trash"></i> Eliminar
                                     </button>
                                 </div>
                             </form>
+                        </div>
+                    </div>
+
+                    <!-- Supervision Panel -->
+                    <div class="card" id="supervision-panel" style="display: none;">
+                        <div class="card-header">
+                            <h5><i class="fas fa-clipboard-check"></i> Supervisión de Rutas</h5>
+                        </div>
+                        <div class="card-body">
+                            <div id="supervision-content">
+                                <div class="loading-placeholder">
+                                    <i class="fas fa-spinner fa-spin"></i>
+                                    <p>Cargando información de empleados...</p>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     {% endif %}
@@ -819,6 +1048,50 @@
                     {% endif %}
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- Modal para completar ruta por staff -->
+    <div class="modal-overlay" id="completarRutaModal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">
+                    <i class="fas fa-check-circle"></i> Marcar Ruta como Completada
+                </h3>
+                <button class="modal-close" onclick="cerrarModalCompletar()">&times;</button>
+            </div>
+            <form id="formCompletarRuta">
+                <div class="form-group">
+                    <label class="form-label">Colonia:</label>
+                    <input type="text" id="modalColonia" class="form-input" readonly>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Empleado:</label>
+                    <input type="text" id="modalEmpleado" class="form-input" readonly>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Tiempo Real (minutos):</label>
+                    <input type="number" id="modalTiempoReal" class="form-input" min="1" max="480" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Fecha de Inicio (opcional):</label>
+                    <input type="datetime-local" id="modalFechaInicio" class="form-input">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Fecha de Fin (opcional):</label>
+                    <input type="datetime-local" id="modalFechaFin" class="form-input">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Notas (opcional):</label>
+                    <textarea id="modalNotas" class="form-textarea" placeholder="Agrega notas sobre la ruta completada..."></textarea>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-cancelar" onclick="cerrarModalCompletar()">Cancelar</button>
+                    <button type="submit" class="btn-confirmar">
+                        <i class="fas fa-check"></i> Confirmar Completado
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -1159,6 +1432,221 @@
                 window.location.href = '/accounts/logout/';
             }
         }
+
+        // ============================
+        // FUNCIONES DE SUPERVISIÓN DE RUTAS
+        // ============================
+
+        // Mostrar/ocultar panel de supervisión
+        document.getElementById('supervision-btn').addEventListener('click', function() {
+            const supervisionPanel = document.getElementById('supervision-panel');
+            const supervisionContent = document.getElementById('supervision-content');
+            
+            if (supervisionPanel.style.display === 'none') {
+                supervisionPanel.style.display = 'block';
+                supervisionContent.innerHTML = `
+                    <div class="loading-placeholder">
+                        <i class="fas fa-spinner fa-spin"></i>
+                        <p>Cargando información de empleados...</p>
+                    </div>
+                `;
+                cargarInformacionSupervision();
+            } else {
+                supervisionPanel.style.display = 'none';
+            }
+        });
+
+        // Cargar información de supervisión
+        function cargarInformacionSupervision() {
+            const configuracionId = document.querySelector('input[name="configuracion_id"]').value;
+            
+            if (!configuracionId) {
+                alert('No hay configuración seleccionada');
+                return;
+            }
+            
+            fetch(`/accounts/api/rutas_staff_supervision/?configuracion_id=${configuracionId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        mostrarEmpleadosSupervision(data.rutas);
+                    } else {
+                        mostrarErrorSupervision(data.error);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    mostrarErrorSupervision('Error de conexión');
+                });
+        }
+
+        // Mostrar empleados para supervisión
+        function mostrarEmpleadosSupervision(rutas) {
+            const supervisionContent = document.getElementById('supervision-content');
+            
+            if (!rutas || rutas.length === 0) {
+                supervisionContent.innerHTML = `
+                    <div class="loading-placeholder">
+                        <i class="fas fa-info-circle"></i>
+                        <p>No hay rutas para supervisar</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            let html = '';
+            rutas.forEach(ruta => {
+                ruta.empleados.forEach(empleado => {
+                    const estadoClass = empleado.estado === 'completada' ? 'completada' : 'pendiente';
+                    const estadoText = empleado.estado === 'completada' ? 'Completada' : 'Pendiente';
+                    
+                    html += `
+                        <div class="employee-supervision-card">
+                            <div class="employee-supervision-header">
+                                <span class="employee-supervision-name">${empleado.empleado_nombre}</span>
+                                <span class="employee-supervision-status ${estadoClass}">${estadoText}</span>
+                            </div>
+                            <div class="employee-supervision-info">
+                                <div class="employee-supervision-info-item">
+                                    <span class="employee-supervision-info-label">Distancia:</span>
+                                    <span class="employee-supervision-info-value">${empleado.distancia_km.toFixed(2)} km</span>
+                                </div>
+                                <div class="employee-supervision-info-item">
+                                    <span class="employee-supervision-info-label">Nodos:</span>
+                                    <span class="employee-supervision-info-value">${empleado.num_nodos}</span>
+                                </div>
+                                <div class="employee-supervision-info-item">
+                                    <span class="employee-supervision-info-label">Tiempo Estimado:</span>
+                                    <span class="employee-supervision-info-value">${empleado.tiempo_estimado.toFixed(1)} hrs</span>
+                                </div>
+                                ${empleado.tiempo_real ? `
+                                    <div class="employee-supervision-info-item">
+                                        <span class="employee-supervision-info-label">Tiempo Real:</span>
+                                        <span class="employee-supervision-info-value">${(empleado.tiempo_real / 60).toFixed(1)} hrs</span>
+                                    </div>
+                                    <div class="employee-supervision-info-item">
+                                        <span class="employee-supervision-info-label">Eficiencia:</span>
+                                        <span class="employee-supervision-info-value">${empleado.eficiencia.toFixed(1)}%</span>
+                                    </div>
+                                    <div class="employee-supervision-info-item">
+                                        <span class="employee-supervision-info-label">Completada:</span>
+                                        <span class="employee-supervision-info-value">${empleado.fecha_completada}</span>
+                                    </div>
+                                ` : ''}
+                            </div>
+                            <div class="employee-supervision-actions">
+                                ${empleado.estado === 'pendiente' ? `
+                                    <button class="btn-completar-empleado" onclick="abrirModalCompletar(${ruta.configuracion_id}, ${empleado.empleado_id}, '${ruta.colonia}', '${empleado.empleado_nombre}')">
+                                        <i class="fas fa-check"></i> Completar
+                                    </button>
+                                ` : `
+                                    <button class="btn-completar-empleado" disabled>
+                                        <i class="fas fa-check"></i> Completada
+                                    </button>
+                                `}
+                            </div>
+                        </div>
+                    `;
+                });
+            });
+            
+            supervisionContent.innerHTML = html;
+        }
+
+        // Mostrar error de supervisión
+        function mostrarErrorSupervision(error) {
+            const supervisionContent = document.getElementById('supervision-content');
+            supervisionContent.innerHTML = `
+                <div class="loading-placeholder">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <p>Error: ${error}</p>
+                    <button class="btn btn-primary" onclick="cargarInformacionSupervision()">
+                        <i class="fas fa-sync-alt"></i> Intentar de nuevo
+                    </button>
+                </div>
+            `;
+        }
+
+        // Abrir modal para completar ruta
+        function abrirModalCompletar(configuracionId, empleadoId, colonia, empleadoNombre) {
+            document.getElementById('completarRutaModal').dataset.configuracionId = configuracionId;
+            document.getElementById('completarRutaModal').dataset.empleadoId = empleadoId;
+            
+            document.getElementById('modalColonia').value = colonia;
+            document.getElementById('modalEmpleado').value = empleadoNombre;
+            document.getElementById('modalTiempoReal').value = '';
+            document.getElementById('modalFechaInicio').value = '';
+            document.getElementById('modalFechaFin').value = '';
+            document.getElementById('modalNotas').value = '';
+            
+            document.getElementById('completarRutaModal').style.display = 'flex';
+        }
+
+        // Cerrar modal de completar
+        function cerrarModalCompletar() {
+            document.getElementById('completarRutaModal').style.display = 'none';
+        }
+
+        // Marcar ruta como completada
+        function marcarRutaCompletada(configuracionId, empleadoId, tiempoReal, fechaInicio, fechaFin, notas) {
+            const data = {
+                configuracion_ruta_id: configuracionId,
+                empleado_id: empleadoId,
+                tiempo_real_minutos: tiempoReal,
+                fecha_inicio: fechaInicio,
+                fecha_fin: fechaFin,
+                notas: notas
+            };
+            
+            fetch('/accounts/api/marcar_ruta_completada_staff/', {
+                method: 'POST',
+                body: JSON.stringify(data),
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(`¡Ruta completada exitosamente para ${data.empleado}!\nTiempo real: ${data.tiempo_real} minutos\nEficiencia: ${data.eficiencia.toFixed(1)}%`);
+                    cerrarModalCompletar();
+                    cargarInformacionSupervision();
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error de conexión al marcar ruta como completada');
+            });
+        }
+
+        // Event listener para el formulario de completar ruta
+        document.getElementById('formCompletarRuta').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const configuracionId = parseInt(document.getElementById('completarRutaModal').dataset.configuracionId);
+            const empleadoId = parseInt(document.getElementById('completarRutaModal').dataset.empleadoId);
+            const tiempoReal = parseFloat(document.getElementById('modalTiempoReal').value);
+            const fechaInicio = document.getElementById('modalFechaInicio').value;
+            const fechaFin = document.getElementById('modalFechaFin').value;
+            const notas = document.getElementById('modalNotas').value;
+            
+            if (!tiempoReal || tiempoReal <= 0) {
+                alert('Por favor ingresa un tiempo real válido');
+                return;
+            }
+            
+            marcarRutaCompletada(configuracionId, empleadoId, tiempoReal, fechaInicio, fechaFin, notas);
+        });
+
+        // Cerrar modal al hacer clic fuera de él
+        document.getElementById('completarRutaModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                cerrarModalCompletar();
+            }
+        });
     </script>
 </body>
 </html> 

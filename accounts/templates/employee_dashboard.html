@@ -571,6 +571,304 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+
+        /* Estilos para la sección de rutas asignadas */
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .section-header h3 {
+            color: #2c3e50;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .refresh-btn {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .refresh-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(40, 167, 69, 0.3);
+        }
+
+        .rutas-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .ruta-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e9ecef;
+            transition: all 0.3s ease;
+        }
+
+        .ruta-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .ruta-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+
+        .ruta-title {
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 1.1rem;
+            margin: 0;
+        }
+
+        .ruta-estado {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .ruta-estado.pendiente {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .ruta-estado.completada {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .ruta-info {
+            margin-bottom: 15px;
+        }
+
+        .ruta-info-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+
+        .ruta-info-label {
+            color: #6c757d;
+            font-weight: 500;
+        }
+
+        .ruta-info-value {
+            color: #2c3e50;
+            font-weight: 600;
+        }
+
+        .ruta-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-completar {
+            flex: 1;
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-completar:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(40, 167, 69, 0.3);
+        }
+
+        .btn-completar:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .btn-ver-detalles {
+            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-ver-detalles:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 123, 255, 0.3);
+        }
+
+        .loading-placeholder {
+            text-align: center;
+            color: #6c757d;
+            padding: 40px 20px;
+        }
+
+        .loading-placeholder i {
+            font-size: 2rem;
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        .no-rutas-message {
+            text-align: center;
+            color: #6c757d;
+            padding: 40px 20px;
+        }
+
+        .no-rutas-message i {
+            font-size: 3rem;
+            color: #667eea;
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        /* Modal para completar ruta */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .modal-title {
+            color: #2c3e50;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #6c757d;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            color: #2c3e50;
+            font-weight: 600;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 1rem;
+            resize: vertical;
+            min-height: 100px;
+            transition: all 0.3s ease;
+        }
+
+        .form-textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 15px;
+            justify-content: flex-end;
+        }
+
+        .btn-cancelar {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-confirmar {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-confirmar:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(40, 167, 69, 0.3);
+        }
     </style>
 </head>
 <body>
@@ -598,6 +896,22 @@
                 </option>
                 {% endfor %}
             </select>
+        </div>
+
+        <!-- Mis Rutas Asignadas -->
+        <div class="section-container">
+            <div class="section-header">
+                <h3><i class="fas fa-route"></i> Mis Rutas Asignadas</h3>
+                <button class="refresh-btn" onclick="cargarMisRutas()">
+                    <i class="fas fa-sync-alt"></i> Actualizar
+                </button>
+            </div>
+            <div id="misRutasContainer" class="rutas-grid">
+                <div class="loading-placeholder">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <p>Cargando mis rutas...</p>
+                </div>
+            </div>
         </div>
 
         <div class="dashboard-grid">
@@ -700,6 +1014,42 @@
         <p class="mt-2">Cargando datos de la ruta...</p>
     </div>
 
+    <!-- Modal para completar ruta -->
+    <div class="modal-overlay" id="completarRutaModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">
+                    <i class="fas fa-check-circle"></i> Marcar Ruta como Completada
+                </h3>
+                <button class="modal-close" onclick="cerrarModalCompletar()">&times;</button>
+            </div>
+            <form id="formCompletarRuta">
+                <div class="form-group">
+                    <label class="form-label">Colonia:</label>
+                    <input type="text" id="modalColonia" class="form-input" readonly>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Tiempo Real (minutos):</label>
+                    <input type="number" id="modalTiempoReal" class="form-input" min="1" max="480" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Fecha de Inicio (opcional):</label>
+                    <input type="datetime-local" id="modalFechaInicio" class="form-input">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Notas (opcional):</label>
+                    <textarea id="modalNotas" class="form-textarea" placeholder="Agrega notas sobre la ruta completada..."></textarea>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-cancelar" onclick="cerrarModalCompletar()">Cancelar</button>
+                    <button type="submit" class="btn-confirmar">
+                        <i class="fas fa-check"></i> Confirmar Completado
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     
@@ -747,43 +1097,71 @@
             console.log('👤 Usuario actual ID:', currentUserId);
             console.log('🎯 Modo de vista inicial:', currentViewMode);
             
-            {% if rutas_asignadas %}
-            console.log('✅ Hay rutas asignadas disponibles');
+            // Check if routes are available (set by Django template)
+            const hasRoutes = {% if rutas_asignadas %}true{% else %}false{% endif %};
             
-            // Set initial route
-            const initialRouteId = document.getElementById('routeSelector').value;
-            console.log('🔄 Ruta inicial seleccionada:', initialRouteId);
-            
-            if (initialRouteId) {
-                loadRouteData(initialRouteId);
+            if (hasRoutes) {
+                console.log('✅ Hay rutas asignadas disponibles');
+                
+                // Set initial route
+                const initialRouteId = document.getElementById('routeSelector').value;
+                console.log('🔄 Ruta inicial seleccionada:', initialRouteId);
+                
+                if (initialRouteId) {
+                    loadRouteData(initialRouteId);
+                } else {
+                    console.warn('⚠️ No hay ruta inicial seleccionada');
+                }
+                
+                // Set initial button state
+                setViewMode('individual'); // Start with individual mode
+                
+                // Event listeners
+                document.getElementById('routeSelector').addEventListener('change', function() {
+                    const routeId = this.value;
+                    console.log('🔄 Cambio de ruta seleccionada:', routeId);
+                    loadRouteData(routeId);
+                });
+                
+                document.getElementById('btnIndividual').addEventListener('click', function() {
+                    console.log('👤 Cambiando a modo individual');
+                    setViewMode('individual');
+                });
+                
+                document.getElementById('btnShared').addEventListener('click', function() {
+                    console.log('👥 Cambiando a modo compartido');
+                    setViewMode('shared');
+                });
             } else {
-                console.warn('⚠️ No hay ruta inicial seleccionada');
+                console.log('⚠️ No hay rutas asignadas para este empleado');
             }
             
-            // Set initial button state
-            setViewMode('individual'); // Start with individual mode
+            // Cargar rutas asignadas al inicializar
+            cargarMisRutas();
             
-            // Event listeners
-            document.getElementById('routeSelector').addEventListener('change', function() {
-                const routeId = this.value;
-                console.log('🔄 Cambio de ruta seleccionada:', routeId);
-                loadRouteData(routeId);
+            // Event listener para el formulario de completar ruta
+            document.getElementById('formCompletarRuta').addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const rutaId = parseInt(document.getElementById('completarRutaModal').dataset.rutaId);
+                const tiempoReal = parseFloat(document.getElementById('modalTiempoReal').value);
+                const fechaInicio = document.getElementById('modalFechaInicio').value;
+                const notas = document.getElementById('modalNotas').value;
+                
+                if (!tiempoReal || tiempoReal <= 0) {
+                    alert('Por favor ingresa un tiempo real válido');
+                    return;
+                }
+                
+                marcarRutaCompletada(rutaId, tiempoReal, fechaInicio, notas);
             });
             
-            document.getElementById('btnIndividual').addEventListener('click', function() {
-                console.log('👤 Cambiando a modo individual');
-                setViewMode('individual');
+            // Cerrar modal al hacer clic fuera de él
+            document.getElementById('completarRutaModal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    cerrarModalCompletar();
+                }
             });
-            
-            document.getElementById('btnShared').addEventListener('click', function() {
-                console.log('👥 Cambiando a modo compartido');
-                setViewMode('shared');
-            });
-            
-
-            {% else %}
-            console.log('⚠️ No hay rutas asignadas para este empleado');
-            {% endif %}
             
             console.log('✅ Dashboard inicializado correctamente');
         });
@@ -1527,6 +1905,235 @@
                 window.location.href = '/accounts/logout/';
             }
         }
+
+        // ============================
+        // FUNCIONES PARA RUTAS ASIGNADAS
+        // ============================
+
+        // Cargar mis rutas asignadas
+        function cargarMisRutas() {
+            console.log('🔄 Cargando mis rutas asignadas...');
+            
+            const container = document.getElementById('misRutasContainer');
+            container.innerHTML = `
+                <div class="loading-placeholder">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <p>Cargando mis rutas...</p>
+                </div>
+            `;
+            
+            fetch('/accounts/api/rutas_empleado/', {
+                method: 'GET',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('📊 Rutas recibidas:', data);
+                
+                if (data.success) {
+                    if (data.rutas && data.rutas.length > 0) {
+                        mostrarRutasAsignadas(data.rutas);
+                    } else {
+                        mostrarNoRutas();
+                    }
+                } else {
+                    console.error('❌ Error cargando rutas:', data.error);
+                    mostrarErrorCarga(data.error);
+                }
+            })
+            .catch(error => {
+                console.error('❌ Error en fetch de rutas:', error);
+                mostrarErrorCarga('Error de conexión');
+            });
+        }
+
+        // Mostrar rutas asignadas
+        function mostrarRutasAsignadas(rutas) {
+            console.log('📋 Mostrando rutas asignadas:', rutas.length);
+            
+            const container = document.getElementById('misRutasContainer');
+            let html = '';
+            
+            rutas.forEach(ruta => {
+                const estadoClass = ruta.estado === 'completada' ? 'completada' : 'pendiente';
+                const estadoText = ruta.estado === 'completada' ? 'Completada' : 'Pendiente';
+                
+                html += `
+                    <div class="ruta-card">
+                        <div class="ruta-header">
+                            <h4 class="ruta-title">${ruta.colonia}</h4>
+                            <span class="ruta-estado ${estadoClass}">${estadoText}</span>
+                        </div>
+                        <div class="ruta-info">
+                            <div class="ruta-info-item">
+                                <span class="ruta-info-label">Distancia:</span>
+                                <span class="ruta-info-value">${ruta.distancia_km.toFixed(2)} km</span>
+                            </div>
+                            <div class="ruta-info-item">
+                                <span class="ruta-info-label">Nodos:</span>
+                                <span class="ruta-info-value">${ruta.num_nodos}</span>
+                            </div>
+                            <div class="ruta-info-item">
+                                <span class="ruta-info-label">Tiempo Estimado:</span>
+                                <span class="ruta-info-value">${ruta.tiempo_estimado.toFixed(1)} hrs</span>
+                            </div>
+                            <div class="ruta-info-item">
+                                <span class="ruta-info-label">Asignada:</span>
+                                <span class="ruta-info-value">${ruta.fecha_asignacion}</span>
+                            </div>
+                            ${ruta.tiempo_real ? `
+                                <div class="ruta-info-item">
+                                    <span class="ruta-info-label">Tiempo Real:</span>
+                                    <span class="ruta-info-value">${(ruta.tiempo_real / 60).toFixed(1)} hrs</span>
+                                </div>
+                                <div class="ruta-info-item">
+                                    <span class="ruta-info-label">Eficiencia:</span>
+                                    <span class="ruta-info-value">${ruta.eficiencia.toFixed(1)}%</span>
+                                </div>
+                            ` : ''}
+                        </div>
+                        <div class="ruta-actions">
+                            <button class="btn-ver-detalles" onclick="verDetallesRuta(${ruta.id})">
+                                <i class="fas fa-eye"></i> Ver Detalles
+                            </button>
+                            ${ruta.estado === 'pendiente' ? `
+                                <button class="btn-completar" onclick="abrirModalCompletar(${ruta.id}, '${ruta.colonia}')">
+                                    <i class="fas fa-check"></i> Completar
+                                </button>
+                            ` : `
+                                <button class="btn-completar" disabled>
+                                    <i class="fas fa-check"></i> Completada
+                                </button>
+                            `}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+            console.log('✅ Rutas mostradas correctamente');
+        }
+
+        // Mostrar mensaje de no hay rutas
+        function mostrarNoRutas() {
+            console.log('📭 No hay rutas asignadas');
+            
+            const container = document.getElementById('misRutasContainer');
+            container.innerHTML = `
+                <div class="no-rutas-message">
+                    <i class="fas fa-route"></i>
+                    <h3>No tienes rutas asignadas</h3>
+                    <p>Contacta con tu supervisor para que te asigne una ruta de trabajo.</p>
+                </div>
+            `;
+        }
+
+        // Mostrar error de carga
+        function mostrarErrorCarga(error) {
+            console.log('❌ Error de carga:', error);
+            
+            const container = document.getElementById('misRutasContainer');
+            container.innerHTML = `
+                <div class="no-rutas-message">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <h3>Error al cargar rutas</h3>
+                    <p>${error}</p>
+                    <button class="refresh-btn" onclick="cargarMisRutas()">
+                        <i class="fas fa-sync-alt"></i> Intentar de nuevo
+                    </button>
+                </div>
+            `;
+        }
+
+        // Ver detalles de ruta
+        function verDetallesRuta(rutaId) {
+            console.log('👁️ Ver detalles de ruta:', rutaId);
+            
+            // Cargar la ruta en el selector principal
+            const routeSelector = document.getElementById('routeSelector');
+            if (routeSelector) {
+                routeSelector.value = rutaId;
+                loadRouteData(rutaId);
+                
+                // Scroll hacia la sección del mapa
+                document.querySelector('.dashboard-grid').scrollIntoView({
+                    behavior: 'smooth'
+                });
+            }
+        }
+
+        // Abrir modal para completar ruta
+        function abrirModalCompletar(rutaId, colonia) {
+            console.log('📝 Abriendo modal para completar ruta:', rutaId, colonia);
+            
+            // Guardar el ID de la ruta en el modal
+            document.getElementById('completarRutaModal').dataset.rutaId = rutaId;
+            
+            // Llenar datos del modal
+            document.getElementById('modalColonia').value = colonia;
+            document.getElementById('modalTiempoReal').value = '';
+            document.getElementById('modalFechaInicio').value = '';
+            document.getElementById('modalNotas').value = '';
+            
+            // Mostrar modal
+            document.getElementById('completarRutaModal').style.display = 'flex';
+        }
+
+        // Cerrar modal de completar
+        function cerrarModalCompletar() {
+            console.log('❌ Cerrando modal de completar');
+            document.getElementById('completarRutaModal').style.display = 'none';
+        }
+
+        // Marcar ruta como completada
+        function marcarRutaCompletada(rutaId, tiempoReal, fechaInicio, notas) {
+            console.log('✅ Marcando ruta como completada:', {
+                rutaId,
+                tiempoReal,
+                fechaInicio,
+                notas
+            });
+            
+            const data = {
+                configuracion_ruta_id: rutaId,
+                tiempo_real_minutos: tiempoReal,
+                fecha_inicio: fechaInicio,
+                notas: notas
+            };
+            
+            fetch('/accounts/api/marcar_ruta_completada/', {
+                method: 'POST',
+                body: JSON.stringify(data),
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    console.log('✅ Ruta marcada como completada exitosamente');
+                    alert(`¡Ruta completada exitosamente!\nTiempo real: ${data.tiempo_real} minutos\nEficiencia: ${data.eficiencia.toFixed(1)}%`);
+                    
+                    // Cerrar modal
+                    cerrarModalCompletar();
+                    
+                    // Recargar rutas
+                    cargarMisRutas();
+                } else {
+                    console.error('❌ Error marcando ruta como completada:', data.error);
+                    alert('Error: ' + data.error);
+                }
+            })
+            .catch(error => {
+                console.error('❌ Error en fetch de completar ruta:', error);
+                alert('Error de conexión al marcar ruta como completada');
+            });
+        }
+
+
     </script>
 </body>
 </html> 

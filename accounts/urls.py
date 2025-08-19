@@ -30,12 +30,20 @@ from .views import (user_login,
                     chat_dashboard,
                     user_logout,
                     researcher_dashboard,
-                                                        analizar_algoritmo,
-                                    comparar_algoritmos,
-                                    obtener_historico_algoritmo,
-                                    gestion_algoritmos_dashboard,
-                                    cambiar_algoritmo_defecto,
-                                    visualizar_ruta)
+                    analizar_algoritmo,
+                    comparar_algoritmos,
+                    obtener_historico_algoritmo,
+                    gestion_algoritmos_dashboard,
+                    cambiar_algoritmo_defecto,
+                    visualizar_ruta,
+                    random_forest_dashboard,
+                    entrenar_modelo_random_forest,
+                    predecir_tiempo_random_forest,
+                    obtener_estadisticas_random_forest,
+                    marcar_ruta_completada,
+                    marcar_ruta_completada_staff,
+                    obtener_rutas_empleado,
+                    obtener_rutas_staff_supervision)
 
 urlpatterns = [
     path('login/', user_login, name='user_login'),
@@ -81,4 +89,16 @@ urlpatterns = [
     path('gestion_algoritmos/', gestion_algoritmos_dashboard, name='gestion_algoritmos_dashboard'),
     path('api/cambiar_algoritmo_defecto/', cambiar_algoritmo_defecto, name='cambiar_algoritmo_defecto'),
     path('api/visualizar_ruta/', visualizar_ruta, name='visualizar_ruta'),
+    
+    # URLs de Random Forest
+    path('random_forest/', random_forest_dashboard, name='random_forest_dashboard'),
+    path('api/entrenar_modelo_rf/', entrenar_modelo_random_forest, name='entrenar_modelo_random_forest'),
+    path('api/predecir_tiempo_rf/', predecir_tiempo_random_forest, name='predecir_tiempo_random_forest'),
+    path('api/estadisticas_rf/', obtener_estadisticas_random_forest, name='obtener_estadisticas_random_forest'),
+
+    # URLs de Marcado de Rutas Completadas
+    path('api/marcar_ruta_completada/', marcar_ruta_completada, name='marcar_ruta_completada'),
+    path('api/marcar_ruta_completada_staff/', marcar_ruta_completada_staff, name='marcar_ruta_completada_staff'),
+    path('api/rutas_empleado/', obtener_rutas_empleado, name='obtener_rutas_empleado'),
+    path('api/rutas_staff_supervision/', obtener_rutas_staff_supervision, name='obtener_rutas_staff_supervision'),
 ]

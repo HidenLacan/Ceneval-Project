@@ -1,0 +1,607 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Random Forest - Predicción de Tiempos{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3 mb-0">
+                    <i class="fas fa-tree text-success"></i>
+                    Random Forest - Predicción de Tiempos
+                </h1>
+                <a href="{% url 'researcher_dashboard' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left"></i> Volver al Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alertas -->
+    <div id="alertContainer"></div>
+
+    <!-- Estadísticas Generales -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-title">Total Rutas</h6>
+                            <h3 class="mb-0">{{ total_rutas }}</h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-route fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-title">Modelo Activo</h6>
+                            <h3 class="mb-0">
+                                {% if modelo_activo %}
+                                    <i class="fas fa-check"></i>
+                                {% else %}
+                                    <i class="fas fa-times"></i>
+                                {% endif %}
+                            </h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-brain fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-title">Precisión Modelo</h6>
+                            <h3 class="mb-0">
+                                {% if metricas_modelo.accuracy %}
+                                    {{ metricas_modelo.accuracy }}%
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                            </h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-bullseye fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-title">Error Medio</h6>
+                            <h3 class="mb-0">
+                                {% if metricas_modelo.mae %}
+                                    {{ metricas_modelo.mae|floatformat:1 }}min
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                            </h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-exclamation-triangle fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contenido Principal -->
+    <div class="row">
+        <!-- Panel de Entrenamiento -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-cogs"></i> Entrenamiento del Modelo
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form id="entrenamientoForm">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="n_estimators">Número de Árboles</label>
+                                    <input type="number" class="form-control" id="n_estimators" value="100" min="10" max="500">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="max_depth">Profundidad Máxima</label>
+                                    <input type="number" class="form-control" id="max_depth" placeholder="Sin límite" min="1" max="50">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="min_samples_split">Mínimo Muestras para Dividir</label>
+                                    <input type="number" class="form-control" id="min_samples_split" value="2" min="2" max="20">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>&nbsp;</label>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="generar_datos_muestra">
+                                        <label class="form-check-label" for="generar_datos_muestra">
+                                            Generar Datos de Muestra
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i>
+                            <strong>Nota:</strong> Se necesitan al menos {{ min_rutas_entrenamiento }} rutas completadas para entrenar el modelo.
+                        </div>
+                        <button type="submit" class="btn btn-primary" id="btnEntrenar">
+                            <i class="fas fa-play"></i> Entrenar Modelo
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Panel de Predicción -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-magic"></i> Predicción de Tiempo
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form id="prediccionForm">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="pred_distancia">Distancia (km)</label>
+                                    <input type="number" class="form-control" id="pred_distancia" step="0.1" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="pred_nodos">Número de Nodos</label>
+                                    <input type="number" class="form-control" id="pred_nodos" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="pred_area">Área Zona (m²)</label>
+                                    <input type="number" class="form-control" id="pred_area" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="pred_densidad_nodos">Densidad Nodos (km²)</label>
+                                    <input type="number" class="form-control" id="pred_densidad_nodos" step="0.1" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="pred_densidad_calles">Densidad Calles (m/km²)</label>
+                                    <input type="number" class="form-control" id="pred_densidad_calles" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="pred_experiencia">Experiencia Empleado (días)</label>
+                                    <input type="number" class="form-control" id="pred_experiencia" value="30" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="pred_hora">Hora Inicio (0-23)</label>
+                                    <input type="number" class="form-control" id="pred_hora" value="9" min="0" max="23" required>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="pred_dia">Día Semana (0-6)</label>
+                                    <input type="number" class="form-control" id="pred_dia" value="0" min="0" max="6" required>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="pred_temperatura">Temperatura (°C)</label>
+                                    <input type="number" class="form-control" id="pred_temperatura" value="25" step="0.1" required>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-success" id="btnPredecir">
+                            <i class="fas fa-search"></i> Predecir Tiempo
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Panel de Resultados -->
+        <div class="col-md-6">
+            <!-- Resultados de Entrenamiento -->
+            <div class="card" id="resultadosEntrenamiento" style="display: none;">
+                <div class="card-header bg-success text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-check-circle"></i> Resultados del Entrenamiento
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div id="metricasEntrenamiento"></div>
+                    <div id="featureImportance" class="mt-3"></div>
+                </div>
+            </div>
+
+            <!-- Resultados de Predicción -->
+            <div class="card" id="resultadosPrediccion" style="display: none;">
+                <div class="card-header bg-info text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-chart-line"></i> Resultados de Predicción
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div id="metricasPrediccion"></div>
+                    <div id="comparacionPrediccion" class="mt-3"></div>
+                </div>
+            </div>
+
+            <!-- Gráfico de Importancia de Features -->
+            <div class="card mt-4" id="graficoImportancia" style="display: none;">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-chart-bar"></i> Importancia de Features
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="importanceChart" width="400" height="200"></canvas>
+                </div>
+            </div>
+
+            <!-- Últimas Rutas Completadas -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-history"></i> Últimas Rutas Completadas
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Empleado</th>
+                                    <th>Colonia</th>
+                                    <th>Tiempo</th>
+                                    <th>Eficiencia</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for ruta in ultimas_rutas %}
+                                <tr>
+                                    <td>{{ ruta.empleado.username }}</td>
+                                    <td>{{ ruta.colonia.nombre|truncatechars:20 }}</td>
+                                    <td>{{ ruta.tiempo_real_minutos|floatformat:1 }}min</td>
+                                    <td>
+                                        <span class="badge badge-{% if ruta.eficiencia_porcentaje >= 80 %}success{% elif ruta.eficiencia_porcentaje >= 60 %}warning{% else %}danger{% endif %}">
+                                            {{ ruta.eficiencia_porcentaje|floatformat:1 }}%
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center text-muted">
+                                        No hay rutas completadas registradas
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Modal -->
+<div class="modal fade" id="loadingModal" tabindex="-1" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-body text-center">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="sr-only">Entrenando...</span>
+                </div>
+                <p class="mt-2 mb-0" id="loadingText">Entrenando modelo...</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+let importanceChart = null;
+
+// Función para mostrar alertas
+function showAlert(message, type = 'info') {
+    const alertContainer = document.getElementById('alertContainer');
+    const alertHtml = `
+        <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+            ${message}
+            <button type="button" class="close" data-dismiss="alert">
+                <span>&times;</span>
+            </button>
+        </div>
+    `;
+    alertContainer.innerHTML = alertHtml;
+}
+
+// Función para mostrar loading
+function showLoading(text = 'Procesando...') {
+    document.getElementById('loadingText').textContent = text;
+    $('#loadingModal').modal('show');
+}
+
+// Función para ocultar loading
+function hideLoading() {
+    $('#loadingModal').modal('hide');
+}
+
+// Entrenamiento del modelo
+document.getElementById('entrenamientoForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const formData = {
+        n_estimators: parseInt(document.getElementById('n_estimators').value),
+        max_depth: document.getElementById('max_depth').value || null,
+        min_samples_split: parseInt(document.getElementById('min_samples_split').value),
+        generar_datos_muestra: document.getElementById('generar_datos_muestra').checked
+    };
+    
+    if (formData.max_depth) {
+        formData.max_depth = parseInt(formData.max_depth);
+    }
+    
+    showLoading('Entrenando modelo Random Forest...');
+    
+    try {
+        const response = await fetch('{% url "entrenar_modelo_random_forest" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify(formData)
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showAlert(data.message, 'success');
+            mostrarResultadosEntrenamiento(data);
+        } else {
+            showAlert(data.error, 'danger');
+        }
+    } catch (error) {
+        showAlert('Error de conexión: ' + error.message, 'danger');
+    } finally {
+        hideLoading();
+    }
+});
+
+// Predicción de tiempo
+document.getElementById('prediccionForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const formData = {
+        distancia_km: parseFloat(document.getElementById('pred_distancia').value),
+        num_nodos: parseInt(document.getElementById('pred_nodos').value),
+        area_zona_m2: parseFloat(document.getElementById('pred_area').value),
+        densidad_nodos_km2: parseFloat(document.getElementById('pred_densidad_nodos').value),
+        densidad_calles_m_km2: parseFloat(document.getElementById('pred_densidad_calles').value),
+        experiencia_empleado_dias: parseInt(document.getElementById('pred_experiencia').value),
+        hora_inicio: parseInt(document.getElementById('pred_hora').value),
+        dia_semana: parseInt(document.getElementById('pred_dia').value),
+        temperatura_celsius: parseFloat(document.getElementById('pred_temperatura').value)
+    };
+    
+    showLoading('Calculando predicción...');
+    
+    try {
+        const response = await fetch('{% url "predecir_tiempo_random_forest" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify(formData)
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            mostrarResultadosPrediccion(data);
+        } else {
+            showAlert(data.error, 'danger');
+        }
+    } catch (error) {
+        showAlert('Error de conexión: ' + error.message, 'danger');
+    } finally {
+        hideLoading();
+    }
+});
+
+// Mostrar resultados de entrenamiento
+function mostrarResultadosEntrenamiento(data) {
+    const container = document.getElementById('resultadosEntrenamiento');
+    const metricasDiv = document.getElementById('metricasEntrenamiento');
+    const featureDiv = document.getElementById('featureImportance');
+    
+    metricasDiv.innerHTML = `
+        <div class="row">
+            <div class="col-md-6">
+                <p><strong>MAE Test:</strong> ${data.metricas.mae_test} minutos</p>
+                <p><strong>R² Test:</strong> ${data.metricas.r2_test}</p>
+            </div>
+            <div class="col-md-6">
+                <p><strong>RMSE Test:</strong> ${data.metricas.rmse_test} minutos</p>
+                <p><strong>Muestras:</strong> ${data.metricas.num_samples}</p>
+            </div>
+        </div>
+    `;
+    
+    // Mostrar importancia de features
+    if (data.feature_importance) {
+        const features = Object.keys(data.feature_importance);
+        const importances = Object.values(data.feature_importance);
+        
+        featureDiv.innerHTML = `
+            <h6>Importancia de Features:</h6>
+            <div class="row">
+                ${features.map((feature, index) => `
+                    <div class="col-md-6">
+                        <div class="progress mb-2">
+                            <div class="progress-bar" role="progressbar" 
+                                 style="width: ${importances[index]}%" 
+                                 aria-valuenow="${importances[index]}" 
+                                 aria-valuemin="0" aria-valuemax="100">
+                                ${feature}: ${importances[index].toFixed(1)}%
+                            </div>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+        
+        // Crear gráfico de importancia
+        crearGraficoImportancia(features, importances);
+    }
+    
+    container.style.display = 'block';
+}
+
+// Mostrar resultados de predicción
+function mostrarResultadosPrediccion(data) {
+    const container = document.getElementById('resultadosPrediccion');
+    const metricasDiv = document.getElementById('metricasPrediccion');
+    const comparacionDiv = document.getElementById('comparacionPrediccion');
+    
+    const pred = data.prediccion;
+    const mejora = pred.mejora_porcentaje;
+    const mejoraClass = mejora > 0 ? 'success' : mejora < 0 ? 'danger' : 'warning';
+    
+    metricasDiv.innerHTML = `
+        <div class="row">
+            <div class="col-md-6">
+                <h6>Predicción Random Forest:</h6>
+                <h3 class="text-primary">${pred.tiempo_random_forest} minutos</h3>
+            </div>
+            <div class="col-md-6">
+                <h6>Predicción por Defecto:</h6>
+                <h3 class="text-secondary">${pred.tiempo_default} minutos</h3>
+            </div>
+        </div>
+    `;
+    
+    comparacionDiv.innerHTML = `
+        <div class="alert alert-${mejoraClass}">
+            <h6>Comparación:</h6>
+            <p><strong>Diferencia:</strong> ${pred.diferencia} minutos</p>
+            <p><strong>Mejora:</strong> ${mejora}%</p>
+        </div>
+        <div class="small text-muted">
+            <strong>Modelo:</strong> ${data.modelo_info.nombre} v${data.modelo_info.version}<br>
+            <strong>Precisión:</strong> ${data.modelo_info.accuracy}%<br>
+            <strong>Error Medio:</strong> ${data.modelo_info.mae} minutos
+        </div>
+    `;
+    
+    container.style.display = 'block';
+}
+
+// Crear gráfico de importancia de features
+function crearGraficoImportancia(features, importances) {
+    const ctx = document.getElementById('importanceChart').getContext('2d');
+    
+    if (importanceChart) {
+        importanceChart.destroy();
+    }
+    
+    importanceChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: features,
+            datasets: [{
+                label: 'Importancia (%)',
+                data: importances,
+                backgroundColor: 'rgba(54, 162, 235, 0.8)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false
+                }
+            }
+        }
+    });
+    
+    document.getElementById('graficoImportancia').style.display = 'block';
+}
+
+// Función para obtener cookie CSRF
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// Cargar estadísticas al cargar la página
+document.addEventListener('DOMContentLoaded', function() {
+    // Aquí se pueden cargar estadísticas adicionales si es necesario
+    console.log('Dashboard Random Forest cargado');
+});
+</script>
+{% endblock %}

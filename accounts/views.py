@@ -2613,3 +2613,649 @@ def visualizar_ruta(request):
             return JsonResponse({'error': f'Error: {str(e)}'}, status=500)
     
     return JsonResponse({'error': 'Método no permitido'}, status=405)
+
+@login_required
+def random_forest_dashboard(request):
+    """Dashboard para gestión del modelo Random Forest de predicción de tiempos"""
+    if request.user.role != 'researcher':
+        return HttpResponseForbidden('Acceso denegado: Solo investigadores.')
+    
+    try:
+        from core.models import RutaCompletada, ModeloPrediccionTiempo
+        from core.utils.random_forest_predictor import RandomForestTimePredictor
+        
+        # Obtener estadísticas
+        total_rutas = RutaCompletada.objects.count()
+        modelo_activo = ModeloPrediccionTiempo.objects.filter(estado='activo').first()
+        
+        # Obtener últimas rutas completadas
+        ultimas_rutas = RutaCompletada.objects.select_related('colonia', 'empleado').order_by('-fecha_fin')[:10]
+        
+        # Obtener métricas del modelo activo
+        metricas_modelo = {}
+        if modelo_activo:
+            metricas_modelo = {
+                'accuracy': modelo_activo.get_accuracy_porcentaje(),
+                'r2': modelo_activo.get_r2_porcentaje(),
+                'mae': modelo_activo.mae_score,
+                'num_muestras': modelo_activo.num_muestras_entrenamiento,
+                'fecha_entrenamiento': modelo_activo.fecha_entrenamiento.strftime('%Y-%m-%d %H:%M')
+            }
+        
+        context = {
+            'total_rutas': total_rutas,
+            'modelo_activo': modelo_activo,
+            'metricas_modelo': metricas_modelo,
+            'ultimas_rutas': ultimas_rutas,
+            'min_rutas_entrenamiento': 10  # Mínimo de rutas para entrenar
+        }
+        
+        return render(request, 'random_forest_dashboard.html', context)
+        
+    except Exception as e:
+        print(f"❌ Error en random_forest_dashboard: {str(e)}")
+        return render(request, 'random_forest_dashboard.html', {'error': str(e)})
+
+
+@login_required
+@csrf_exempt
+def entrenar_modelo_random_forest(request):
+    """API para entrenar el modelo Random Forest"""
+    if request.user.role != 'researcher':
+        return JsonResponse({'error': 'Acceso denegado'}, status=403)
+    
+    if request.method == 'POST':
+        try:
+            from core.models import RutaCompletada, ModeloPrediccionTiempo
+            from core.utils.random_forest_predictor import RandomForestTimePredictor, create_sample_rutas_completadas
+            import os
+            
+            data = json.loads(request.body)
+            n_estimators = data.get('n_estimators', 100)
+            max_depth = data.get('max_depth', None)
+            min_samples_split = data.get('min_samples_split', 2)
+            generar_datos_muestra = data.get('generar_datos_muestra', False)
+            
+            # Crear datos de muestra si se solicita
+            if generar_datos_muestra:
+                print("🎲 Generando datos de muestra...")
+                create_sample_rutas_completadas()
+            
+            # Obtener rutas completadas
+            rutas_completadas = RutaCompletada.objects.all()
+            
+            if rutas_completadas.count() < 10:
+                return JsonResponse({
+                    'error': 'Se necesitan al menos 10 rutas completadas para entrenar el modelo. Use "Generar Datos de Muestra" primero.'
+                }, status=400)
+            
+            # Crear predictor y entrenar
+            predictor = RandomForestTimePredictor()
+            X, y = predictor.prepare_training_data(rutas_completadas)
+            
+            if X is None or y is None:
+                return JsonResponse({'error': 'No se pudieron preparar los datos de entrenamiento'}, status=400)
+            
+            # Entrenar modelo
+            metricas = predictor.train_model(X, y, n_estimators, max_depth, min_samples_split)
+            
+            # Crear registro del modelo
+            version = f"v{ModeloPrediccionTiempo.objects.count() + 1}.0"
+            modelo_obj = ModeloPrediccionTiempo.objects.create(
+                nombre=f"Random Forest Predictor {version}",
+                version=version,
+                estado='activo',
+                accuracy_score=metricas['r2_test'],  # Usar R² como accuracy
+                mae_score=metricas['mae_test'],
+                r2_score=metricas['r2_test'],
+                n_estimators=n_estimators,
+                max_depth=max_depth,
+                min_samples_split=min_samples_split,
+                num_muestras_entrenamiento=metricas['num_samples'],
+                features_usadas=predictor.features,
+                entrenado_por=request.user,
+                notas=f"Modelo entrenado con {metricas['num_samples']} muestras. MAE: {metricas['mae_test']:.2f}, R²: {metricas['r2_test']:.3f}"
+            )
+            
+            # Desactivar modelos anteriores
+            ModeloPrediccionTiempo.objects.exclude(pk=modelo_obj.pk).update(estado='inactivo')
+            
+            # Guardar modelo en archivo
+            modelo_path = f"media/modelos_prediccion/rf_model_{version}.pkl"
+            if predictor.save_model(modelo_path):
+                modelo_obj.modelo_archivo = modelo_path
+                modelo_obj.save()
+            
+            return JsonResponse({
+                'success': True,
+                'message': f'Modelo entrenado exitosamente con {metricas["num_samples"]} muestras',
+                'modelo_id': modelo_obj.id,
+                'metricas': {
+                    'mae_test': round(metricas['mae_test'], 2),
+                    'r2_test': round(metricas['r2_test'], 3),
+                    'rmse_test': round(metricas['rmse_test'], 2),
+                    'num_samples': metricas['num_samples']
+                },
+                'feature_importance': metricas['feature_importance']
+            })
+            
+        except Exception as e:
+            print(f"❌ Error entrenando modelo: {str(e)}")
+            return JsonResponse({'error': f'Error entrenando modelo: {str(e)}'}, status=500)
+    
+    return JsonResponse({'error': 'Método no permitido'}, status=405)
+
+
+@login_required
+@csrf_exempt
+def predecir_tiempo_random_forest(request):
+    """API para predecir tiempo usando Random Forest"""
+    if request.user.role != 'researcher':
+        return JsonResponse({'error': 'Acceso denegado'}, status=403)
+    
+    if request.method == 'POST':
+        try:
+            from core.models import ModeloPrediccionTiempo
+            from core.utils.random_forest_predictor import RandomForestTimePredictor
+            
+            data = json.loads(request.body)
+            
+            # Obtener modelo activo
+            modelo_activo = ModeloPrediccionTiempo.objects.filter(estado='activo').first()
+            
+            if not modelo_activo or not modelo_activo.modelo_archivo:
+                return JsonResponse({
+                    'error': 'No hay modelo activo entrenado. Entrene un modelo primero.'
+                }, status=400)
+            
+            # Cargar modelo
+            predictor = RandomForestTimePredictor()
+            if not predictor.load_model(modelo_activo.modelo_archivo.path):
+                return JsonResponse({'error': 'Error cargando el modelo'}, status=500)
+            
+            # Obtener features de la ruta
+            features = {
+                'distancia_km': data.get('distancia_km', 0),
+                'num_nodos': data.get('num_nodos', 0),
+                'area_zona_m2': data.get('area_zona_m2', 0),
+                'densidad_nodos_km2': data.get('densidad_nodos_km2', 0),
+                'densidad_calles_m_km2': data.get('densidad_calles_m_km2', 0),
+                'experiencia_empleado_dias': data.get('experiencia_empleado_dias', 30),
+                'hora_inicio': data.get('hora_inicio', 9),
+                'dia_semana': data.get('dia_semana', 0),
+                'temperatura_celsius': data.get('temperatura_celsius', 25.0)
+            }
+            
+            # Hacer predicción
+            tiempo_predicho = predictor.predict_time(features)
+            
+            # Comparar con predicción por defecto
+            tiempo_default = features['distancia_km'] * 15
+            
+            return JsonResponse({
+                'success': True,
+                'prediccion': {
+                    'tiempo_random_forest': round(tiempo_predicho, 1),
+                    'tiempo_default': round(tiempo_default, 1),
+                    'diferencia': round(tiempo_predicho - tiempo_default, 1),
+                    'mejora_porcentaje': round(((tiempo_default - tiempo_predicho) / tiempo_default) * 100, 1) if tiempo_default > 0 else 0
+                },
+                'features_usadas': features,
+                'modelo_info': {
+                    'nombre': modelo_activo.nombre,
+                    'version': modelo_activo.version,
+                    'accuracy': modelo_activo.get_accuracy_porcentaje(),
+                    'mae': modelo_activo.mae_score
+                }
+            })
+            
+        except Exception as e:
+            print(f"❌ Error en predicción: {str(e)}")
+            return JsonResponse({'error': f'Error en predicción: {str(e)}'}, status=500)
+    
+    return JsonResponse({'error': 'Método no permitido'}, status=405)
+
+
+@login_required
+@csrf_exempt
+def obtener_estadisticas_random_forest(request):
+    """API para obtener estadísticas del modelo Random Forest"""
+    if request.user.role != 'researcher':
+        return JsonResponse({'error': 'Acceso denegado'}, status=403)
+    
+    try:
+        from core.models import RutaCompletada, ModeloPrediccionTiempo
+        from django.db.models import Avg, Count, Min, Max
+        
+        # Estadísticas generales
+        total_rutas = RutaCompletada.objects.count()
+        modelo_activo = ModeloPrediccionTiempo.objects.filter(estado='activo').first()
+        
+        # Estadísticas de rutas completadas
+        if total_rutas > 0:
+            stats_rutas = RutaCompletada.objects.aggregate(
+                tiempo_promedio=Avg('tiempo_real_minutos'),
+                distancia_promedio=Avg('distancia_km'),
+                nodos_promedio=Avg('num_nodos'),
+                experiencia_promedio=Avg('experiencia_empleado_dias'),
+                eficiencia_promedio=Avg('eficiencia_porcentaje')
+            )
+            
+            # Distribución por algoritmo
+            distribucion_algoritmos = RutaCompletada.objects.values('algoritmo_usado').annotate(
+                count=Count('id')
+            ).order_by('-count')
+            
+            # Últimas 5 rutas
+            ultimas_rutas = list(RutaCompletada.objects.select_related('colonia', 'empleado').order_by('-fecha_fin')[:5].values(
+                'id', 'colonia__nombre', 'empleado__username', 'tiempo_real_minutos', 
+                'distancia_km', 'eficiencia_porcentaje', 'fecha_fin'
+            ))
+        else:
+            stats_rutas = {}
+            distribucion_algoritmos = []
+            ultimas_rutas = []
+        
+        return JsonResponse({
+            'success': True,
+            'estadisticas': {
+                'total_rutas': total_rutas,
+                'stats_rutas': stats_rutas,
+                'distribucion_algoritmos': list(distribucion_algoritmos),
+                'ultimas_rutas': ultimas_rutas
+            },
+            'modelo_activo': {
+                'existe': modelo_activo is not None,
+                'info': {
+                    'nombre': modelo_activo.nombre if modelo_activo else None,
+                    'version': modelo_activo.version if modelo_activo else None,
+                    'accuracy': modelo_activo.get_accuracy_porcentaje() if modelo_activo else 0,
+                    'mae': modelo_activo.mae_score if modelo_activo else 0,
+                    'fecha_entrenamiento': modelo_activo.fecha_entrenamiento.strftime('%Y-%m-%d %H:%M') if modelo_activo else None
+                }
+            } if modelo_activo else None
+        })
+        
+    except Exception as e:
+        print(f"❌ Error obteniendo estadísticas: {str(e)}")
+        return JsonResponse({'error': f'Error obteniendo estadísticas: {str(e)}'}, status=500)
+
+@login_required
+@csrf_exempt
+def marcar_ruta_completada(request):
+    """API para marcar una ruta como completada por el empleado"""
+    if request.user.role != 'employee':
+        return JsonResponse({'error': 'Acceso denegado: Solo empleados pueden marcar rutas como completadas'}, status=403)
+    
+    if request.method == 'POST':
+        try:
+            from core.models import RutaCompletada, ConfiguracionRuta
+            from datetime import datetime, timedelta
+            import json
+            
+            data = json.loads(request.body)
+            configuracion_ruta_id = data.get('configuracion_ruta_id')
+            tiempo_real_minutos = data.get('tiempo_real_minutos')
+            fecha_inicio = data.get('fecha_inicio')  # ISO format string
+            notas = data.get('notas', '')
+            
+            # Validar datos requeridos
+            if not configuracion_ruta_id or not tiempo_real_minutos:
+                return JsonResponse({'error': 'Faltan datos requeridos'}, status=400)
+            
+            # Obtener la configuración de ruta
+            try:
+                config_ruta = ConfiguracionRuta.objects.get(id=configuracion_ruta_id)
+            except ConfiguracionRuta.DoesNotExist:
+                return JsonResponse({'error': 'Configuración de ruta no encontrada'}, status=404)
+            
+            # Verificar que la ruta pertenece al empleado
+            if request.user not in config_ruta.empleados_asignados.all():
+                return JsonResponse({'error': 'No tienes permisos para marcar esta ruta'}, status=403)
+            
+            # Verificar que no esté ya completada
+            if RutaCompletada.objects.filter(configuracion_ruta=config_ruta, empleado=request.user).exists():
+                return JsonResponse({'error': 'Esta ruta ya fue marcada como completada'}, status=400)
+            
+            # Calcular fechas
+            if fecha_inicio:
+                fecha_inicio_dt = datetime.fromisoformat(fecha_inicio.replace('Z', '+00:00'))
+            else:
+                fecha_inicio_dt = datetime.now() - timedelta(minutes=tiempo_real_minutos)
+            
+            fecha_fin_dt = datetime.now()
+            
+            # Extraer features de la configuración de ruta desde mapa_calculado
+            distancia_km = 0
+            num_nodos = 0
+            area_zona_m2 = 0
+            tiempo_estimado_minutos = 0
+            
+            if config_ruta.mapa_calculado and 'rutas' in config_ruta.mapa_calculado:
+                for ruta_info in config_ruta.mapa_calculado['rutas']:
+                    if ruta_info.get('empleado_id') == request.user.id:
+                        distancia_km = ruta_info.get('distancia_km', 0)
+                        num_nodos = ruta_info.get('num_nodos', 0)
+                        area_zona_m2 = ruta_info.get('area_m2', 0)
+                        tiempo_estimado_minutos = ruta_info.get('tiempo_estimado', 0) * 60  # Convertir horas a minutos
+                        break
+            
+            # Calcular densidades (aproximadas)
+            densidad_nodos_km2 = (num_nodos / (area_zona_m2 / 1000000)) if area_zona_m2 > 0 else 0
+            densidad_calles_m_km2 = (distancia_km * 1000) / (area_zona_m2 / 1000000) if area_zona_m2 > 0 else 0
+            
+            # Calcular experiencia del empleado (días desde que se registró)
+            experiencia_empleado_dias = (datetime.now() - request.user.date_joined.replace(tzinfo=None)).days
+            
+            # Obtener hora y día de la semana
+            hora_inicio = fecha_inicio_dt.hour
+            dia_semana = fecha_inicio_dt.weekday()
+            
+            # Temperatura (por defecto, se puede mejorar con API de clima)
+            temperatura_celsius = 25.0
+            
+            # Crear registro de ruta completada
+            ruta_completada = RutaCompletada.objects.create(
+                colonia=config_ruta.colonia,
+                empleado=request.user,
+                configuracion_ruta=config_ruta,
+                fecha_inicio=fecha_inicio_dt,
+                fecha_fin=fecha_fin_dt,
+                tiempo_real_minutos=tiempo_real_minutos,
+                tiempo_estimado_minutos=tiempo_estimado_minutos,
+                distancia_km=distancia_km,
+                num_nodos=num_nodos,
+                area_zona_m2=area_zona_m2,
+                densidad_nodos_km2=densidad_nodos_km2,
+                densidad_calles_m_km2=densidad_calles_m_km2,
+                experiencia_empleado_dias=experiencia_empleado_dias,
+                hora_inicio=hora_inicio,
+                dia_semana=dia_semana,
+                temperatura_celsius=temperatura_celsius,
+                algoritmo_usado=getattr(config_ruta, 'algoritmo_usado', 'kernighan_lin'),
+                notas=notas
+            )
+            
+            # Actualizar estado de la configuración de ruta
+            config_ruta.estado = 'completada'
+            config_ruta.save()
+            
+            print(f"✅ Ruta marcada como completada - ID: {ruta_completada.id}")
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Ruta marcada como completada exitosamente',
+                'ruta_id': ruta_completada.id,
+                'tiempo_real': tiempo_real_minutos,
+                'tiempo_estimado': tiempo_estimado_minutos,
+                'eficiencia': ruta_completada.eficiencia_porcentaje
+            })
+            
+        except Exception as e:
+            print(f"❌ Error marcando ruta como completada: {str(e)}")
+            return JsonResponse({'error': f'Error interno: {str(e)}'}, status=500)
+    
+    return JsonResponse({'error': 'Método no permitido'}, status=405)
+
+
+@login_required
+@csrf_exempt
+def marcar_ruta_completada_staff(request):
+    """API para marcar una ruta como completada por el staff (supervisor)"""
+    if request.user.role != 'staff':
+        return JsonResponse({'error': 'Acceso denegado: Solo staff puede marcar rutas como completadas'}, status=403)
+    
+    if request.method == 'POST':
+        try:
+            from core.models import RutaCompletada, ConfiguracionRuta
+            from accounts.models import User
+            from datetime import datetime, timedelta
+            import json
+            
+            data = json.loads(request.body)
+            configuracion_ruta_id = data.get('configuracion_ruta_id')
+            empleado_id = data.get('empleado_id')
+            tiempo_real_minutos = data.get('tiempo_real_minutos')
+            fecha_inicio = data.get('fecha_inicio')
+            fecha_fin = data.get('fecha_fin')
+            notas = data.get('notas', '')
+            
+            # Validar datos requeridos
+            if not configuracion_ruta_id or not empleado_id or not tiempo_real_minutos:
+                return JsonResponse({'error': 'Faltan datos requeridos'}, status=400)
+            
+            # Obtener empleado
+            try:
+                empleado = User.objects.get(id=empleado_id, role='employee')
+            except User.DoesNotExist:
+                return JsonResponse({'error': 'Empleado no encontrado'}, status=404)
+            
+            # Obtener la configuración de ruta
+            try:
+                config_ruta = ConfiguracionRuta.objects.get(id=configuracion_ruta_id)
+            except ConfiguracionRuta.DoesNotExist:
+                return JsonResponse({'error': 'Configuración de ruta no encontrada'}, status=404)
+            
+            # Verificar que el empleado está asignado a esta ruta
+            if empleado not in config_ruta.empleados_asignados.all():
+                return JsonResponse({'error': 'El empleado no está asignado a esta ruta'}, status=403)
+            
+            # Verificar que no esté ya completada
+            if RutaCompletada.objects.filter(configuracion_ruta=config_ruta, empleado=empleado).exists():
+                return JsonResponse({'error': 'Esta ruta ya fue marcada como completada para este empleado'}, status=400)
+            
+            # Calcular fechas
+            if fecha_inicio:
+                fecha_inicio_dt = datetime.fromisoformat(fecha_inicio.replace('Z', '+00:00'))
+            else:
+                fecha_inicio_dt = datetime.now() - timedelta(minutes=tiempo_real_minutos)
+            
+            if fecha_fin:
+                fecha_fin_dt = datetime.fromisoformat(fecha_fin.replace('Z', '+00:00'))
+            else:
+                fecha_fin_dt = datetime.now()
+            
+            # Extraer features de la configuración de ruta desde mapa_calculado
+            distancia_km = 0
+            num_nodos = 0
+            area_zona_m2 = 0
+            tiempo_estimado_minutos = 0
+            
+            if config_ruta.mapa_calculado and 'rutas' in config_ruta.mapa_calculado:
+                for ruta_info in config_ruta.mapa_calculado['rutas']:
+                    if ruta_info.get('empleado_id') == empleado.id:
+                        distancia_km = ruta_info.get('distancia_km', 0)
+                        num_nodos = ruta_info.get('num_nodos', 0)
+                        area_zona_m2 = ruta_info.get('area_m2', 0)
+                        tiempo_estimado_minutos = ruta_info.get('tiempo_estimado', 0) * 60
+                        break
+            
+            # Calcular densidades
+            densidad_nodos_km2 = (num_nodos / (area_zona_m2 / 1000000)) if area_zona_m2 > 0 else 0
+            densidad_calles_m_km2 = (distancia_km * 1000) / (area_zona_m2 / 1000000) if area_zona_m2 > 0 else 0
+            
+            # Calcular experiencia del empleado
+            experiencia_empleado_dias = (datetime.now() - empleado.date_joined.replace(tzinfo=None)).days
+            
+            # Obtener hora y día de la semana
+            hora_inicio = fecha_inicio_dt.hour
+            dia_semana = fecha_inicio_dt.weekday()
+            
+            # Temperatura por defecto
+            temperatura_celsius = 25.0
+            
+            # Crear registro de ruta completada
+            ruta_completada = RutaCompletada.objects.create(
+                colonia=config_ruta.colonia,
+                empleado=empleado,
+                configuracion_ruta=config_ruta,
+                fecha_inicio=fecha_inicio_dt,
+                fecha_fin=fecha_fin_dt,
+                tiempo_real_minutos=tiempo_real_minutos,
+                tiempo_estimado_minutos=tiempo_estimado_minutos,
+                distancia_km=distancia_km,
+                num_nodos=num_nodos,
+                area_zona_m2=area_zona_m2,
+                densidad_nodos_km2=densidad_nodos_km2,
+                densidad_calles_m_km2=densidad_calles_m_km2,
+                experiencia_empleado_dias=experiencia_empleado_dias,
+                hora_inicio=hora_inicio,
+                dia_semana=dia_semana,
+                temperatura_celsius=temperatura_celsius,
+                algoritmo_usado=getattr(config_ruta, 'algoritmo_usado', 'kernighan_lin'),
+                notas=f"Completada por staff: {request.user.username}. {notas}"
+            )
+            
+            print(f"✅ Ruta marcada como completada por staff - ID: {ruta_completada.id}")
+            
+            return JsonResponse({
+                'success': True,
+                'message': f'Ruta marcada como completada para {empleado.username}',
+                'ruta_id': ruta_completada.id,
+                'empleado': empleado.username,
+                'tiempo_real': tiempo_real_minutos,
+                'tiempo_estimado': tiempo_estimado_minutos,
+                'eficiencia': ruta_completada.eficiencia_porcentaje
+            })
+            
+        except Exception as e:
+            print(f"❌ Error marcando ruta como completada por staff: {str(e)}")
+            return JsonResponse({'error': f'Error interno: {str(e)}'}, status=500)
+    
+    return JsonResponse({'error': 'Método no permitido'}, status=405)
+
+
+@login_required
+def obtener_rutas_empleado(request):
+    """API para obtener las rutas asignadas al empleado"""
+    if request.user.role != 'employee':
+        return JsonResponse({'error': 'Acceso denegado'}, status=403)
+    
+    try:
+        from core.models import ConfiguracionRuta, RutaCompletada
+        
+        # Obtener rutas asignadas al empleado
+        rutas_asignadas = ConfiguracionRuta.objects.filter(
+            empleados_asignados=request.user
+        ).order_by('-fecha_creacion')
+        
+        rutas_data = []
+        for ruta in rutas_asignadas:
+            # Verificar si ya está completada
+            completada = RutaCompletada.objects.filter(
+                configuracion_ruta=ruta,
+                empleado=request.user
+            ).first()
+            
+            # Obtener información de la ruta desde mapa_calculado
+            distancia_km = 0
+            num_nodos = 0
+            tiempo_estimado = 0
+            
+            if ruta.mapa_calculado and 'rutas' in ruta.mapa_calculado:
+                for ruta_info in ruta.mapa_calculado['rutas']:
+                    if ruta_info.get('empleado_id') == request.user.id:
+                        distancia_km = ruta_info.get('distancia_km', 0)
+                        num_nodos = ruta_info.get('num_nodos', 0)
+                        tiempo_estimado = ruta_info.get('tiempo_estimado', 0)
+                        break
+            
+            rutas_data.append({
+                'id': ruta.id,
+                'colonia': ruta.colonia.nombre,
+                'estado': 'completada' if completada else 'pendiente',
+                'distancia_km': distancia_km,
+                'num_nodos': num_nodos,
+                'tiempo_estimado': tiempo_estimado,
+                'fecha_asignacion': ruta.fecha_creacion.strftime('%Y-%m-%d %H:%M'),
+                'tiempo_real': completada.tiempo_real_minutos if completada else None,
+                'eficiencia': completada.eficiencia_porcentaje if completada else None
+            })
+        
+        return JsonResponse({
+            'success': True,
+            'rutas': rutas_data
+        })
+        
+    except Exception as e:
+        print(f"❌ Error obteniendo rutas del empleado: {str(e)}")
+        return JsonResponse({'error': f'Error interno: {str(e)}'}, status=500)
+
+
+@login_required
+def obtener_rutas_staff_supervision(request):
+    """API para obtener todas las rutas para supervisión del staff"""
+    if request.user.role != 'staff':
+        return JsonResponse({'error': 'Acceso denegado'}, status=403)
+    
+    try:
+        from core.models import ConfiguracionRuta, RutaCompletada
+        from accounts.models import User
+        
+        # Obtener configuracion_id del query parameter si se proporciona
+        configuracion_id = request.GET.get('configuracion_id')
+        
+        if configuracion_id:
+            # Filtrar por configuración específica
+            try:
+                configuraciones = [ConfiguracionRuta.objects.get(id=configuracion_id)]
+            except ConfiguracionRuta.DoesNotExist:
+                return JsonResponse({'error': 'Configuración de ruta no encontrada'}, status=404)
+        else:
+            # Obtener todas las configuraciones de rutas
+            configuraciones = ConfiguracionRuta.objects.all().order_by('-fecha_creacion')
+        
+        rutas_data = []
+        for config in configuraciones:
+            # Obtener empleados asignados
+            empleados_asignados = []
+            
+            # Obtener empleados desde la relación ManyToMany
+            for empleado in config.empleados_asignados.all():
+                completada = RutaCompletada.objects.filter(
+                    configuracion_ruta=config,
+                    empleado=empleado
+                ).first()
+                
+                # Obtener información de la ruta desde mapa_calculado
+                distancia_km = 0
+                num_nodos = 0
+                tiempo_estimado = 0
+                
+                if config.mapa_calculado and 'rutas' in config.mapa_calculado:
+                    for ruta_info in config.mapa_calculado['rutas']:
+                        if ruta_info.get('empleado_id') == empleado.id:
+                            distancia_km = ruta_info.get('distancia_km', 0)
+                            num_nodos = ruta_info.get('num_nodos', 0)
+                            tiempo_estimado = ruta_info.get('tiempo_estimado', 0)
+                            break
+                
+                empleados_asignados.append({
+                    'empleado_id': empleado.id,
+                    'empleado_nombre': empleado.username,
+                    'estado': 'completada' if completada else 'pendiente',
+                    'distancia_km': distancia_km,
+                    'num_nodos': num_nodos,
+                    'tiempo_estimado': tiempo_estimado,
+                    'tiempo_real': completada.tiempo_real_minutos if completada else None,
+                    'eficiencia': completada.eficiencia_porcentaje if completada else None,
+                    'fecha_completada': completada.fecha_fin.strftime('%Y-%m-%d %H:%M') if completada else None
+                })
+            
+            if empleados_asignados:
+                rutas_data.append({
+                    'configuracion_id': config.id,
+                    'colonia': config.colonia.nombre,
+                    'fecha_creacion': config.fecha_creacion.strftime('%Y-%m-%d %H:%M'),
+                    'algoritmo': getattr(config, 'algoritmo_usado', 'kernighan_lin'),
+                    'empleados': empleados_asignados
+                })
+        
+        return JsonResponse({
+            'success': True,
+            'rutas': rutas_data
+        })
+        
+    except Exception as e:
+        print(f"❌ Error obteniendo rutas para staff: {str(e)}")
+        return JsonResponse({'error': f'Error interno: {str(e)}'}, status=500)

@@ -642,7 +642,7 @@
     <div class="header">
         <div class="header-content">
             <h1><i class="fas fa-crown"></i> ADMIN</h1>
-            <h2>Creación de polígonos</h2>
+        <h2>Creación de polígonos</h2>
         </div>
         <button type="button" onclick="confirmLogout()" class="logout-btn">
             <i class="fas fa-sign-out-alt"></i> Logout
@@ -651,26 +651,26 @@
     
     <div class="main-content">
         <!-- Messages -->
-        {% if success %}
+    {% if success %}
             <div class="messages">
                 <div class="message success">
                     <i class="fas fa-check-circle"></i>
                     {{ success }}
                 </div>
             </div>
-        {% endif %}
-        
-        {% if error %}
+    {% endif %}
+    
+    {% if error %}
             <div class="messages">
                 <div class="message error">
                     <i class="fas fa-exclamation-circle"></i>
                     {{ error }}
                 </div>
             </div>
-        {% endif %}
-        
-        <form method="post" enctype="multipart/form-data" id="main-form">
-            {% csrf_token %}
+    {% endif %}
+    
+    <form method="post" enctype="multipart/form-data" id="main-form">
+        {% csrf_token %}
             
             <!-- Search Section -->
             <div class="search-section">
@@ -690,20 +690,20 @@
                         <i class="fas fa-search"></i> Buscar
                     </button>
                 </div>
-            </div>
-            
+        </div>
+        
             <!-- Hidden fields -->
-            <input type="hidden" name="poligono_geojson" id="poligono_geojson" value="">
-            <input type="hidden" name="datos_json" id="datos_json" value="">
-            
+        <input type="hidden" name="poligono_geojson" id="poligono_geojson" value="">
+        <input type="hidden" name="datos_json" id="datos_json" value="">
+        
             <!-- Panels -->
-            <div class="panel-row">
-                <div class="panel">
+        <div class="panel-row">
+            <div class="panel">
                     <div class="panel-title">
                         <i class="fas fa-map-marked-alt"></i> Mapa Interactivo
                     </div>
-                    <div id="map"></div>
-                </div>
+                <div id="map"></div>
+            </div>
                 
                 <div class="panel">
                     <div class="panel-title">
@@ -716,16 +716,16 @@
                     </div>
                     <input type="file" id="png-upload" name="png_file" accept="image/png" style="display: none;">
                     <img id="png-preview" src="#" alt="Vista previa de la imagen" style="display: none;"/>
-                    {% if colonia_existente and colonia_existente.imagen %}
+                {% if colonia_existente and colonia_existente.imagen %}
                         <p style="font-size: 0.9rem; color: #7f8c8d; margin-top: 10px;">
                             <i class="fas fa-info-circle"></i> Imagen actual: {{ colonia_existente.imagen.name }}
                         </p>
-                    {% endif %}
-                </div>
+                {% endif %}
             </div>
-            
+        </div>
+        
             <!-- Action Buttons -->
-            <div class="actions">
+        <div class="actions">
                 <button type="submit" name="action" value="guardar" id="guardar-btn" class="action-btn btn-save">
                     <i class="fas fa-save"></i> GUARDAR TODO
                 </button>
@@ -738,52 +738,52 @@
                 <button type="submit" name="action" value="usuarios" class="action-btn btn-users">
                     <i class="fas fa-users"></i> USUARIOS
                 </button>
-            </div>
-        </form>
-        
+        </div>
+    </form>
+    
         <!-- Existing Colonies -->
-        {% if colonias_existentes %}
-        <div class="colonias-existentes">
+    {% if colonias_existentes %}
+    <div class="colonias-existentes">
             <div class="colonias-title">
                 <i class="fas fa-list"></i> Colonias Existentes (últimas 10)
             </div>
-            {% for colonia in colonias_existentes %}
-            <div class="colonia-item" onclick="cargarColonia('{{ colonia.nombre }}')">
+        {% for colonia in colonias_existentes %}
+        <div class="colonia-item" onclick="cargarColonia('{{ colonia.nombre }}')">
                 <div class="colonia-name">{{ colonia.nombre }}</div>
                 <div class="colonia-info">
                     <i class="fas fa-calendar"></i> Creado: {{ colonia.fecha_creacion|date:"d/m/Y H:i" }} 
                     <i class="fas fa-user"></i> por {{ colonia.creado_por.username }}
                 </div>
-                <div class="status-indicators">
-                    {% if colonia.imagen %}
+            <div class="status-indicators">
+                {% if colonia.imagen %}
                         <span class="status-indicator status-imagen">
                             <i class="fas fa-image"></i> Imagen
                         </span>
-                    {% endif %}
-                    {% if colonia.poligono_geojson %}
+                {% endif %}
+                {% if colonia.poligono_geojson %}
                         <span class="status-indicator status-poligono">
                             <i class="fas fa-draw-polygon"></i> Polígono
                         </span>
-                    {% endif %}
-                    {% if colonia.datos_json %}
+                {% endif %}
+                {% if colonia.datos_json %}
                         <span class="status-indicator status-json">
                             <i class="fas fa-code"></i> JSON
                         </span>
-                    {% endif %}
-                </div>
+                {% endif %}
             </div>
-            {% endfor %}
         </div>
-        {% endif %}
-        
-        {% if resultado %}
+        {% endfor %}
+    </div>
+    {% endif %}
+    
+    {% if resultado %}
             <div class="messages">
                 <div class="message warning">
                     <i class="fas fa-info-circle"></i>
                     <strong>Resultado:</strong> {{ resultado|safe }}
                 </div>
             </div>
-        {% endif %}
+    {% endif %}
     </div>
 </div>
 
@@ -906,12 +906,12 @@
                 action: 'search'
             })
         })
-        .then(function(response) {
-            if (!response.ok) {
-                throw new Error('Error en la búsqueda');
-            }
-            return response.json();
-        })
+            .then(function(response) {
+                if (!response.ok) {
+                    throw new Error('Error en la búsqueda');
+                }
+                return response.json();
+            })
         .then(function(data) {
             if (data.success && data.found_in_db && data.colonias.length > 0) {
                 // Si se encontró en la base de datos, cargar la colonia existente
@@ -931,32 +931,32 @@
             }
             return response.json();
         })
-        .then(function(config) {
-            if (config.center_lat && config.center_lon) {
-                map.setView([config.center_lat, config.center_lon], 15);
-                
-                if (boundingBoxLayer) {
-                    map.removeLayer(boundingBoxLayer);
+            .then(function(config) {
+                if (config.center_lat && config.center_lon) {
+                    map.setView([config.center_lat, config.center_lon], 15);
+                    
+                    if (boundingBoxLayer) {
+                        map.removeLayer(boundingBoxLayer);
+                    }
+                    var bounds = [
+                        [config.bbox[0], config.bbox[2]],
+                        [config.bbox[1], config.bbox[3]]
+                    ];
+                    boundingBoxLayer = L.rectangle(bounds, { 
+                        color: 'orange', 
+                        weight: 2, 
+                        fillOpacity: 0.2 
+                    });
+                    boundingBoxLayer.addTo(map);
+                    
+                    drawnItems.clearLayers();
+                    actualizarCamposOcultos();
+                } else {
+                    alert('No se encontró información para esta colonia');
                 }
-                var bounds = [
-                    [config.bbox[0], config.bbox[2]],
-                    [config.bbox[1], config.bbox[3]]
-                ];
-                boundingBoxLayer = L.rectangle(bounds, { 
-                    color: 'orange', 
-                    weight: 2, 
-                    fillOpacity: 0.2 
-                });
-                boundingBoxLayer.addTo(map);
-                
-                drawnItems.clearLayers();
-                actualizarCamposOcultos();
-            } else {
-                alert('No se encontró información para esta colonia');
-            }
-        })
-        .catch(function(error) {
-            console.error('Error:', error);
+            })
+            .catch(function(error) {
+                console.error('Error:', error);
             
             // Intentar obtener más información del error
             if (error.response) {
@@ -970,16 +970,16 @@
                     }
                     alert(errorMessage);
                 }).catch(function() {
-                    alert('Error al buscar la colonia: ' + error.message);
+                alert('Error al buscar la colonia: ' + error.message);
                 });
             } else {
                 alert('Error al buscar la colonia: ' + error.message);
             }
-        })
-        .finally(function() {
+            })
+            .finally(function() {
             this.innerHTML = '<i class="fas fa-search"></i> Buscar';
-            this.disabled = false;
-        }.bind(this));
+                this.disabled = false;
+            }.bind(this));
     });
     
     // Validación del formulario antes de enviar

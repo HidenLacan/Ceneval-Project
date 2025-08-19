@@ -389,13 +389,14 @@ class ChatParticipant(models.Model):
 
 class ConfiguracionAlgoritmo(models.Model):
     """Configuración del algoritmo por defecto para el sistema"""
+    
     ALGORITMOS_CHOICES = [
         ('kernighan_lin', 'Kernighan-Lin'),
         ('kmeans', 'K-Means Clustering'),
+        ('voronoi', 'Voronoi Diagram'),
+        ('random', 'Random Division'),
         ('dbscan', 'DBSCAN Clustering'),
         ('spectral', 'Spectral Clustering'),
-        ('voronoi', 'Voronoi Diagram'),
-        ('random', 'División Aleatoria'),
     ]
     
     algoritmo_por_defecto = models.CharField(
@@ -404,35 +405,155 @@ class ConfiguracionAlgoritmo(models.Model):
         default='kernighan_lin',
         help_text='Algoritmo que se usará por defecto en el sistema'
     )
-    descripcion = models.TextField(
-        blank=True,
-        help_text='Descripción de por qué se eligió este algoritmo'
-    )
-    activo = models.BooleanField(
-        default=True,
-        help_text='Indica si esta configuración está activa'
-    )
+    activo = models.BooleanField(default=True, help_text='Indica si esta configuración está activa')
     fecha_creacion = models.DateTimeField(auto_now_add=True)
     fecha_modificacion = models.DateTimeField(auto_now=True)
-    modificado_por = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        help_text='Usuario que realizó el último cambio'
-    )
+    creado_por = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='configuraciones_algoritmo')
+    notas = models.TextField(blank=True, null=True, help_text='Notas sobre la configuración')
     
     class Meta:
-        verbose_name = 'Configuración de Algoritmo'
-        verbose_name_plural = 'Configuraciones de Algoritmos'
+        verbose_name = "Configuración de Algoritmo"
+        verbose_name_plural = "Configuraciones de Algoritmos"
+        ordering = ['-fecha_creacion']
     
     def __str__(self):
-        return f"Algoritmo por defecto: {self.get_algoritmo_por_defecto_display()}"
+        return f"{self.get_algoritmo_por_defecto_display()} - {'Activo' if self.activo else 'Inactivo'}"
+    
+    def save(self, *args, **kwargs):
+        # Si esta configuración se activa, desactivar las demás
+        if self.activo:
+            ConfiguracionAlgoritmo.objects.exclude(pk=self.pk).update(activo=False)
+        super().save(*args, **kwargs)
     
     @classmethod
     def get_algoritmo_activo(cls):
-        """Obtiene el algoritmo activo por defecto"""
+        """Retorna el algoritmo activo por defecto"""
         config = cls.objects.filter(activo=True).first()
         if config:
             return config.algoritmo_por_defecto
-        return 'kernighan_lin'  # Fallback por defecto
+        return 'kernighan_lin'
+
+
+class RutaCompletada(models.Model):
+    """Modelo para almacenar datos históricos de rutas completadas para entrenar Random Forest"""
+    
+    # Información básica de la ruta
+    colonia = models.ForeignKey(ColoniaProcesada, on_delete=models.CASCADE, related_name='rutas_completadas')
+    empleado = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='rutas_completadas')
+    configuracion_ruta = models.ForeignKey('ConfiguracionRuta', on_delete=models.CASCADE, related_name='completadas')
+    
+    # Fechas
+    fecha_inicio = models.DateTimeField(help_text='Cuándo comenzó la ruta')
+    fecha_fin = models.DateTimeField(help_text='Cuándo terminó la ruta')
+    tiempo_real_minutos = models.FloatField(help_text='Tiempo real que tomó completar la ruta en minutos')
+    tiempo_estimado_minutos = models.FloatField(help_text='Tiempo que se estimó originalmente en minutos')
+    
+    # Features para el modelo de predicción
+    distancia_km = models.FloatField(help_text='Distancia total de la ruta en kilómetros')
+    num_nodos = models.IntegerField(help_text='Número de nodos/paradas en la ruta')
+    area_zona_m2 = models.FloatField(help_text='Área de la zona asignada en metros cuadrados')
+    densidad_nodos_km2 = models.FloatField(help_text='Densidad de nodos por km²')
+    densidad_calles_m_km2 = models.FloatField(help_text='Densidad de calles en metros por km²')
+    
+    # Features del empleado
+    experiencia_empleado_dias = models.IntegerField(help_text='Días de experiencia del empleado')
+    hora_inicio = models.IntegerField(help_text='Hora de inicio (0-23)')
+    dia_semana = models.IntegerField(help_text='Día de la semana (0=Lunes, 6=Domingo)')
+    
+    # Features ambientales (si están disponibles)
+    temperatura_celsius = models.FloatField(null=True, blank=True, help_text='Temperatura en grados Celsius')
+    condiciones_clima = models.CharField(max_length=50, null=True, blank=True, help_text='Condiciones climáticas')
+    
+    # Métricas de rendimiento
+    eficiencia_porcentaje = models.FloatField(help_text='Eficiencia real vs estimada (0-100%)')
+    velocidad_promedio_kmh = models.FloatField(help_text='Velocidad promedio en km/h')
+    
+    # Metadatos
+    algoritmo_usado = models.CharField(max_length=20, choices=EficienciaAlgoritmica.ALGORITMO_CHOICES)
+    notas = models.TextField(blank=True, null=True)
+    fecha_registro = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        verbose_name = "Ruta Completada"
+        verbose_name_plural = "Rutas Completadas"
+        ordering = ['-fecha_fin']
+    
+    def __str__(self):
+        return f"Ruta {self.id} - {self.empleado.username} en {self.colonia.nombre} ({self.tiempo_real_minutos:.1f}min)"
+    
+    def calcular_eficiencia(self):
+        """Calcula la eficiencia real vs estimada"""
+        if self.tiempo_estimado_minutos > 0:
+            return (self.tiempo_estimado_minutos / self.tiempo_real_minutos) * 100
+        return 0.0
+    
+    def calcular_velocidad(self):
+        """Calcula la velocidad promedio en km/h"""
+        if self.tiempo_real_minutos > 0:
+            return (self.distancia_km / self.tiempo_real_minutos) * 60
+        return 0.0
+    
+    def save(self, *args, **kwargs):
+        # Calcular métricas automáticamente
+        self.eficiencia_porcentaje = self.calcular_eficiencia()
+        self.velocidad_promedio_kmh = self.calcular_velocidad()
+        super().save(*args, **kwargs)
+
+
+class ModeloPrediccionTiempo(models.Model):
+    """Modelo para almacenar información sobre el modelo Random Forest entrenado"""
+    
+    ESTADO_CHOICES = [
+        ('entrenando', 'Entrenando'),
+        ('activo', 'Activo'),
+        ('inactivo', 'Inactivo'),
+        ('error', 'Error'),
+    ]
+    
+    nombre = models.CharField(max_length=100, help_text='Nombre del modelo')
+    version = models.CharField(max_length=20, help_text='Versión del modelo')
+    estado = models.CharField(max_length=20, choices=ESTADO_CHOICES, default='inactivo')
+    
+    # Métricas del modelo
+    accuracy_score = models.FloatField(null=True, blank=True, help_text='Precisión del modelo (0-1)')
+    mae_score = models.FloatField(null=True, blank=True, help_text='Error absoluto medio')
+    r2_score = models.FloatField(null=True, blank=True, help_text='Coeficiente de determinación R²')
+    
+    # Parámetros del modelo
+    n_estimators = models.IntegerField(default=100, help_text='Número de árboles en el Random Forest')
+    max_depth = models.IntegerField(null=True, blank=True, help_text='Profundidad máxima de los árboles')
+    min_samples_split = models.IntegerField(default=2, help_text='Mínimo de muestras para dividir un nodo')
+    
+    # Datos de entrenamiento
+    num_muestras_entrenamiento = models.IntegerField(default=0, help_text='Número de muestras usadas para entrenar')
+    features_usadas = models.JSONField(default=list, help_text='Lista de features utilizadas')
+    
+    # Archivos del modelo
+    modelo_archivo = models.FileField(upload_to='modelos_prediccion/', null=True, blank=True)
+    scaler_archivo = models.FileField(upload_to='modelos_prediccion/', null=True, blank=True)
+    
+    # Metadatos
+    fecha_entrenamiento = models.DateTimeField(auto_now_add=True)
+    fecha_ultima_actualizacion = models.DateTimeField(auto_now=True)
+    entrenado_por = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='modelos_entrenados')
+    notas = models.TextField(blank=True, null=True)
+    
+    class Meta:
+        verbose_name = "Modelo de Predicción de Tiempo"
+        verbose_name_plural = "Modelos de Predicción de Tiempo"
+        ordering = ['-fecha_entrenamiento']
+    
+    def __str__(self):
+        return f"{self.nombre} v{self.version} - {self.get_estado_display()}"
+    
+    def get_accuracy_porcentaje(self):
+        """Retorna la precisión en porcentaje"""
+        if self.accuracy_score:
+            return round(self.accuracy_score * 100, 2)
+        return 0.0
+    
+    def get_r2_porcentaje(self):
+        """Retorna el R² en porcentaje"""
+        if self.r2_score:
+            return round(self.r2_score * 100, 2)
+        return 0.0

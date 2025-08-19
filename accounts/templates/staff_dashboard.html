@@ -98,6 +98,356 @@
             margin: 20px;
             border-radius: 12px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        /* Panel de supervisión de rutas */
+        .supervision-panel {
+            grid-column: 2;
+            grid-row: 2;
+            background: white;
+            margin: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .supervision-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .supervision-title {
+            color: #2c3e50;
+            font-weight: 600;
+            margin: 0;
+            font-size: 1.2rem;
+        }
+
+        .refresh-btn {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .refresh-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(40, 167, 69, 0.3);
+        }
+
+        .rutas-supervision {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .ruta-supervision-card {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            border: 1px solid #e9ecef;
+            transition: all 0.3s ease;
+        }
+
+        .ruta-supervision-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .ruta-supervision-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 10px;
+        }
+
+        .ruta-supervision-title {
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 1rem;
+            margin: 0;
+        }
+
+        .ruta-supervision-fecha {
+            color: #6c757d;
+            font-size: 0.8rem;
+        }
+
+        .empleados-ruta {
+            margin-top: 10px;
+        }
+
+        .empleado-item {
+            background: white;
+            border-radius: 8px;
+            padding: 10px;
+            margin-bottom: 8px;
+            border: 1px solid #e9ecef;
+        }
+
+        .empleado-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .empleado-nombre {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .empleado-estado {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .empleado-estado.pendiente {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .empleado-estado.completada {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .empleado-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            font-size: 0.8rem;
+            margin-bottom: 10px;
+        }
+
+        .empleado-info-item {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .empleado-info-label {
+            color: #6c757d;
+        }
+
+        .empleado-info-value {
+            color: #2c3e50;
+            font-weight: 600;
+        }
+
+        .empleado-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-completar-empleado {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-completar-empleado:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 3px 10px rgba(40, 167, 69, 0.3);
+        }
+
+        .btn-completar-empleado:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .btn-ver-detalles-empleado {
+            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-ver-detalles-empleado:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 3px 10px rgba(0, 123, 255, 0.3);
+        }
+
+        .loading-placeholder {
+            text-align: center;
+            color: #6c757d;
+            padding: 40px 20px;
+        }
+
+        .loading-placeholder i {
+            font-size: 2rem;
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        .no-rutas-message {
+            text-align: center;
+            color: #6c757d;
+            padding: 40px 20px;
+        }
+
+        .no-rutas-message i {
+            font-size: 3rem;
+            color: #667eea;
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        /* Modal para completar ruta por staff */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .modal-title {
+            color: #2c3e50;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #6c757d;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            color: #2c3e50;
+            font-weight: 600;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 1rem;
+            resize: vertical;
+            min-height: 100px;
+            transition: all 0.3s ease;
+        }
+
+        .form-textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 15px;
+            justify-content: flex-end;
+        }
+
+        .btn-cancelar {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-confirmar {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-confirmar:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(40, 167, 69, 0.3);
+        }
+        
+        /* Panel principal izquierdo - Mapa con polígonos */
+        .map-panel {
+            grid-column: 1;
+            grid-row: 2;
+            background: white;
+            margin: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
             overflow: hidden;
         }
         
@@ -676,32 +1026,32 @@
     <!-- CSRF Token -->
     {% csrf_token %}
     
-    <div class="dashboard-container">        
+    <div class="dashboard-container">
         <!-- Panel superior -->
         <div class="top-panel">
             <div class="top-panel-left">
-                <div class="selection-group">
-                    <label for="colonia-select">Selección de colonia</label>
-                    <select id="colonia-select">
-                        <option value="">Seleccionar colonia...</option>
-                        {% for colonia in colonias %}
-                        <option value="{{ colonia.id }}">{{ colonia.nombre }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                
-                <div class="selection-group">
-                    <label for="empleados-select">Selección de empleados para asignar ruta (máximo 2)</label>
-                    <select id="empleados-select">
-                        <option value="">Seleccionar empleado...</option>
-                        {% for empleado in empleados %}
-                        <option value="{{ empleado.id }}" data-username="{{ empleado.username }}" data-email="{{ empleado.email }}">
-                            {{ empleado.username }} - {{ empleado.email }}
-                        </option>
-                        {% endfor %}
-                    </select>
-                    <small style="color: #666; font-size: 12px;">Puedes seleccionar hasta 2 empleados por ruta</small>
-                </div>
+            <div class="selection-group">
+                <label for="colonia-select">Selección de colonia</label>
+                <select id="colonia-select">
+                    <option value="">Seleccionar colonia...</option>
+                    {% for colonia in colonias %}
+                    <option value="{{ colonia.id }}">{{ colonia.nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="selection-group">
+                <label for="empleados-select">Selección de empleados para asignar ruta (máximo 2)</label>
+                <select id="empleados-select">
+                    <option value="">Seleccionar empleado...</option>
+                    {% for empleado in empleados %}
+                    <option value="{{ empleado.id }}" data-username="{{ empleado.username }}" data-email="{{ empleado.email }}">
+                        {{ empleado.username }} - {{ empleado.email }}
+                    </option>
+                    {% endfor %}
+                </select>
+                <small style="color: #666; font-size: 12px;">Puedes seleccionar hasta 2 empleados por ruta</small>
+            </div>
             </div>
             
             <button class="logout-btn" onclick="confirmLogout()">
@@ -715,6 +1065,26 @@
                 <h3>🗺️ MAPA CON POLÍGONOS</h3>
             </div>
             <div id="map"></div>
+        </div>
+        
+        <!-- Panel de supervisión de rutas -->
+        <div class="supervision-panel">
+            <div class="supervision-header">
+                <h3 class="supervision-title">📊 Supervisión de Rutas</h3>
+                <button class="refresh-btn" onclick="refreshSupervision()">
+                    <i class="fas fa-sync-alt"></i> Actualizar
+                </button>
+            </div>
+            <div class="rutas-supervision">
+                <div class="loading-placeholder">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    Cargando rutas de supervisión...
+                </div>
+                <div class="no-rutas-message">
+                    <i class="fas fa-info-circle"></i>
+                    No hay rutas de supervisión disponibles.
+                </div>
+            </div>
         </div>
         
         <!-- Panel central - Mapa dividido -->
@@ -767,6 +1137,50 @@
                 Enviar Información
             </button>
         </div>
+        
+        <!-- Modal para completar ruta por staff -->
+        <div class="modal-overlay" id="completarRutaStaffModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 class="modal-title">
+                        <i class="fas fa-check-circle"></i> Marcar Ruta como Completada (Staff)
+                    </h3>
+                    <button class="modal-close" onclick="cerrarModalStaff()">&times;</button>
+                </div>
+                <form id="formCompletarRutaStaff">
+                    <div class="form-group">
+                        <label class="form-label">Colonia:</label>
+                        <input type="text" id="modalStaffColonia" class="form-input" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Empleado:</label>
+                        <input type="text" id="modalStaffEmpleado" class="form-input" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Tiempo Real (minutos):</label>
+                        <input type="number" id="modalStaffTiempoReal" class="form-input" min="1" max="480" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Fecha de Inicio (opcional):</label>
+                        <input type="datetime-local" id="modalStaffFechaInicio" class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Fecha de Fin (opcional):</label>
+                        <input type="datetime-local" id="modalStaffFechaFin" class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Notas (opcional):</label>
+                        <textarea id="modalStaffNotas" class="form-textarea" placeholder="Agrega notas sobre la ruta completada..."></textarea>
+                    </div>
+                    <div class="modal-actions">
+                        <button type="button" class="btn-cancelar" onclick="cerrarModalStaff()">Cancelar</button>
+                        <button type="submit" class="btn-confirmar">
+                            <i class="fas fa-check"></i> Confirmar Completado
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
     
     <!-- Scripts -->
@@ -779,6 +1193,22 @@
         var selectedColonia = null;
         var selectedEmployees = [];
         var coloniaPolygon = null;
+        
+        // CSRF Token
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
         
         // Inicializar mapas
         function initializeMaps() {
@@ -986,9 +1416,9 @@
                     if (data.success) {
                         if (data.ruta2) {
                             // Múltiples empleados
-                            mostrarRutasReales(data.ruta1, data.ruta2);
-                            actualizarInformacionRutas(data);
-                            showMessage(`✅ Rutas divididas exitosamente: ${data.ruta1.nodos} y ${data.ruta2.nodos} nodos`, 'success');
+                        mostrarRutasReales(data.ruta1, data.ruta2);
+                        actualizarInformacionRutas(data);
+                        showMessage(`✅ Rutas divididas exitosamente: ${data.ruta1.nodos} y ${data.ruta2.nodos} nodos`, 'success');
                         } else {
                             // Un solo empleado
                             mostrarRutaUnica(data.ruta1);
@@ -1014,15 +1444,24 @@
                 }
             });
             
-            // Mostrar ruta 1 (primer empleado)
+            // Definir colores específicos para cada empleado
+            const coloresEmpleados = {
+                1: '#e74c3c', // Rojo para empleado 1
+                2: '#3498db'  // Azul para empleado 2
+            };
+            
+            // Mostrar ruta 1 (primer empleado) - ROJO
             if (selectedEmployees[0]) {
-                mostrarRutaEmpleado(ruta1, selectedEmployees[0], ruta1.color, 1);
+                mostrarRutaEmpleado(ruta1, selectedEmployees[0], coloresEmpleados[1], 1);
             }
             
-            // Mostrar ruta 2 (segundo empleado) - solo si existe
+            // Mostrar ruta 2 (segundo empleado) - AZUL - solo si existe
             if (selectedEmployees[1] && ruta2) {
-                mostrarRutaEmpleado(ruta2, selectedEmployees[1], ruta2.color, 2);
+                mostrarRutaEmpleado(ruta2, selectedEmployees[1], coloresEmpleados[2], 2);
             }
+            
+            // Agregar leyenda de colores
+            agregarLeyendaRutas();
             
             // Centrar mapa en las rutas
             dividedMap.fitBounds(coloniaPolygon.getBounds());
@@ -1036,17 +1475,23 @@
                 ruta.calles.forEach((calle, index) => {
                     const routeLine = L.polyline(calle, {
                         color: color,
-                        weight: 4,
-                        opacity: 0.8
+                        weight: 6,
+                        opacity: 0.9
                     }).addTo(dividedMap);
                     
-                    // Popup para cada calle
+                    // Popup para cada calle con información mejorada
                     routeLine.bindPopup(`
-                        <strong>Ruta ${numeroRuta} - Calle ${index + 1}</strong><br>
-                        <strong>Empleado:</strong> ${empleado.username}<br>
-                        <strong>Nodos:</strong> ${ruta.nodos}<br>
-                        <strong>Distancia:</strong> ${(ruta.longitud/1000).toFixed(2)} km<br>
-                        <strong>Área:</strong> ${ruta.area.toFixed(2)} km²
+                        <div style="min-width: 200px;">
+                            <h4 style="margin: 0 0 10px 0; color: ${color};">
+                                🛣️ Ruta ${numeroRuta} - Empleado ${empleado.username}
+                            </h4>
+                            <p><strong>📍 Calle ${index + 1}</strong></p>
+                            <p><strong>👤 Empleado:</strong> ${empleado.username}</p>
+                            <p><strong>🔢 Nodos:</strong> ${ruta.nodos}</p>
+                            <p><strong>📏 Distancia:</strong> ${(ruta.longitud/1000).toFixed(2)} km</p>
+                            <p><strong>📐 Área:</strong> ${ruta.area.toFixed(2)} km²</p>
+                            <p><strong>🎨 Color:</strong> <span style="color: ${color}; font-weight: bold;">${numeroRuta === 1 ? 'ROJO' : 'AZUL'}</span></p>
+                        </div>
                     `);
                 });
                 
@@ -1055,10 +1500,14 @@
                     L.marker(ruta.calles[0][0], {
                         icon: L.divIcon({
                             className: 'route-start',
-                            html: '🏁',
-                            iconSize: [20, 20]
+                            html: numeroRuta === 1 ? '🔴' : '🔵',
+                            iconSize: [25, 25]
                         })
-                    }).addTo(dividedMap);
+                    }).addTo(dividedMap).bindPopup(`
+                        <strong>🚀 INICIO - Ruta ${numeroRuta}</strong><br>
+                        <strong>Empleado:</strong> ${empleado.username}<br>
+                        <strong>Color:</strong> ${numeroRuta === 1 ? 'ROJO' : 'AZUL'}
+                    `);
                 }
                 
                 // Marcador de fin (último punto de la última calle)
@@ -1067,10 +1516,14 @@
                     L.marker(ultimaCalle[ultimaCalle.length - 1], {
                         icon: L.divIcon({
                             className: 'route-end',
-                            html: '🎯',
-                            iconSize: [20, 20]
+                            html: numeroRuta === 1 ? '🏁' : '🎯',
+                            iconSize: [25, 25]
                         })
-                    }).addTo(dividedMap);
+                    }).addTo(dividedMap).bindPopup(`
+                        <strong>🏁 FIN - Ruta ${numeroRuta}</strong><br>
+                        <strong>Empleado:</strong> ${empleado.username}<br>
+                        <strong>Color:</strong> ${numeroRuta === 1 ? 'ROJO' : 'AZUL'}
+                    `);
                 }
             } else {
                 // Fallback: usar puntos simulados si no hay calles reales
@@ -1079,35 +1532,61 @@
                 
                 const routeLine = L.polyline(puntosRuta, {
                     color: color,
-                    weight: 4,
-                    opacity: 0.8
+                    weight: 6,
+                    opacity: 0.9
                 }).addTo(dividedMap);
                 
-                // Marcadores
+                // Marcadores mejorados
                 L.marker(puntosRuta[0], {
                     icon: L.divIcon({
                         className: 'route-start',
-                        html: '🏁',
-                        iconSize: [20, 20]
+                        html: numeroRuta === 1 ? '🔴' : '🔵',
+                        iconSize: [25, 25]
                     })
                 }).addTo(dividedMap);
                 
                 L.marker(puntosRuta[puntosRuta.length - 1], {
                     icon: L.divIcon({
                         className: 'route-end',
-                        html: '🎯',
-                        iconSize: [20, 20]
+                        html: numeroRuta === 1 ? '🏁' : '🎯',
+                        iconSize: [25, 25]
                     })
                 }).addTo(dividedMap);
                 
                 routeLine.bindPopup(`
-                    <strong>Ruta ${numeroRuta} (Simulada)</strong><br>
-                    <strong>Empleado:</strong> ${empleado.username}<br>
-                    <strong>Nodos:</strong> ${ruta.nodos}<br>
-                    <strong>Distancia:</strong> ${(ruta.longitud/1000).toFixed(2)} km<br>
-                    <strong>Área:</strong> ${ruta.area.toFixed(2)} km²
+                    <div style="min-width: 200px;">
+                        <h4 style="margin: 0 0 10px 0; color: ${color};">
+                            🛣️ Ruta ${numeroRuta} (Simulada) - Empleado ${empleado.username}
+                        </h4>
+                        <p><strong>👤 Empleado:</strong> ${empleado.username}</p>
+                        <p><strong>🔢 Nodos:</strong> ${ruta.nodos}</p>
+                        <p><strong>📏 Distancia:</strong> ${(ruta.longitud/1000).toFixed(2)} km</p>
+                        <p><strong>📐 Área:</strong> ${ruta.area.toFixed(2)} km²</p>
+                        <p><strong>🎨 Color:</strong> <span style="color: ${color}; font-weight: bold;">${numeroRuta === 1 ? 'ROJO' : 'AZUL'}</span></p>
+                    </div>
                 `);
             }
+        }
+        
+        // Mostrar ruta única (cuando solo hay un empleado)
+        function mostrarRutaUnica(ruta) {
+            // Limpiar mapa dividido
+            dividedMap.eachLayer((layer) => {
+                if (layer instanceof L.Marker || layer instanceof L.Polyline) {
+                    dividedMap.removeLayer(layer);
+                }
+            });
+            
+            // Mostrar ruta única con color rojo
+            if (selectedEmployees[0]) {
+                mostrarRutaEmpleado(ruta, selectedEmployees[0], '#e74c3c', 1);
+            }
+            
+            // Agregar leyenda de colores
+            agregarLeyendaRutas();
+            
+            // Centrar mapa en las rutas
+            dividedMap.fitBounds(coloniaPolygon.getBounds());
         }
         
         // Generar puntos de ruta basados en datos reales
@@ -1132,6 +1611,9 @@
             let html = '';
             selectedEmployees.forEach((employee, index) => {
                 const ruta = index === 0 ? data.ruta1 : data.ruta2;
+                const color = index === 0 ? '#e74c3c' : '#3498db';
+                const colorName = index === 0 ? 'ROJO' : 'AZUL';
+                const icon = index === 0 ? '🔴' : '🔵';
                 
                 html += `
                     <div class="employee-item selected" data-employee-id="${employee.id}">
@@ -1139,8 +1621,99 @@
                         <div class="employee-email">${employee.email}</div>
                         <div class="employee-details">
                             <div class="employee-info">
-                                <div class="employee-status status-assigned">
-                                    Ruta ${index + 1} - ${ruta.nodos} nodos
+                                <div class="employee-status status-assigned" style="background: ${color}; color: white;">
+                                    ${icon} Ruta ${index + 1} - ${ruta.nodos} nodos
+                                </div>
+                                <div style="font-size: 11px; color: #666; margin-top: 3px;">
+                                    Distancia: ${(ruta.longitud/1000).toFixed(2)} km | 
+                                    Área: ${ruta.area.toFixed(2)} km² | 
+                                    Color: <span style="color: ${color}; font-weight: bold;">${colorName}</span>
+                                </div>
+                            </div>
+                            <div class="employee-actions">
+                                <button class="btn-small btn-remove" onclick="removeEmployee('${employee.id}')">
+                                    <i class="fas fa-times"></i>
+                                    Remover
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            employeesList.innerHTML = html;
+        }
+        
+        // Agregar leyenda de colores al mapa
+        function agregarLeyendaRutas() {
+            // Remover leyenda existente si existe
+            const leyendaExistente = document.querySelector('.map-legend');
+            if (leyendaExistente) {
+                leyendaExistente.remove();
+            }
+            
+            // Crear leyenda
+            const leyenda = document.createElement('div');
+            leyenda.className = 'map-legend';
+            leyenda.style.cssText = `
+                position: absolute;
+                top: 10px;
+                right: 10px;
+                background: white;
+                padding: 15px;
+                border-radius: 8px;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+                z-index: 1000;
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                min-width: 200px;
+            `;
+            
+            let leyendaHTML = '<h4 style="margin: 0 0 10px 0; color: #2c3e50;">🎨 Leyenda de Rutas</h4>';
+            
+            // Agregar información para cada empleado
+            selectedEmployees.forEach((empleado, index) => {
+                const color = index === 0 ? '#e74c3c' : '#3498db';
+                const colorName = index === 0 ? 'ROJO' : 'AZUL';
+                const icon = index === 0 ? '🔴' : '🔵';
+                
+                leyendaHTML += `
+                    <div style="display: flex; align-items: center; margin-bottom: 8px;">
+                        <div style="width: 20px; height: 6px; background: ${color}; margin-right: 10px; border-radius: 3px;"></div>
+                        <div>
+                            <div style="font-weight: 600; color: #2c3e50;">
+                                ${icon} Empleado ${index + 1}: ${empleado.username}
+                            </div>
+                            <div style="font-size: 12px; color: #666;">
+                                Color: <span style="color: ${color}; font-weight: bold;">${colorName}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            leyenda.innerHTML = leyendaHTML;
+            
+            // Agregar al mapa
+            const mapContainer = document.getElementById('divided-map');
+            mapContainer.appendChild(leyenda);
+        }
+        
+        // Actualizar información de empleados para ruta única
+        function actualizarInformacionRutaUnica(data) {
+            const employeesList = document.getElementById('employees-list');
+            
+            let html = '';
+            selectedEmployees.forEach((employee, index) => {
+                const ruta = data.ruta1;
+                
+                html += `
+                    <div class="employee-item selected" data-employee-id="${employee.id}">
+                        <div class="employee-name">${employee.username}</div>
+                        <div class="employee-email">${employee.email}</div>
+                        <div class="employee-details">
+                            <div class="employee-info">
+                                <div class="employee-status status-assigned" style="background: #e74c3c; color: white;">
+                                    🔴 Ruta Completa - ${ruta.nodos} nodos
                                 </div>
                                 <div style="font-size: 11px; color: #666; margin-top: 3px;">
                                     Distancia: ${(ruta.longitud/1000).toFixed(2)} km | 
@@ -1265,84 +1838,252 @@
             }, 5000);
         }
         
-        // Confirmar logout
+        // Función para confirmar logout
         function confirmLogout() {
             if (confirm('¿Estás seguro de que quieres cerrar sesión?')) {
                 window.location.href = '/accounts/logout/';
             }
         }
-        
-        // Función para obtener CSRF token
-        function getCookie(name) {
-            let cookieValue = null;
-            if (document.cookie && document.cookie !== '') {
-                const cookies = document.cookie.split(';');
-                for (let i = 0; i < cookies.length; i++) {
-                    const cookie = cookies[i].trim();
-                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                        break;
+
+        // ============================
+        // FUNCIONES DE SUPERVISIÓN DE RUTAS
+        // ============================
+
+        // Cargar rutas para supervisión
+        function cargarRutasSupervision() {
+            console.log('🔄 Cargando rutas para supervisión...');
+            
+            const container = document.querySelector('.rutas-supervision');
+            container.innerHTML = `
+                <div class="loading-placeholder">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <p>Cargando rutas de supervisión...</p>
+                </div>
+            `;
+            
+            fetch('/accounts/api/rutas_staff_supervision/', {
+                method: 'GET',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('📊 Rutas de supervisión recibidas:', data);
+                
+                if (data.success) {
+                    if (data.rutas && data.rutas.length > 0) {
+                        mostrarRutasSupervision(data.rutas);
+                    } else {
+                        mostrarNoRutasSupervision();
                     }
+                } else {
+                    console.error('❌ Error cargando rutas de supervisión:', data.error);
+                    mostrarErrorCargaSupervision(data.error);
                 }
-            }
-            return cookieValue;
-        }
-        
-        // Mostrar ruta única para un solo empleado
-        function mostrarRutaUnica(ruta) {
-            // Limpiar mapa dividido
-            dividedMap.eachLayer((layer) => {
-                if (layer instanceof L.Marker || layer instanceof L.Polyline) {
-                    dividedMap.removeLayer(layer);
-                }
+            })
+            .catch(error => {
+                console.error('❌ Error en fetch de supervisión:', error);
+                mostrarErrorCargaSupervision('Error de conexión');
             });
-            
-            // Mostrar ruta completa para el empleado único
-            if (selectedEmployees[0]) {
-                mostrarRutaEmpleado(ruta, selectedEmployees[0], ruta.color, 1);
-            }
-            
-            // Centrar mapa en las rutas
-            dividedMap.fitBounds(coloniaPolygon.getBounds());
         }
-        
-        // Actualizar información para ruta única
-        function actualizarInformacionRutaUnica(data) {
-            const infoDiv = document.getElementById('route-info');
-            if (infoDiv) {
-                infoDiv.innerHTML = `
-                    <h3>📊 Información de Ruta Completa</h3>
-                    <div class="route-stats">
-                        <div class="stat-item">
-                            <span class="stat-label">Empleado:</span>
-                            <span class="stat-value">${selectedEmployees[0] ? selectedEmployees[0].username : 'N/A'}</span>
+
+        // Mostrar rutas de supervisión
+        function mostrarRutasSupervision(rutas) {
+            console.log('📋 Mostrando rutas de supervisión:', rutas.length);
+            
+            const container = document.querySelector('.rutas-supervision');
+            let html = '';
+            
+            rutas.forEach(ruta => {
+                html += `
+                    <div class="ruta-supervision-card">
+                        <div class="ruta-supervision-header">
+                            <h4 class="ruta-supervision-title">${ruta.colonia}</h4>
+                            <span class="ruta-supervision-fecha">${ruta.fecha_creacion}</span>
                         </div>
-                        <div class="stat-item">
-                            <span class="stat-label">Nodos:</span>
-                            <span class="stat-value">${data.ruta1.nodos}</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-label">Distancia:</span>
-                            <span class="stat-value">${(data.ruta1.longitud/1000).toFixed(2)} km</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-label">Área:</span>
-                            <span class="stat-value">${(data.ruta1.area/1000000).toFixed(2)} km²</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-label">Densidad de nodos:</span>
-                            <span class="stat-value">${data.ruta1.densidad_nodos.toFixed(2)} nodos/km²</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-label">Densidad de calles:</span>
-                            <span class="stat-value">${data.ruta1.densidad_calles.toFixed(2)} m/km²</span>
+                        <div class="empleados-ruta">
+                            ${ruta.empleados.map(empleado => `
+                                <div class="empleado-item">
+                                    <div class="empleado-header">
+                                        <span class="empleado-nombre">${empleado.empleado_nombre}</span>
+                                        <span class="empleado-estado ${empleado.estado}">${empleado.estado}</span>
+                                    </div>
+                                    <div class="empleado-info">
+                                        <div class="empleado-info-item">
+                                            <span class="empleado-info-label">Distancia:</span>
+                                            <span class="empleado-info-value">${empleado.distancia_km.toFixed(2)} km</span>
+                                        </div>
+                                        <div class="empleado-info-item">
+                                            <span class="empleado-info-label">Nodos:</span>
+                                            <span class="empleado-info-value">${empleado.num_nodos}</span>
+                                        </div>
+                                        <div class="empleado-info-item">
+                                            <span class="empleado-info-label">Tiempo Estimado:</span>
+                                            <span class="empleado-info-value">${empleado.tiempo_estimado.toFixed(1)} hrs</span>
+                                        </div>
+                                        ${empleado.tiempo_real ? `
+                                            <div class="empleado-info-item">
+                                                <span class="empleado-info-label">Tiempo Real:</span>
+                                                <span class="empleado-info-value">${(empleado.tiempo_real / 60).toFixed(1)} hrs</span>
+                                            </div>
+                                            <div class="empleado-info-item">
+                                                <span class="empleado-info-label">Eficiencia:</span>
+                                                <span class="empleado-info-value">${empleado.eficiencia.toFixed(1)}%</span>
+                                            </div>
+                                            <div class="empleado-info-item">
+                                                <span class="empleado-info-label">Completada:</span>
+                                                <span class="empleado-info-value">${empleado.fecha_completada}</span>
+                                            </div>
+                                        ` : ''}
+                                    </div>
+                                    <div class="empleado-actions">
+                                        <button class="btn-ver-detalles-empleado" onclick="verDetallesEmpleado(${ruta.configuracion_id}, ${empleado.empleado_id})">
+                                            <i class="fas fa-eye"></i> Ver Detalles
+                                        </button>
+                                        ${empleado.estado === 'pendiente' ? `
+                                            <button class="btn-completar-empleado" onclick="abrirModalStaff(${ruta.configuracion_id}, ${empleado.empleado_id}, '${ruta.colonia}', '${empleado.empleado_nombre}')">
+                                                <i class="fas fa-check"></i> Completar
+                                            </button>
+                                        ` : `
+                                            <button class="btn-completar-empleado" disabled>
+                                                <i class="fas fa-check"></i> Completada
+                                            </button>
+                                        `}
+                                    </div>
+                                </div>
+                            `).join('')}
                         </div>
                     </div>
                 `;
-            }
+            });
+            
+            container.innerHTML = html;
+            console.log('✅ Rutas de supervisión mostradas correctamente');
         }
-        
-        // Event listeners
+
+        // Mostrar mensaje de no hay rutas de supervisión
+        function mostrarNoRutasSupervision() {
+            console.log('📭 No hay rutas de supervisión');
+            
+            const container = document.querySelector('.rutas-supervision');
+            container.innerHTML = `
+                <div class="no-rutas-message">
+                    <i class="fas fa-route"></i>
+                    <h3>No hay rutas para supervisar</h3>
+                    <p>No se han encontrado rutas asignadas a empleados.</p>
+                </div>
+            `;
+        }
+
+        // Mostrar error de carga de supervisión
+        function mostrarErrorCargaSupervision(error) {
+            console.log('❌ Error de carga de supervisión:', error);
+            
+            const container = document.querySelector('.rutas-supervision');
+            container.innerHTML = `
+                <div class="no-rutas-message">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <h3>Error al cargar rutas de supervisión</h3>
+                    <p>${error}</p>
+                    <button class="refresh-btn" onclick="cargarRutasSupervision()">
+                        <i class="fas fa-sync-alt"></i> Intentar de nuevo
+                    </button>
+                </div>
+            `;
+        }
+
+        // Ver detalles de empleado
+        function verDetallesEmpleado(configuracionId, empleadoId) {
+            console.log('👁️ Ver detalles de empleado:', configuracionId, empleadoId);
+            
+            // Aquí podrías implementar la lógica para mostrar detalles específicos
+            alert(`Detalles del empleado en la configuración ${configuracionId}`);
+        }
+
+        // Abrir modal para completar ruta por staff
+        function abrirModalStaff(configuracionId, empleadoId, colonia, empleadoNombre) {
+            console.log('📝 Abriendo modal staff para completar ruta:', configuracionId, empleadoId, colonia, empleadoNombre);
+            
+            // Guardar datos en el modal
+            document.getElementById('completarRutaStaffModal').dataset.configuracionId = configuracionId;
+            document.getElementById('completarRutaStaffModal').dataset.empleadoId = empleadoId;
+            
+            // Llenar datos del modal
+            document.getElementById('modalStaffColonia').value = colonia;
+            document.getElementById('modalStaffEmpleado').value = empleadoNombre;
+            document.getElementById('modalStaffTiempoReal').value = '';
+            document.getElementById('modalStaffFechaInicio').value = '';
+            document.getElementById('modalStaffFechaFin').value = '';
+            document.getElementById('modalStaffNotas').value = '';
+            
+            // Mostrar modal
+            document.getElementById('completarRutaStaffModal').style.display = 'flex';
+        }
+
+        // Cerrar modal de staff
+        function cerrarModalStaff() {
+            console.log('❌ Cerrando modal de staff');
+            document.getElementById('completarRutaStaffModal').style.display = 'none';
+        }
+
+        // Marcar ruta como completada por staff
+        function marcarRutaCompletadaStaff(configuracionId, empleadoId, tiempoReal, fechaInicio, fechaFin, notas) {
+            console.log('✅ Marcando ruta como completada por staff:', {
+                configuracionId,
+                empleadoId,
+                tiempoReal,
+                fechaInicio,
+                fechaFin,
+                notas
+            });
+            
+            const data = {
+                configuracion_ruta_id: configuracionId,
+                empleado_id: empleadoId,
+                tiempo_real_minutos: tiempoReal,
+                fecha_inicio: fechaInicio,
+                fecha_fin: fechaFin,
+                notas: notas
+            };
+            
+            fetch('/accounts/api/marcar_ruta_completada_staff/', {
+                method: 'POST',
+                body: JSON.stringify(data),
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    console.log('✅ Ruta marcada como completada por staff exitosamente');
+                    alert(`¡Ruta completada exitosamente para ${data.empleado}!\nTiempo real: ${data.tiempo_real} minutos\nEficiencia: ${data.eficiencia.toFixed(1)}%`);
+                    
+                    // Cerrar modal
+                    cerrarModalStaff();
+                    
+                    // Recargar rutas de supervisión
+                    cargarRutasSupervision();
+                } else {
+                    console.error('❌ Error marcando ruta como completada por staff:', data.error);
+                    alert('Error: ' + data.error);
+                }
+            })
+            .catch(error => {
+                console.error('❌ Error en fetch de completar ruta por staff:', error);
+                alert('Error de conexión al marcar ruta como completada');
+            });
+        }
+
+        // Función para refrescar supervisión
+        function refreshSupervision() {
+            console.log('🔄 Refrescando supervisión de rutas');
+            cargarRutasSupervision();
+        }
+
+        // Event listener para el formulario de completar ruta por staff
         document.addEventListener('DOMContentLoaded', function() {
             initializeMaps();
             
@@ -1389,6 +2130,35 @@
             document.getElementById('generar-rutas-btn').addEventListener('click', generateRoutes);
             document.getElementById('guardar-btn').addEventListener('click', saveConfiguration);
             document.getElementById('mandar-info-btn').addEventListener('click', sendInformation);
+            
+            // Cargar rutas de supervisión al inicializar
+            cargarRutasSupervision();
+            
+            // Event listener para el formulario de completar ruta por staff
+            document.getElementById('formCompletarRutaStaff').addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const configuracionId = parseInt(document.getElementById('completarRutaStaffModal').dataset.configuracionId);
+                const empleadoId = parseInt(document.getElementById('completarRutaStaffModal').dataset.empleadoId);
+                const tiempoReal = parseFloat(document.getElementById('modalStaffTiempoReal').value);
+                const fechaInicio = document.getElementById('modalStaffFechaInicio').value;
+                const fechaFin = document.getElementById('modalStaffFechaFin').value;
+                const notas = document.getElementById('modalStaffNotas').value;
+                
+                if (!tiempoReal || tiempoReal <= 0) {
+                    alert('Por favor ingresa un tiempo real válido');
+                    return;
+                }
+                
+                marcarRutaCompletadaStaff(configuracionId, empleadoId, tiempoReal, fechaInicio, fechaFin, notas);
+            });
+            
+            // Cerrar modal al hacer clic fuera de él
+            document.getElementById('completarRutaStaffModal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    cerrarModalStaff();
+                }
+            });
         });
     </script>
 </body>

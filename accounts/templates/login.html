@@ -448,19 +448,19 @@
         </div>
 
         <!-- Messages -->
-        {% if messages %}
+    {% if messages %}
         <div class="messages">
-            {% for message in messages %}
+        {% for message in messages %}
             <div class="message {% if message.tags %}{{ message.tags }}{% else %}error{% endif %}">
                 <i class="fas fa-{% if message.tags == 'success' %}check-circle{% else %}exclamation-circle{% endif %}"></i>
                 {{ message }}
             </div>
-            {% endfor %}
+        {% endfor %}
         </div>
-        {% endif %}
+    {% endif %}
 
         <form method="post" id="loginForm">
-            {% csrf_token %}
+        {% csrf_token %}
             
             <div class="form-group">
                 <label for="username">
@@ -501,7 +501,7 @@
                 <span class="spinner"></span>
                 <i class="fas fa-sign-in-alt"></i> Iniciar Sesión
             </button>
-        </form>
+    </form>
 
     </div>
 
