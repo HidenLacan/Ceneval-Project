@@ -422,6 +422,16 @@
             display: inline-block;
         }
 
+        /* Ensure button text is properly aligned */
+        .login-btn i {
+            margin-right: 8px;
+        }
+
+        /* Reset button state styles */
+        .login-btn:not(.loading) .spinner {
+            display: none;
+        }
+
         /* Focus styles for accessibility */
         .form-control:focus,
         .login-btn:focus {
@@ -537,8 +547,35 @@
             }, 100);
         });
 
-        // Auto-focus on username field
+        // Reset button state when page loads (for back button cases)
+        function resetLoginButton() {
+            const loginBtn = document.getElementById('loginBtn');
+            if (loginBtn) {
+                loginBtn.classList.remove('loading');
+                loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Iniciar Sesión';
+            }
+        }
+
+        // Reset button on page load and visibility change
+        document.addEventListener('DOMContentLoaded', resetLoginButton);
+        document.addEventListener('pageshow', resetLoginButton);
+        
+        // Handle back/forward navigation
+        window.addEventListener('pageshow', function(event) {
+            if (event.persisted) {
+                // Page was loaded from back-forward cache
+                resetLoginButton();
+            }
+        });
+
+        // Handle beforeunload to reset state
+        window.addEventListener('beforeunload', function() {
+            resetLoginButton();
+        });
+
+        // Auto-focus on username field and ensure button is reset
         document.addEventListener('DOMContentLoaded', function() {
+            resetLoginButton(); // Ensure button is in correct state
             document.getElementById('username').focus();
         });
 
