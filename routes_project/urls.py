@@ -2,6 +2,7 @@ from django.contrib import admin
 from django.urls import path,include
 from django.conf import settings
 from django.conf.urls.static import static
+from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from core import views
 
 urlpatterns = [
@@ -9,6 +10,9 @@ urlpatterns = [
     path("",include('core.urls')),
     path("accounts/",include('accounts.urls')),
 ]
+
+# Add staticfiles URL patterns for production
+urlpatterns += staticfiles_urlpatterns()
 
 # Servir archivos media en desarrollo y producción
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

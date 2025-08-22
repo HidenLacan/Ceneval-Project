@@ -12,7 +12,7 @@ class StaticMediaStorage(FileSystemStorage):
     """
     
     def __init__(self, location=None, base_url=None):
-        # Set location to static/media
+        # Always save to static/media for consistency
         if location is None:
             location = os.path.join(settings.BASE_DIR, 'static', 'media')
         
@@ -24,6 +24,9 @@ class StaticMediaStorage(FileSystemStorage):
         os.makedirs(location, exist_ok=True)
         
         super().__init__(location=location, base_url=base_url)
+
+
+
     
     def get_available_name(self, name, max_length=None):
         """Ensure the directory exists before saving"""
@@ -43,21 +46,9 @@ class StaticMediaStorage(FileSystemStorage):
             # Save the file
             saved_name = super().save(name, content, max_length)
             
-            # Also save to staticfiles/media for production
-            staticfiles_path = os.path.join(settings.STATIC_ROOT, 'media', saved_name)
-            staticfiles_dir = os.path.dirname(staticfiles_path)
-            os.makedirs(staticfiles_dir, exist_ok=True)
-            
-            # Copy the file to staticfiles
-            import shutil
-            original_path = os.path.join(self.location, saved_name)
-            if os.path.exists(original_path):
-                shutil.copy2(original_path, staticfiles_path)
-                logger.info(f"✅ File also copied to staticfiles: {staticfiles_path}")
-            
-            logger.info(f"✅ File saved successfully: {saved_name}")
+            logger.info(f"File saved successfully: {saved_name}")
             return saved_name
             
         except Exception as e:
-            logger.error(f"❌ Error saving file {name}: {str(e)}")
+            logger.error(f"Error saving file {name}: {str(e)}")
             raise

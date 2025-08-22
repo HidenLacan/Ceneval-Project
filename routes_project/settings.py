@@ -127,9 +127,13 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 # Always include static directories for collectstatic
 STATICFILES_DIRS = [
     BASE_DIR / 'static',
-    BASE_DIR / 'static' / 'media',
 ]
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
+
+# Use Whitenoise for static file serving in production
+if not DEBUG:
+    STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
+else:
+    STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
 
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 # Default primary key field type
@@ -174,5 +178,6 @@ if not DEBUG:
 CORS_ALLOWED_ORIGINS = os.environ.get('CORS_ALLOWED_ORIGINS', 'http://localhost:3000,http://127.0.0.1:3000').split(',')
 CORS_ALLOW_CREDENTIALS = True
 
-# Static files storage
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
+# Whitenoise configuration for better static file serving
+WHITENOISE_USE_FINDERS = True
+WHITENOISE_AUTOREFRESH = True

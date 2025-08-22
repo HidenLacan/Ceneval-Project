@@ -116,14 +116,7 @@ def admin_dashboard(request):
                     print(f"📄 Debug: After save - Image path: {colonia_obj.imagen.path}")
                     print(f"📄 Debug: After save - Image URL: {colonia_obj.imagen.url}")
                 
-                # Ejecutar collectstatic si se subió una imagen (siempre en producción)
-                if imagen_subida:
-                    try:
-                        from django.core.management import call_command
-                        call_command('collect_media_static', verbosity=0)
-                        print(f"✅ Collectstatic ejecutado para nueva imagen de colonia '{colonia}'")
-                    except Exception as e:
-                        print(f"⚠️ Error ejecutando collectstatic: {str(e)}")
+
                 
                 context['success'] = f"Colonia '{colonia}' guardada exitosamente con todos los datos"
                 context['colonia'] = colonia
@@ -159,15 +152,6 @@ def admin_dashboard(request):
                         pass
                 
                 colonia_obj.save()
-                
-                # Ejecutar collectstatic si se subió una imagen (siempre en producción)
-                if imagen_subida:
-                    try:
-                        from django.core.management import call_command
-                        call_command('collect_media_static', verbosity=0)
-                        print(f"✅ Collectstatic ejecutado para imagen de colonia '{colonia}'")
-                    except Exception as e:
-                        print(f"⚠️ Error ejecutando collectstatic: {str(e)}")
                 
                 context['success'] = f"Colonia '{colonia}' modificada exitosamente"
                 context['colonia'] = colonia
