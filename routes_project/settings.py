@@ -144,8 +144,7 @@ AUTH_USER_MODEL = 'accounts.User'
 
 # Media files (uploads)
 MEDIA_URL = '/media/'
-MEDIA_ROOT = os.environ.get('MEDIA_ROOT', '/var/media')  # o directamente '/var/media'
-
+MEDIA_ROOT = BASE_DIR / 'media'
 # Static files configuration
 
 # Email configuration
