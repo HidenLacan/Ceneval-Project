@@ -445,6 +445,31 @@
         .hidden {
             display: none;
         }
+        
+        .edit-mode {
+            border: 3px solid #ffc107 !important;
+            box-shadow: 0 0 15px rgba(255, 193, 7, 0.3) !important;
+        }
+        
+        .edit-mode-indicator {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-weight: 600;
+            z-index: 1000;
+            box-shadow: 0 5px 15px rgba(255, 193, 7, 0.4);
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
 
         /* Responsive Design */
         @media (max-width: 1200px) {
@@ -872,16 +897,97 @@
     document.getElementById('png-upload').addEventListener('change', function(e) {
         var file = e.target.files[0];
         if (file) {
-            var reader = new FileReader();
-            reader.onload = function(ev) {
-                var img = document.getElementById('png-preview');
-                img.src = ev.target.result;
-                img.style.display = 'block';
-                document.querySelector('.image-upload-area').style.display = 'none';
-            };
-            reader.readAsDataURL(file);
+            handleImageFile(file);
         }
     });
+    
+    // Función para manejar archivos de imagen
+    function handleImageFile(file) {
+        // Verificar que sea una imagen
+        if (!file.type.startsWith('image/')) {
+            alert('Por favor selecciona un archivo de imagen válido');
+            return;
+        }
+        
+        var reader = new FileReader();
+        reader.onload = function(ev) {
+            var img = document.getElementById('png-preview');
+            img.src = ev.target.result;
+            img.style.display = 'block';
+            document.querySelector('.image-upload-area').style.display = 'none';
+            
+            // Mostrar mensaje de éxito
+            mostrarMensaje('✅ Imagen cargada exitosamente: ' + file.name, 'success');
+        };
+        reader.readAsDataURL(file);
+    }
+    
+    // Funcionalidad de Drag and Drop
+    var uploadArea = document.querySelector('.image-upload-area');
+    var pngPreview = document.getElementById('png-preview');
+    
+    // Prevenir comportamiento por defecto del navegador
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        uploadArea.addEventListener(eventName, preventDefaults, false);
+        pngPreview.addEventListener(eventName, preventDefaults, false);
+        document.body.addEventListener(eventName, preventDefaults, false);
+    });
+    
+    function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+    
+    // Efectos visuales durante el drag
+    ['dragenter', 'dragover'].forEach(eventName => {
+        uploadArea.addEventListener(eventName, highlight, false);
+        pngPreview.addEventListener(eventName, highlight, false);
+    });
+    
+    ['dragleave', 'drop'].forEach(eventName => {
+        uploadArea.addEventListener(eventName, unhighlight, false);
+        pngPreview.addEventListener(eventName, unhighlight, false);
+    });
+    
+    function highlight(e) {
+        uploadArea.style.borderColor = '#28a745';
+        uploadArea.style.backgroundColor = '#d4edda';
+        uploadArea.style.transform = 'scale(1.02)';
+    }
+    
+    function unhighlight(e) {
+        uploadArea.style.borderColor = '#667eea';
+        uploadArea.style.backgroundColor = '#f8f9fa';
+        uploadArea.style.transform = 'scale(1)';
+    }
+    
+    // Manejar el drop
+    uploadArea.addEventListener('drop', handleDrop, false);
+    pngPreview.addEventListener('drop', handleDrop, false);
+    
+    function handleDrop(e) {
+        var dt = e.dataTransfer;
+        var files = dt.files;
+        
+        if (files.length > 0) {
+            var file = files[0];
+            handleImageFile(file);
+            
+            // Actualizar el input file para que el formulario funcione
+            var input = document.getElementById('png-upload');
+            var dataTransfer = new DataTransfer();
+            dataTransfer.items.add(file);
+            input.files = dataTransfer.files;
+        }
+    }
+    
+    // Hacer clic en la imagen para cambiarla
+    pngPreview.addEventListener('click', function() {
+        document.getElementById('png-upload').click();
+    });
+    
+    // Agregar cursor pointer a la imagen
+    pngPreview.style.cursor = 'pointer';
     
     // Botón de búsqueda
     document.getElementById('buscar-btn').addEventListener('click', function() {
@@ -987,23 +1093,26 @@
         var colonia = document.getElementById('colonia').value;
         var poligono = document.getElementById('poligono_geojson').value;
         var imagen = document.getElementById('png-upload').files[0];
-        
-        if (!colonia.trim()) {
-            alert('Por favor ingresa el nombre de una colonia');
-            e.preventDefault();
-            return;
-        }
-        
-        if (!poligono && !imagen) {
-            alert('Por favor dibuja un polígono o sube una imagen antes de guardar');
-            e.preventDefault();
-            return;
-        }
-        
-        // Mostrar mensaje de confirmación
         var action = e.submitter ? e.submitter.value : '';
+        
         if (action === 'guardar') {
-            var mensaje = 'Guardando colonia con:\n';
+            // Modo creación - nueva colonia
+            if (!colonia.trim()) {
+                alert('Por favor ingresa el nombre de una colonia');
+                e.preventDefault();
+                return;
+            }
+            
+            if (!poligono && !imagen) {
+                alert('Por favor dibuja un polígono o sube una imagen antes de guardar');
+                e.preventDefault();
+                return;
+            }
+            
+            // Ocultar indicador de edición si existe
+            ocultarIndicadorEdicion();
+            
+            var mensaje = 'Guardando nueva colonia con:\n';
             if (poligono) mensaje += '✓ Polígono dibujado\n';
             if (imagen) mensaje += '✓ Imagen PNG\n';
             mensaje += '✓ Configuración de la colonia\n';
@@ -1016,6 +1125,9 @@
         var buscarBtn = document.getElementById('buscar-btn');
         buscarBtn.innerHTML = '<span class="spinner"></span>Cargando...';
         buscarBtn.disabled = true;
+        
+        // Mostrar indicador de modo edición
+        mostrarIndicadorEdicion();
         
         fetch('/accounts/cargar_colonia/?nombre=' + encodeURIComponent(nombre))
             .then(function(response) {
@@ -1073,7 +1185,7 @@
                     document.querySelector('.image-upload-area').style.display = 'none';
                 }
                 
-                mostrarMensaje('Colonia "' + data.nombre + '" cargada exitosamente', 'success');
+                mostrarMensaje('✅ Colonia "' + data.nombre + '" cargada para edición\n\nAhora puedes:\n• Editar el polígono en el mapa\n• Cambiar la imagen\n• Presionar "MODIFICAR" para guardar cambios', 'success');
             })
             .catch(function(error) {
                 console.error('Error:', error);
@@ -1157,6 +1269,84 @@
                     
                     // Enviar el formulario
                     form.submit();
+                }
+            });
+        }
+        
+        // Manejo del botón MODIFICAR
+        var modificarBtn = document.querySelector('button[value="modificar"]');
+        if (modificarBtn) {
+            modificarBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                var colonia = document.getElementById('colonia').value.trim();
+                if (!colonia) {
+                    alert('⚠️ DEBES SELECCIONAR UNA COLONIA\n\nPara modificar una colonia:\n1. Haz clic en una colonia de la lista "Colonias Existentes"\n2. La colonia se cargará automáticamente\n3. Edita el polígono o cambia la imagen\n4. Presiona "MODIFICAR"');
+                    return;
+                }
+                
+                var poligono = document.getElementById('poligono_geojson').value;
+                var imagen = document.getElementById('png-upload').files[0];
+                
+                if (!poligono && !imagen) {
+                    alert('⚠️ NO HAY CAMBIOS PARA GUARDAR\n\nPara modificar la colonia:\n• Dibuja un nuevo polígono en el mapa, O\n• Sube una nueva imagen PNG\n\nLuego presiona "MODIFICAR"');
+                    return;
+                }
+                
+                var mensaje = '✏️ MODIFICAR COLONIA\n\n¿Estás seguro de que quieres modificar "' + colonia + '"?\n\nCambios que se guardarán:';
+                if (poligono) mensaje += '\n• Nuevo polígono dibujado';
+                if (imagen) mensaje += '\n• Nueva imagen subida';
+                mensaje += '\n\nLa colonia existente será actualizada con estos cambios.';
+                
+                var confirmacion = confirm(mensaje);
+                
+                if (confirmacion) {
+                    // Actualizar campos ocultos antes de enviar
+                    actualizarCamposOcultos();
+                    
+                    // Crear un formulario temporal para enviar la acción
+                    var form = document.getElementById('main-form');
+                    var input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = 'action';
+                    input.value = 'modificar';
+                    form.appendChild(input);
+                    
+                    // Enviar el formulario
+                    form.submit();
+                }
+            });
+        }
+        
+        // Manejo del botón BORRAR
+        var borrarBtn = document.querySelector('button[value="borrar"]');
+        if (borrarBtn) {
+            borrarBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                var colonia = document.getElementById('colonia').value.trim();
+                if (!colonia) {
+                    alert('Debes seleccionar una colonia para borrar');
+                    return;
+                }
+                
+                var confirmacion = confirm('🗑️ ELIMINAR COLONIA\n\n⚠️ ADVERTENCIA: Esta acción no se puede deshacer\n\n¿Estás seguro de que quieres eliminar la colonia "' + colonia + '"?\n\nEsto eliminará permanentemente:\n• El polígono\n• La imagen\n• Los datos JSON\n• Toda la información asociada\n\n¿Deseas continuar?');
+                
+                if (confirmacion) {
+                    var confirmacionFinal = confirm('🔴 CONFIRMACIÓN FINAL\n\n¿Estás completamente seguro?\n\nLa colonia "' + colonia + '" será eliminada permanentemente.');
+                    
+                    if (confirmacionFinal) {
+                        // Crear un formulario temporal para enviar la acción
+                        var form = document.getElementById('main-form');
+                        var input = document.createElement('input');
+                        input.type = 'hidden';
+                        input.name = 'action';
+                        input.value = 'borrar';
+                        form.appendChild(input);
+                        
+                        // Enviar el formulario
+                        form.submit();
+                    }
                 }
             });
         }
@@ -1306,6 +1496,39 @@
     // Función para ocultar mensaje de validación
     function hideValidationMessage() {
         validationMessage.style.display = 'none';
+    }
+    
+    // Función para mostrar indicador de modo edición
+    function mostrarIndicadorEdicion() {
+        // Remover indicador existente
+        var indicadorExistente = document.querySelector('.edit-mode-indicator');
+        if (indicadorExistente) {
+            indicadorExistente.remove();
+        }
+        
+        // Crear nuevo indicador
+        var indicador = document.createElement('div');
+        indicador.className = 'edit-mode-indicator';
+        indicador.innerHTML = '<i class="fas fa-edit"></i> MODO EDICIÓN';
+        document.body.appendChild(indicador);
+        
+        // Agregar clase de modo edición a los paneles
+        document.querySelectorAll('.panel').forEach(function(panel) {
+            panel.classList.add('edit-mode');
+        });
+    }
+    
+    // Función para ocultar indicador de modo edición
+    function ocultarIndicadorEdicion() {
+        var indicador = document.querySelector('.edit-mode-indicator');
+        if (indicador) {
+            indicador.remove();
+        }
+        
+        // Remover clase de modo edición de los paneles
+        document.querySelectorAll('.panel').forEach(function(panel) {
+            panel.classList.remove('edit-mode');
+        });
     }
 </script>
 </body>
