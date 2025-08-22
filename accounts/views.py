@@ -7,6 +7,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseForbidden, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
+from django.conf import settings
 import json
 import time
 import random
@@ -71,8 +72,10 @@ def admin_dashboard(request):
                 )
                 
                 # Guardar imagen si se subió
+                imagen_subida = False
                 if 'png_file' in request.FILES:
                     colonia_obj.imagen = request.FILES['png_file']
+                    imagen_subida = True
                 
                 # Obtener configuración de la colonia
                 from core.utils.main import download_bbox
@@ -101,6 +104,15 @@ def admin_dashboard(request):
                 
                 colonia_obj.save()
                 
+                # Ejecutar collectstatic si se subió una imagen
+                if imagen_subida and not settings.DEBUG:
+                    try:
+                        from django.core.management import call_command
+                        call_command('collect_media_static', verbosity=0)
+                        print(f"✅ Collectstatic ejecutado para nueva imagen de colonia '{colonia}'")
+                    except Exception as e:
+                        print(f"⚠️ Error ejecutando collectstatic: {str(e)}")
+                
                 context['success'] = f"Colonia '{colonia}' guardada exitosamente con todos los datos"
                 context['colonia'] = colonia
                 context['config'] = config
@@ -113,8 +125,10 @@ def admin_dashboard(request):
                 colonia_obj = ColoniaProcesada.objects.get(nombre=colonia)
                 
                 # Actualizar imagen si se subió
+                imagen_subida = False
                 if 'png_file' in request.FILES:
                     colonia_obj.imagen = request.FILES['png_file']
+                    imagen_subida = True
                 
                 # Actualizar polígono y datos JSON si se proporcionan
                 poligono_geojson = request.POST.get('poligono_geojson')
@@ -133,6 +147,16 @@ def admin_dashboard(request):
                         pass
                 
                 colonia_obj.save()
+                
+                # Ejecutar collectstatic si se subió una imagen
+                if imagen_subida and not settings.DEBUG:
+                    try:
+                        from django.core.management import call_command
+                        call_command('collect_media_static', verbosity=0)
+                        print(f"✅ Collectstatic ejecutado para imagen de colonia '{colonia}'")
+                    except Exception as e:
+                        print(f"⚠️ Error ejecutando collectstatic: {str(e)}")
+                
                 context['success'] = f"Colonia '{colonia}' modificada exitosamente"
                 context['colonia'] = colonia
                 context['config'] = colonia_obj.configuracion
