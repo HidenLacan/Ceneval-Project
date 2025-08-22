@@ -1,11 +1,12 @@
 from django.db import models
 from django.conf import settings
+from .storage import StaticMediaStorage
 import json
 
 class ColoniaProcesada(models.Model):
     nombre = models.CharField(max_length=255, unique=True)
     nombre_normalizado = models.CharField(max_length=255, unique=True)
-    imagen = models.ImageField(upload_to='colonias/imagenes/', null=True, blank=True)
+    imagen = models.ImageField(upload_to='colonias/imagenes/', storage=StaticMediaStorage(), null=True, blank=True)
     poligono_geojson = models.JSONField(null=True, blank=True)
     datos_json = models.JSONField(null=True, blank=True)
     configuracion = models.JSONField(null=True, blank=True)

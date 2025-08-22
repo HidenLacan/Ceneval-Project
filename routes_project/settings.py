@@ -125,7 +125,13 @@ STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 _static_dir = BASE_DIR / 'static'
-STATICFILES_DIRS = [_static_dir] if _static_dir.exists() else []
+_static_media_dir = BASE_DIR / 'static' / 'media'
+
+STATICFILES_DIRS = []
+if _static_dir.exists():
+    STATICFILES_DIRS.append(_static_dir)
+if _static_media_dir.exists():
+    STATICFILES_DIRS.append(_static_media_dir)
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
