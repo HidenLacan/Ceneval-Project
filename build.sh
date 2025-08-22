@@ -30,6 +30,6 @@ python manage.py force_collect_media --force
 
 # Verify the setup
 echo "🔍 Verifying media setup..."
-python manage.py check_media_status
+python manage.py check_production_status
 
 echo "✅ Build completed successfully!"

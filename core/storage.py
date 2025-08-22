@@ -43,6 +43,18 @@ class StaticMediaStorage(FileSystemStorage):
             # Save the file
             saved_name = super().save(name, content, max_length)
             
+            # Also save to staticfiles/media for production
+            staticfiles_path = os.path.join(settings.STATIC_ROOT, 'media', saved_name)
+            staticfiles_dir = os.path.dirname(staticfiles_path)
+            os.makedirs(staticfiles_dir, exist_ok=True)
+            
+            # Copy the file to staticfiles
+            import shutil
+            original_path = os.path.join(self.location, saved_name)
+            if os.path.exists(original_path):
+                shutil.copy2(original_path, staticfiles_path)
+                logger.info(f"✅ File also copied to staticfiles: {staticfiles_path}")
+            
             logger.info(f"✅ File saved successfully: {saved_name}")
             return saved_name
             

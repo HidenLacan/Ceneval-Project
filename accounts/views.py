@@ -73,9 +73,16 @@ def admin_dashboard(request):
                 
                 # Guardar imagen si se subió
                 imagen_subida = False
+                print(f"🔍 Debug: request.FILES keys: {list(request.FILES.keys())}")
                 if 'png_file' in request.FILES:
+                    print(f"✅ Debug: png_file found in request.FILES")
+                    print(f"📄 Debug: File name: {request.FILES['png_file'].name}")
+                    print(f"📄 Debug: File size: {request.FILES['png_file'].size}")
                     colonia_obj.imagen = request.FILES['png_file']
                     imagen_subida = True
+                    print(f"✅ Debug: Image assigned to colonia_obj")
+                else:
+                    print(f"❌ Debug: png_file NOT found in request.FILES")
                 
                 # Obtener configuración de la colonia
                 from core.utils.main import download_bbox
@@ -103,9 +110,14 @@ def admin_dashboard(request):
                         print(f"Error al parsear datos JSON para {colonia}")
                 
                 colonia_obj.save()
+                print(f"✅ Debug: colonia_obj saved")
+                if colonia_obj.imagen:
+                    print(f"📄 Debug: After save - Image name: {colonia_obj.imagen.name}")
+                    print(f"📄 Debug: After save - Image path: {colonia_obj.imagen.path}")
+                    print(f"📄 Debug: After save - Image URL: {colonia_obj.imagen.url}")
                 
-                # Ejecutar collectstatic si se subió una imagen
-                if imagen_subida and not settings.DEBUG:
+                # Ejecutar collectstatic si se subió una imagen (siempre en producción)
+                if imagen_subida:
                     try:
                         from django.core.management import call_command
                         call_command('collect_media_static', verbosity=0)
@@ -148,8 +160,8 @@ def admin_dashboard(request):
                 
                 colonia_obj.save()
                 
-                # Ejecutar collectstatic si se subió una imagen
-                if imagen_subida and not settings.DEBUG:
+                # Ejecutar collectstatic si se subió una imagen (siempre en producción)
+                if imagen_subida:
                     try:
                         from django.core.management import call_command
                         call_command('collect_media_static', verbosity=0)
