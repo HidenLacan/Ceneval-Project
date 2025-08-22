@@ -124,14 +124,11 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
-_static_dir = BASE_DIR / 'static'
-_static_media_dir = BASE_DIR / 'static' / 'media'
-
-STATICFILES_DIRS = []
-if _static_dir.exists():
-    STATICFILES_DIRS.append(_static_dir)
-if _static_media_dir.exists():
-    STATICFILES_DIRS.append(_static_media_dir)
+# Always include static directories for collectstatic
+STATICFILES_DIRS = [
+    BASE_DIR / 'static',
+    BASE_DIR / 'static' / 'media',
+]
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
