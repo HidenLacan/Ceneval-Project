@@ -2392,7 +2392,8 @@ def gestion_algoritmos_dashboard(request):
         # Crear configuración por defecto si no existe
         config_actual = ConfiguracionAlgoritmo.objects.create(
             algoritmo_por_defecto='kernighan_lin',
-            descripcion='Configuración inicial del sistema',
+            notas='Configuración inicial del sistema',
+            creado_por=request.user,
             activo=True
         )
     
@@ -2438,8 +2439,8 @@ def cambiar_algoritmo_defecto(request):
             # Crear nueva configuración
             nueva_config = ConfiguracionAlgoritmo.objects.create(
                 algoritmo_por_defecto=nuevo_algoritmo,
-                descripcion=descripcion,
-                modificado_por=request.user,
+                notas=descripcion,
+                creado_por=request.user,
                 activo=True
             )
             
@@ -2447,7 +2448,7 @@ def cambiar_algoritmo_defecto(request):
                 'success': True,
                 'message': f'Algoritmo por defecto cambiado a: {nueva_config.get_algoritmo_por_defecto_display()}',
                 'algoritmo': nuevo_algoritmo,
-                'fecha_cambio': nueva_config.fecha_modificacion.strftime('%d/%m/%Y %H:%M')
+                'fecha_cambio': nueva_config.fecha_creacion.strftime('%d/%m/%Y %H:%M')
             })
             
         except json.JSONDecodeError:
