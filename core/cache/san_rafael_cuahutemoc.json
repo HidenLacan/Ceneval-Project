@@ -1,0 +1,50 @@
+[
+  {
+    "place_id": 289583946,
+    "licence": "Data \u00a9 OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+    "osm_type": "way",
+    "osm_id": 281177635,
+    "lat": "20.8719951",
+    "lon": "-101.5261609",
+    "class": "leisure",
+    "type": "park",
+    "place_rank": 24,
+    "importance": 0.08005175173571372,
+    "addresstype": "park",
+    "name": "Parque Recreativo Cuahutemoc",
+    "display_name": "Parque Recreativo Cuahutemoc, Cuauhtemoc, Romita, Guanajuato, 36200, M\u00e9xico",
+    "boundingbox": [
+      "20.8718848",
+      "20.8721054",
+      "-101.5264108",
+      "-101.5259110"
+    ],
+    "geojson": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            -101.5264108,
+            20.8720862
+          ],
+          [
+            -101.5264018,
+            20.8718848
+          ],
+          [
+            -101.525911,
+            20.871904
+          ],
+          [
+            -101.52592,
+            20.8721054
+          ],
+          [
+            -101.5264108,
+            20.8720862
+          ]
+        ]
+      ]
+    }
+  }
+]

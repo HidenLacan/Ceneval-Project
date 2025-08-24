@@ -1,0 +1,30 @@
+[
+  {
+    "place_id": 287470995,
+    "licence": "Data \u00a9 OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+    "osm_type": "node",
+    "osm_id": 4985431499,
+    "lat": "19.4186245",
+    "lon": "-99.1129618",
+    "class": "tourism",
+    "type": "artwork",
+    "place_rank": 30,
+    "importance": 9.399328603031995e-05,
+    "addresstype": "tourism",
+    "name": "Venustiano Carranza",
+    "display_name": "Venustiano Carranza, Francisco del Paso y Troncoso, Colonia Kennedy, Jard\u00edn Balbuena, Ciudad de M\u00e9xico, Venustiano Carranza, Ciudad de M\u00e9xico, 15900, M\u00e9xico",
+    "boundingbox": [
+      "19.4185745",
+      "19.4186745",
+      "-99.1130118",
+      "-99.1129118"
+    ],
+    "geojson": {
+      "type": "Point",
+      "coordinates": [
+        -99.1129618,
+        19.4186245
+      ]
+    }
+  }
+]

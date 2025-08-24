@@ -1,0 +1,50 @@
+[
+  {
+    "place_id": 287552708,
+    "licence": "Data \u00a9 OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+    "osm_type": "way",
+    "osm_id": 1202125484,
+    "lat": "19.4249304",
+    "lon": "-99.1537085",
+    "class": "highway",
+    "type": "platform",
+    "place_rank": 30,
+    "importance": 9.399328603031995e-05,
+    "addresstype": "highway",
+    "name": "Cuauht\u00e9moc",
+    "display_name": "Cuauht\u00e9moc, Avenida Cuauht\u00e9moc, Doctores, Ciudad de M\u00e9xico, Cuauht\u00e9moc, Ciudad de M\u00e9xico, 06720, M\u00e9xico",
+    "boundingbox": [
+      "19.4245795",
+      "19.4252813",
+      "-99.1537549",
+      "-99.1536620"
+    ],
+    "geojson": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            -99.1537549,
+            19.4245821
+          ],
+          [
+            -99.1537177,
+            19.4245795
+          ],
+          [
+            -99.153662,
+            19.4252787
+          ],
+          [
+            -99.1536993,
+            19.4252813
+          ],
+          [
+            -99.1537549,
+            19.4245821
+          ]
+        ]
+      ]
+    }
+  }
+]

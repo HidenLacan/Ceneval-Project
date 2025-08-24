@@ -1,0 +1,30 @@
+[
+  {
+    "place_id": 287238547,
+    "licence": "Data \u00a9 OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+    "osm_type": "node",
+    "osm_id": 11900061801,
+    "lat": "19.3916160",
+    "lon": "-99.1513127",
+    "class": "place",
+    "type": "suburb",
+    "place_rank": 19,
+    "importance": 0.146760659952697,
+    "addresstype": "suburb",
+    "name": "Narvarte",
+    "display_name": "Narvarte, Ciudad de M\u00e9xico, Benito Ju\u00e1rez, Ciudad de M\u00e9xico, 03023, M\u00e9xico",
+    "boundingbox": [
+      "19.3716160",
+      "19.4116160",
+      "-99.1713127",
+      "-99.1313127"
+    ],
+    "geojson": {
+      "type": "Point",
+      "coordinates": [
+        -99.1513127,
+        19.391616
+      ]
+    }
+  }
+]

@@ -43,7 +43,8 @@ from .views import (user_login,
                     marcar_ruta_completada,
                     marcar_ruta_completada_staff,
                     obtener_rutas_empleado,
-                    obtener_rutas_staff_supervision)
+                    obtener_rutas_staff_supervision,
+                    get_all_colonias)
 
 urlpatterns = [
     path('login/', user_login, name='user_login'),
@@ -101,4 +102,5 @@ urlpatterns = [
     path('api/marcar_ruta_completada_staff/', marcar_ruta_completada_staff, name='marcar_ruta_completada_staff'),
     path('api/rutas_empleado/', obtener_rutas_empleado, name='obtener_rutas_empleado'),
     path('api/rutas_staff_supervision/', obtener_rutas_staff_supervision, name='obtener_rutas_staff_supervision'),
+    path('get_all_colonias/', get_all_colonias, name='get_all_colonias'),
 ]

@@ -28,6 +28,231 @@
         .admin-container {
             min-height: 100vh;
             padding: 20px;
+            display: flex;
+            gap: 20px;
+        }
+
+        .sidebar {
+            width: 250px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            height: fit-content;
+            position: sticky;
+            top: 20px;
+            max-height: calc(100vh - 40px);
+            overflow-y: auto;
+        }
+
+        .main-content-wrapper {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .sidebar-title {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e9ecef;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sidebar-search {
+            margin-bottom: 20px;
+        }
+
+        .sidebar-search input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar-search input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .sidebar-stats {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border-left: 4px solid #667eea;
+        }
+
+        .sidebar-stats h4 {
+            font-size: 0.9rem;
+            color: #2c3e50;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .sidebar-stats p {
+            font-size: 0.8rem;
+            color: #7f8c8d;
+            margin: 3px 0;
+        }
+
+        .colonias-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .colonia-item {
+            background: #f8f9fa;
+            padding: 12px;
+            margin-bottom: 8px;
+            border-radius: 8px;
+            border-left: 3px solid #667eea;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .colonia-item:hover {
+            background: #e8f4fd;
+            transform: translateX(3px);
+            box-shadow: 0 3px 10px rgba(102, 126, 234, 0.2);
+        }
+
+        .colonia-item.selected {
+            background: #667eea;
+            color: white;
+            border-left-color: #4a5fd1;
+        }
+
+        .colonia-item.selected .colonia-name {
+            color: white;
+        }
+
+        .colonia-item.selected .colonia-info {
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .colonia-name {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 4px;
+            font-size: 0.9rem;
+            line-height: 1.3;
+        }
+
+        .colonia-info {
+            font-size: 0.75rem;
+            color: #7f8c8d;
+            margin-bottom: 6px;
+        }
+
+        .status-indicators {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+        }
+
+        .status-indicator {
+            font-size: 0.65rem;
+            padding: 2px 6px;
+            border-radius: 8px;
+            font-weight: 600;
+        }
+
+        .status-imagen {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-poligono {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .status-json {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .colonia-item.selected .status-imagen {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+
+        .colonia-item.selected .status-poligono {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+
+        .colonia-item.selected .status-json {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid #e9ecef;
+        }
+
+        .pagination button {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.3s ease;
+        }
+
+        .pagination button:hover {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .pagination button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .pagination .current-page {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .no-colonias {
+            text-align: center;
+            padding: 30px 20px;
+            color: #7f8c8d;
+        }
+
+        .no-colonias i {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            opacity: 0.5;
+        }
+
+        .loading-colonias {
+            text-align: center;
+            padding: 20px;
+            color: #7f8c8d;
+        }
+
+        .loading-colonias .spinner {
+            margin: 0 auto 10px;
         }
 
         .header {
@@ -473,6 +698,16 @@
 
         /* Responsive Design */
         @media (max-width: 1200px) {
+            .admin-container {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                position: static;
+                max-height: none;
+            }
+            
             .panel-row {
                 grid-template-columns: 1fr;
                 gap: 20px;
@@ -664,17 +899,55 @@
 </head>
 <body>
 <div class="admin-container">
-    <div class="header">
-        <div class="header-content">
-            <h1><i class="fas fa-crown"></i> ADMIN</h1>
-        <h2>Creación de polígonos</h2>
+    <!-- Sidebar de Colonias Existentes -->
+    <div class="sidebar">
+        <div class="sidebar-title">
+            <i class="fas fa-list"></i>
+            Colonias Existentes
         </div>
-        <button type="button" onclick="confirmLogout()" class="logout-btn">
-            <i class="fas fa-sign-out-alt"></i> Logout
-        </button>
+        
+        <!-- Búsqueda en sidebar -->
+        <div class="sidebar-search">
+            <input type="text" id="sidebar-search" placeholder="Buscar colonias..." />
+        </div>
+        
+        <!-- Estadísticas -->
+        <div class="sidebar-stats">
+            <h4><i class="fas fa-chart-bar"></i> Estadísticas</h4>
+            <p id="total-colonias">Total: <span id="colonias-count">0</span></p>
+            <p id="colonias-con-imagen">Con imagen: <span id="imagen-count">0</span></p>
+            <p id="colonias-con-poligono">Con polígono: <span id="poligono-count">0</span></p>
+        </div>
+        
+        <!-- Lista de colonias -->
+        <div class="colonias-list" id="colonias-list">
+            <div class="loading-colonias">
+                <div class="spinner"></div>
+                <p>Cargando colonias...</p>
+            </div>
+        </div>
+        
+        <!-- Paginación -->
+        <div class="pagination" id="pagination" style="display: none;">
+            <button id="prev-page" disabled><i class="fas fa-chevron-left"></i></button>
+            <span id="page-info">Página 1 de 1</span>
+            <button id="next-page" disabled><i class="fas fa-chevron-right"></i></button>
+        </div>
     </div>
     
-    <div class="main-content">
+    <!-- Contenido Principal -->
+    <div class="main-content-wrapper">
+        <div class="header">
+            <div class="header-content">
+                <h1><i class="fas fa-crown"></i> ADMIN</h1>
+                <h2>Creación de polígonos</h2>
+            </div>
+            <button type="button" onclick="confirmLogout()" class="logout-btn">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </button>
+        </div>
+        
+        <div class="main-content">
         <!-- Messages -->
     {% if success %}
             <div class="messages">
@@ -765,41 +1038,6 @@
                 </button>
         </div>
     </form>
-    
-        <!-- Existing Colonies -->
-    {% if colonias_existentes %}
-    <div class="colonias-existentes">
-            <div class="colonias-title">
-                <i class="fas fa-list"></i> Colonias Existentes (últimas 10)
-            </div>
-        {% for colonia in colonias_existentes %}
-        <div class="colonia-item" onclick="cargarColonia('{{ colonia.nombre }}')">
-                <div class="colonia-name">{{ colonia.nombre }}</div>
-                <div class="colonia-info">
-                    <i class="fas fa-calendar"></i> Creado: {{ colonia.fecha_creacion|date:"d/m/Y H:i" }} 
-                    <i class="fas fa-user"></i> por {{ colonia.creado_por.username }}
-                </div>
-            <div class="status-indicators">
-                {% if colonia.imagen %}
-                        <span class="status-indicator status-imagen">
-                            <i class="fas fa-image"></i> Imagen
-                        </span>
-                {% endif %}
-                {% if colonia.poligono_geojson %}
-                        <span class="status-indicator status-poligono">
-                            <i class="fas fa-draw-polygon"></i> Polígono
-                        </span>
-                {% endif %}
-                {% if colonia.datos_json %}
-                        <span class="status-indicator status-json">
-                            <i class="fas fa-code"></i> JSON
-                        </span>
-                {% endif %}
-            </div>
-        </div>
-        {% endfor %}
-    </div>
-    {% endif %}
     
     {% if resultado %}
             <div class="messages">
@@ -1352,6 +1590,177 @@
         }
     });
 
+    // ========================================
+    // SIDEBAR DE COLONIAS EXISTENTES
+    // ========================================
+    
+    let allColonias = [];
+    let filteredColonias = [];
+    let currentPage = 1;
+    let itemsPerPage = 10;
+    let selectedColoniaId = null;
+    
+    // Cargar colonias al iniciar
+    document.addEventListener('DOMContentLoaded', function() {
+        loadColonias();
+        setupSidebarSearch();
+        setupPagination();
+    });
+    
+    // Función para cargar todas las colonias
+    function loadColonias() {
+        fetch('/accounts/get_all_colonias/')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    allColonias = data.colonias;
+                    filteredColonias = [...allColonias];
+                    updateColoniasList();
+                    updateStats();
+                } else {
+                    showSidebarError('Error al cargar las colonias');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showSidebarError('Error de conexión');
+            });
+    }
+    
+    // Función para actualizar la lista de colonias
+    function updateColoniasList() {
+        const coloniasList = document.getElementById('colonias-list');
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        const endIndex = startIndex + itemsPerPage;
+        const pageColonias = filteredColonias.slice(startIndex, endIndex);
+        
+        if (pageColonias.length === 0) {
+            coloniasList.innerHTML = `
+                <div class="no-colonias">
+                    <i class="fas fa-search"></i>
+                    <p>No se encontraron colonias</p>
+                </div>
+            `;
+            return;
+        }
+        
+        coloniasList.innerHTML = pageColonias.map(colonia => `
+            <div class="colonia-item ${selectedColoniaId === colonia.id ? 'selected' : ''}" 
+                 onclick="selectColonia(${colonia.id}, '${colonia.nombre}')">
+                <div class="colonia-name">${colonia.nombre}</div>
+                <div class="colonia-info">
+                    <i class="fas fa-calendar"></i> ${formatDate(colonia.fecha_creacion)}
+                    <i class="fas fa-user"></i> por ${colonia.creado_por}
+                </div>
+                <div class="status-indicators">
+                    ${colonia.imagen ? '<span class="status-indicator status-imagen"><i class="fas fa-image"></i> Imagen</span>' : ''}
+                    ${colonia.poligono_geojson ? '<span class="status-indicator status-poligono"><i class="fas fa-draw-polygon"></i> Polígono</span>' : ''}
+                    ${colonia.datos_json ? '<span class="status-indicator status-json"><i class="fas fa-code"></i> JSON</span>' : ''}
+                </div>
+            </div>
+        `).join('');
+        
+        updatePagination();
+    }
+    
+    // Función para actualizar estadísticas
+    function updateStats() {
+        document.getElementById('colonias-count').textContent = allColonias.length;
+        document.getElementById('imagen-count').textContent = allColonias.filter(c => c.imagen).length;
+        document.getElementById('poligono-count').textContent = allColonias.filter(c => c.poligono_geojson).length;
+    }
+    
+    // Función para seleccionar una colonia
+    function selectColonia(id, nombre) {
+        selectedColoniaId = id;
+        updateColoniasList();
+        cargarColonia(nombre);
+    }
+    
+    // Configurar búsqueda en sidebar
+    function setupSidebarSearch() {
+        const searchInput = document.getElementById('sidebar-search');
+        let searchTimeout;
+        
+        searchInput.addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                const query = this.value.toLowerCase().trim();
+                
+                if (query === '') {
+                    filteredColonias = [...allColonias];
+                } else {
+                    filteredColonias = allColonias.filter(colonia => 
+                        colonia.nombre.toLowerCase().includes(query) ||
+                        colonia.creado_por.toLowerCase().includes(query)
+                    );
+                }
+                
+                currentPage = 1;
+                updateColoniasList();
+            }, 300);
+        });
+    }
+    
+    // Configurar paginación
+    function setupPagination() {
+        document.getElementById('prev-page').addEventListener('click', () => {
+            if (currentPage > 1) {
+                currentPage--;
+                updateColoniasList();
+            }
+        });
+        
+        document.getElementById('next-page').addEventListener('click', () => {
+            const maxPages = Math.ceil(filteredColonias.length / itemsPerPage);
+            if (currentPage < maxPages) {
+                currentPage++;
+                updateColoniasList();
+            }
+        });
+    }
+    
+    // Actualizar controles de paginación
+    function updatePagination() {
+        const maxPages = Math.ceil(filteredColonias.length / itemsPerPage);
+        const pagination = document.getElementById('pagination');
+        const prevBtn = document.getElementById('prev-page');
+        const nextBtn = document.getElementById('next-page');
+        const pageInfo = document.getElementById('page-info');
+        
+        if (maxPages <= 1) {
+            pagination.style.display = 'none';
+        } else {
+            pagination.style.display = 'flex';
+            prevBtn.disabled = currentPage === 1;
+            nextBtn.disabled = currentPage === maxPages;
+            pageInfo.textContent = `Página ${currentPage} de ${maxPages}`;
+        }
+    }
+    
+    // Función para formatear fecha
+    function formatDate(dateString) {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('es-ES', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    }
+    
+    // Función para mostrar error en sidebar
+    function showSidebarError(message) {
+        const coloniasList = document.getElementById('colonias-list');
+        coloniasList.innerHTML = `
+            <div class="no-colonias">
+                <i class="fas fa-exclamation-triangle"></i>
+                <p>${message}</p>
+            </div>
+        `;
+    }
+    
     // Función para confirmar logout
     function confirmLogout() {
         if (confirm('¿Estás seguro de que quieres cerrar sesión?')) {

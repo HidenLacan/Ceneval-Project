@@ -61,11 +61,11 @@ class RandomForestTimePredictor:
             data.append(row)
         
         if not data:
-            print("❌ No hay datos de rutas completadas para entrenar")
+            print(" No hay datos de rutas completadas para entrenar")
             return None, None
         
         df = pd.DataFrame(data)
-        print(f"✅ Datos preparados: {len(df)} muestras")
+        print(f"Datos preparados: {len(df)} muestras")
         
         # Separar features y target
         X = df[self.features].fillna(0)  # Rellenar valores nulos con 0

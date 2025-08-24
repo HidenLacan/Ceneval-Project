@@ -1,0 +1,30 @@
+[
+  {
+    "place_id": 288561183,
+    "licence": "Data \u00a9 OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+    "osm_type": "node",
+    "osm_id": 9041880765,
+    "lat": "19.4865267",
+    "lon": "-99.1877364",
+    "class": "place",
+    "type": "neighbourhood",
+    "place_rank": 20,
+    "importance": 0.13342732661936368,
+    "addresstype": "neighbourhood",
+    "name": "Colonia San Rafael",
+    "display_name": "Colonia San Rafael, Ciudad de M\u00e9xico, Azcapotzalco, Ciudad de M\u00e9xico, 02010, M\u00e9xico",
+    "boundingbox": [
+      "19.4765267",
+      "19.4965267",
+      "-99.1977364",
+      "-99.1777364"
+    ],
+    "geojson": {
+      "type": "Point",
+      "coordinates": [
+        -99.1877364,
+        19.4865267
+      ]
+    }
+  }
+]

@@ -1,0 +1,30 @@
+[
+  {
+    "place_id": 290782134,
+    "licence": "Data \u00a9 OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+    "osm_type": "node",
+    "osm_id": 9041879320,
+    "lat": "19.5136535",
+    "lon": "-99.1218269",
+    "class": "place",
+    "type": "neighbourhood",
+    "place_rank": 20,
+    "importance": 0.13342732661936368,
+    "addresstype": "neighbourhood",
+    "name": "Colonia San Rafael Ticom\u00e1n",
+    "display_name": "Colonia San Rafael Ticom\u00e1n, Gustavo A. Madero, Ciudad de M\u00e9xico, 07359, M\u00e9xico",
+    "boundingbox": [
+      "19.5036535",
+      "19.5236535",
+      "-99.1318269",
+      "-99.1118269"
+    ],
+    "geojson": {
+      "type": "Point",
+      "coordinates": [
+        -99.1218269,
+        19.5136535
+      ]
+    }
+  }
+]

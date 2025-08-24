@@ -737,6 +737,18 @@
                             <input type="text" id="username" name="username" required>
                         </div>
                         <div class="form-group">
+                            <label for="first_name">
+                                <i class="fas fa-id-card"></i> Nombre *
+                            </label>
+                            <input type="text" id="first_name" name="first_name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="last_name">
+                                <i class="fas fa-id-card"></i> Apellido *
+                            </label>
+                            <input type="text" id="last_name" name="last_name" required>
+                        </div>
+                        <div class="form-group">
                             <label for="email">
                                 <i class="fas fa-envelope"></i> Email *
                             </label>
@@ -806,7 +818,7 @@
                                 <i class="fas fa-list"></i> Formato requerido:
                             </h4>
                             <ul style="margin: 0; padding-left: 20px; font-size: 12px; color: #7f8c8d;">
-                                <li>Columnas: username, email, password, role</li>
+                                <li>Columnas: username, first_name, last_name, email, password, role</li>
                                 <li>Roles válidos: admin, staff, employee, researcher</li>
                                 <li>Formatos: .xlsx, .xls, .csv</li>
                             </ul>
@@ -837,6 +849,8 @@
                                     <thead style="background: #f8f9fa; position: sticky; top: 0;">
                                         <tr>
                                             <th style="padding: 10px; border-bottom: 1px solid #e9ecef; font-size: 12px;">Usuario</th>
+                                            <th style="padding: 10px; border-bottom: 1px solid #e9ecef; font-size: 12px;">Nombre</th>
+                                            <th style="padding: 10px; border-bottom: 1px solid #e9ecef; font-size: 12px;">Apellido</th>
                                             <th style="padding: 10px; border-bottom: 1px solid #e9ecef; font-size: 12px;">Email</th>
                                             <th style="padding: 10px; border-bottom: 1px solid #e9ecef; font-size: 12px;">Contraseña</th>
                                             <th style="padding: 10px; border-bottom: 1px solid #e9ecef; font-size: 12px;">Rol</th>
@@ -868,6 +882,7 @@
                         <thead>
                             <tr>
                                 <th><i class="fas fa-user"></i> Usuario</th>
+                                <th><i class="fas fa-id-card"></i> Nombre Completo</th>
                                 <th><i class="fas fa-envelope"></i> Email</th>
                                 <th><i class="fas fa-user-tag"></i> Rol</th>
                                 <th><i class="fas fa-circle"></i> Estado</th>
@@ -879,6 +894,7 @@
                             {% for usuario in usuarios %}
                             <tr>
                                 <td><strong>{{ usuario.username }}</strong></td>
+                                <td>{{ usuario.get_full_name|default:"Sin nombre" }}</td>
                                 <td>{{ usuario.email }}</td>
                                 <td>
                                     <span class="role-badge role-{{ usuario.role }}">
@@ -893,7 +909,7 @@
                                 </td>
                                 <td>{{ usuario.date_joined|date:"d/m/Y H:i" }}</td>
                                 <td class="actions-cell">
-                                    <button class="btn btn-warning" onclick="editarUsuario({{ usuario.id }}, '{{ usuario.username }}', '{{ usuario.email }}', '{{ usuario.role }}', {% if usuario.is_active %}true{% else %}false{% endif %})">
+                                    <button class="btn btn-warning" onclick="editarUsuario({{ usuario.id }}, '{{ usuario.username }}', '{{ usuario.first_name }}', '{{ usuario.last_name }}', '{{ usuario.email }}', '{{ usuario.role }}', {% if usuario.is_active %}true{% else %}false{% endif %})">
                                         <i class="fas fa-edit"></i> Editar
                                     </button>
                                     {% if usuario != user %}
@@ -935,6 +951,18 @@
                             <i class="fas fa-user"></i> Nombre de Usuario
                         </label>
                         <input type="text" id="edit_username" name="username" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit_first_name">
+                            <i class="fas fa-id-card"></i> Nombre
+                        </label>
+                        <input type="text" id="edit_first_name" name="first_name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit_last_name">
+                            <i class="fas fa-id-card"></i> Apellido
+                        </label>
+                        <input type="text" id="edit_last_name" name="last_name" required>
                     </div>
                     <div class="form-group">
                         <label for="edit_email">
@@ -998,9 +1026,11 @@
     
     <script>
         // Función para editar usuario
-        function editarUsuario(userId, username, email, role, isActive) {
+        function editarUsuario(userId, username, firstName, lastName, email, role, isActive) {
             document.getElementById('edit_user_id').value = userId;
             document.getElementById('edit_username').value = username;
+            document.getElementById('edit_first_name').value = firstName;
+            document.getElementById('edit_last_name').value = lastName;
             document.getElementById('edit_email').value = email;
             document.getElementById('edit_role').value = role;
             document.getElementById('edit_is_active').checked = isActive;
@@ -1110,12 +1140,14 @@
                 if (lines[i].trim()) {
                     var values = lines[i].split(',').map(v => v.trim());
                     console.log('Línea', i, 'valores:', values);
-                    if (values.length >= 4) {
+                    if (values.length >= 6) {
                         usuariosData.push({
                             username: values[0] || '',
-                            email: values[1] || '',
-                            password: values[2] || '',
-                            role: values[3] || 'employee',
+                            first_name: values[1] || '',
+                            last_name: values[2] || '',
+                            email: values[3] || '',
+                            password: values[4] || '',
+                            role: values[5] || 'employee',
                             status: 'pendiente'
                         });
                     }
@@ -1133,9 +1165,9 @@
             
             // Datos de ejemplo para demostración
             usuariosData = [
-                { username: 'usuario1', email: 'user1@example.com', password: 'pass123', role: 'employee', status: 'pendiente' },
-                { username: 'usuario2', email: 'user2@example.com', password: 'pass456', role: 'staff', status: 'pendiente' },
-                { username: 'usuario3', email: 'user3@example.com', password: 'pass789', role: 'researcher', status: 'pendiente' }
+                { username: 'usuario1', first_name: 'Juan', last_name: 'Pérez', email: 'user1@example.com', password: 'pass123', role: 'employee', status: 'pendiente' },
+                { username: 'usuario2', first_name: 'María', last_name: 'García', email: 'user2@example.com', password: 'pass456', role: 'staff', status: 'pendiente' },
+                { username: 'usuario3', first_name: 'Carlos', last_name: 'López', email: 'user3@example.com', password: 'pass789', role: 'researcher', status: 'pendiente' }
             ];
             
             mostrarVistaPrevia();
@@ -1157,6 +1189,12 @@
                 row.innerHTML = `
                     <td style="padding: 8px; border-bottom: 1px solid #e9ecef;">
                         <input type="text" value="${usuario.username}" onchange="actualizarUsuario(${index}, 'username', this.value)" style="width: 100%; border: 1px solid #e9ecef; padding: 4px; border-radius: 6px;">
+                    </td>
+                    <td style="padding: 8px; border-bottom: 1px solid #e9ecef;">
+                        <input type="text" value="${usuario.first_name}" onchange="actualizarUsuario(${index}, 'first_name', this.value)" style="width: 100%; border: 1px solid #e9ecef; padding: 4px; border-radius: 6px;">
+                    </td>
+                    <td style="padding: 8px; border-bottom: 1px solid #e9ecef;">
+                        <input type="text" value="${usuario.last_name}" onchange="actualizarUsuario(${index}, 'last_name', this.value)" style="width: 100%; border: 1px solid #e9ecef; padding: 4px; border-radius: 6px;">
                     </td>
                     <td style="padding: 8px; border-bottom: 1px solid #e9ecef;">
                         <input type="email" value="${usuario.email}" onchange="actualizarUsuario(${index}, 'email', this.value)" style="width: 100%; border: 1px solid #e9ecef; padding: 4px; border-radius: 6px;">

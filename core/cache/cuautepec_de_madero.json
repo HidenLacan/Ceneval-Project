@@ -1,0 +1,30 @@
+[
+  {
+    "place_id": 287838159,
+    "licence": "Data \u00a9 OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+    "osm_type": "node",
+    "osm_id": 11253543784,
+    "lat": "19.5577737",
+    "lon": "-99.1354215",
+    "class": "place",
+    "type": "quarter",
+    "place_rank": 20,
+    "importance": 0.13342732661936368,
+    "addresstype": "quarter",
+    "name": "Cuautepec",
+    "display_name": "Cuautepec, Ciudad de M\u00e9xico, Gustavo A. Madero, Ciudad de M\u00e9xico, 07100, M\u00e9xico",
+    "boundingbox": [
+      "19.5477737",
+      "19.5677737",
+      "-99.1454215",
+      "-99.1254215"
+    ],
+    "geojson": {
+      "type": "Point",
+      "coordinates": [
+        -99.1354215,
+        19.5577737
+      ]
+    }
+  }
+]

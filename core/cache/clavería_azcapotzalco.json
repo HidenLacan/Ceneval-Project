@@ -1,0 +1,30 @@
+[
+  {
+    "place_id": 289977631,
+    "licence": "Data \u00a9 OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+    "osm_type": "node",
+    "osm_id": 9041880770,
+    "lat": "19.4659567",
+    "lon": "-99.1821386",
+    "class": "place",
+    "type": "neighbourhood",
+    "place_rank": 20,
+    "importance": 0.13342732661936368,
+    "addresstype": "neighbourhood",
+    "name": "Colonia Claver\u00eda",
+    "display_name": "Colonia Claver\u00eda, Ciudad de M\u00e9xico, Azcapotzalco, Ciudad de M\u00e9xico, 02080, M\u00e9xico",
+    "boundingbox": [
+      "19.4559567",
+      "19.4759567",
+      "-99.1921386",
+      "-99.1721386"
+    ],
+    "geojson": {
+      "type": "Point",
+      "coordinates": [
+        -99.1821386,
+        19.4659567
+      ]
+    }
+  }
+]

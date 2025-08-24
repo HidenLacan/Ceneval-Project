@@ -1,0 +1,50 @@
+[
+  {
+    "place_id": 288504443,
+    "licence": "Data \u00a9 OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+    "osm_type": "way",
+    "osm_id": 1146838961,
+    "lat": "19.3896634",
+    "lon": "-99.1738081",
+    "class": "highway",
+    "type": "platform",
+    "place_rank": 30,
+    "importance": 9.399328603031995e-05,
+    "addresstype": "highway",
+    "name": "N\u00e1poles",
+    "display_name": "N\u00e1poles, Avenida Insurgentes Sur, Colonia Ampliaci\u00f3n N\u00e1poles, Ciudad de M\u00e9xico, Benito Ju\u00e1rez, Ciudad de M\u00e9xico, 03100, M\u00e9xico",
+    "boundingbox": [
+      "19.3893449",
+      "19.3899820",
+      "-99.1739335",
+      "-99.1736826"
+    ],
+    "geojson": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            -99.1739335,
+            19.3893566
+          ],
+          [
+            -99.1738947,
+            19.3893449
+          ],
+          [
+            -99.1736826,
+            19.3899702
+          ],
+          [
+            -99.1737215,
+            19.389982
+          ],
+          [
+            -99.1739335,
+            19.3893566
+          ]
+        ]
+      ]
+    }
+  }
+]

@@ -2099,6 +2099,29 @@
 
         // Setup chat event listeners
         function setupChatEventListeners() {
+            // Remove existing event listeners by cloning and replacing elements
+            const sendMessageBtn = document.getElementById('sendMessageBtn');
+            const messageInput = document.getElementById('messageInput');
+            
+            // Clone and replace send button to remove old listeners
+            if (sendMessageBtn) {
+                const newSendBtn = sendMessageBtn.cloneNode(true);
+                sendMessageBtn.parentNode.replaceChild(newSendBtn, sendMessageBtn);
+            }
+            
+            // Clone and replace message input to remove old listeners
+            if (messageInput) {
+                const newMessageInput = messageInput.cloneNode(true);
+                messageInput.parentNode.replaceChild(newMessageInput, messageInput);
+            }
+            
+            // Remove old quick message buttons and recreate them
+            document.querySelectorAll('.quick-msg-btn').forEach(btn => {
+                const newBtn = btn.cloneNode(true);
+                btn.parentNode.replaceChild(newBtn, btn);
+            });
+            
+            // Add new event listeners
             // Quick message buttons
             document.querySelectorAll('.quick-msg-btn').forEach(btn => {
                 btn.addEventListener('click', function() {
@@ -2108,18 +2131,24 @@
             });
             
             // Send message button
-            document.getElementById('sendMessageBtn').addEventListener('click', function() {
-                const messageInput = document.getElementById('messageInput');
-                sendMessage(messageInput.value);
-            });
+            const newSendMessageBtn = document.getElementById('sendMessageBtn');
+            if (newSendMessageBtn) {
+                newSendMessageBtn.addEventListener('click', function() {
+                    const messageInput = document.getElementById('messageInput');
+                    sendMessage(messageInput.value);
+                });
+            }
             
             // Enter key in message input
-            document.getElementById('messageInput').addEventListener('keypress', function(e) {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    sendMessage(this.value);
-                }
-            });
+            const newMessageInput = document.getElementById('messageInput');
+            if (newMessageInput) {
+                newMessageInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        sendMessage(this.value);
+                    }
+                });
+            }
         }
 
         // Función para confirmar logout

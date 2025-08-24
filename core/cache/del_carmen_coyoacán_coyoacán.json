@@ -1,0 +1,30 @@
+[
+  {
+    "place_id": 289106681,
+    "licence": "Data \u00a9 OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+    "osm_type": "node",
+    "osm_id": 9041880781,
+    "lat": "19.3542897",
+    "lon": "-99.1617971",
+    "class": "place",
+    "type": "neighbourhood",
+    "place_rank": 20,
+    "importance": 0.13342732661936368,
+    "addresstype": "neighbourhood",
+    "name": "Colonia Del Carmen",
+    "display_name": "Colonia Del Carmen, Ciudad de M\u00e9xico, Coyoac\u00e1n, Ciudad de M\u00e9xico, 04100, M\u00e9xico",
+    "boundingbox": [
+      "19.3442897",
+      "19.3642897",
+      "-99.1717971",
+      "-99.1517971"
+    ],
+    "geojson": {
+      "type": "Point",
+      "coordinates": [
+        -99.1617971,
+        19.3542897
+      ]
+    }
+  }
+]

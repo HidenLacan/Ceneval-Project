@@ -1,0 +1,30 @@
+[
+  {
+    "place_id": 287646380,
+    "licence": "Data \u00a9 OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+    "osm_type": "node",
+    "osm_id": 11900047494,
+    "lat": "19.4148842",
+    "lon": "-99.1712466",
+    "class": "place",
+    "type": "suburb",
+    "place_rank": 19,
+    "importance": 0.146760659952697,
+    "addresstype": "suburb",
+    "name": "Condesa",
+    "display_name": "Condesa, Ciudad de M\u00e9xico, Cuauht\u00e9moc, Ciudad de M\u00e9xico, 06140, M\u00e9xico",
+    "boundingbox": [
+      "19.3948842",
+      "19.4348842",
+      "-99.1912466",
+      "-99.1512466"
+    ],
+    "geojson": {
+      "type": "Point",
+      "coordinates": [
+        -99.1712466,
+        19.4148842
+      ]
+    }
+  }
+]

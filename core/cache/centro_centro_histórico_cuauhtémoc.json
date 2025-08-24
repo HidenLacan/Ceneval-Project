@@ -1,0 +1,40 @@
+[
+  {
+    "place_id": 289862056,
+    "licence": "Data \u00a9 OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+    "osm_type": "way",
+    "osm_id": 900435391,
+    "lat": "20.1245051",
+    "lon": "-98.7362078",
+    "class": "highway",
+    "type": "residential",
+    "place_rank": 26,
+    "importance": 0.053391609826810064,
+    "addresstype": "road",
+    "name": "Avenida Cuauht\u00e9moc",
+    "display_name": "Avenida Cuauht\u00e9moc, Centro, Pachuca, Pachuca de Soto, Hidalgo, 42000, M\u00e9xico",
+    "boundingbox": [
+      "20.1240547",
+      "20.1249554",
+      "-98.7368643",
+      "-98.7355513"
+    ],
+    "geojson": {
+      "type": "LineString",
+      "coordinates": [
+        [
+          -98.7355513,
+          20.1249554
+        ],
+        [
+          -98.7368107,
+          20.1240915
+        ],
+        [
+          -98.7368643,
+          20.1240547
+        ]
+      ]
+    }
+  }
+]

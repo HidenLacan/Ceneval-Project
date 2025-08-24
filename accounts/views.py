@@ -632,8 +632,10 @@ def admin_user_control(request):
             email = request.POST.get('email')
             password = request.POST.get('password')
             role = request.POST.get('role')
+            first_name = request.POST.get('first_name', '').strip()
+            last_name = request.POST.get('last_name', '').strip()
             
-            if not all([username, email, password, role]):
+            if not all([username, email, password, role, first_name, last_name]):
                 context['error'] = 'Todos los campos son requeridos'
             else:
                 try:
@@ -648,9 +650,11 @@ def admin_user_control(request):
                             username=username,
                             email=email,
                             password=password,
-                            role=role
+                            role=role,
+                            first_name=first_name,
+                            last_name=last_name
                         )
-                        context['success'] = f'Usuario "{username}" creado exitosamente con rol "{role}"'
+                        context['success'] = f'Usuario "{username}" ({first_name} {last_name}) creado exitosamente con rol "{role}"'
                 except Exception as e:
                     context['error'] = f'Error al crear usuario: {str(e)}'
         
@@ -659,6 +663,8 @@ def admin_user_control(request):
             username = request.POST.get('username')
             email = request.POST.get('email')
             role = request.POST.get('role')
+            first_name = request.POST.get('first_name', '').strip()
+            last_name = request.POST.get('last_name', '').strip()
             is_active = request.POST.get('is_active') == 'on'
             
             try:
@@ -666,9 +672,11 @@ def admin_user_control(request):
                 user.username = username
                 user.email = email
                 user.role = role
+                user.first_name = first_name
+                user.last_name = last_name
                 user.is_active = is_active
                 user.save()
-                context['success'] = f'Usuario "{username}" actualizado exitosamente'
+                context['success'] = f'Usuario "{username}" ({first_name} {last_name}) actualizado exitosamente'
             except User.DoesNotExist:
                 context['error'] = 'Usuario no encontrado'
             except Exception as e:
@@ -725,9 +733,11 @@ def procesar_usuarios_masivos(request):
                 email = usuario_data.get('email', '').strip()
                 password = usuario_data.get('password', '').strip()
                 role = usuario_data.get('role', 'employee').strip()
+                first_name = usuario_data.get('first_name', '').strip()
+                last_name = usuario_data.get('last_name', '').strip()
                 
                 # Validaciones
-                if not username or not email or not password:
+                if not username or not email or not password or not first_name or not last_name:
                     errores += 1
                     errores_detalle.append(f"Usuario {username}: Campos requeridos vacíos")
                     continue
@@ -752,11 +762,13 @@ def procesar_usuarios_masivos(request):
                     username=username,
                     email=email,
                     password=password,
-                    role=role
+                    role=role,
+                    first_name=first_name,
+                    last_name=last_name
                 )
                 
                 creados += 1
-                print(f"Usuario creado: {username} ({email}) con rol {role}")
+                print(f"Usuario creado: {username} ({first_name} {last_name}) con rol {role}")
                 
             except Exception as e:
                 errores += 1
@@ -1950,11 +1962,11 @@ def analizar_algoritmo(request):
                 # Calcular balance de zonas (qué tan equilibradas están)
                 if num_empleados == 1:
                     balance_zonas = 100.0  # Perfecto para un empleado
-                else:
+                else: #####################################################################calculo para el score
                     diferencia_nodos = abs(nodos_z1 - nodos_z2)
                     balance_zonas = max(0, 100 - (diferencia_nodos / total_nodos * 100)) if total_nodos > 0 else 0
                 
-                # Calcular eficiencia de rutas (densidad de calles vs área)
+                # Calcular eficiencia de rutas (densidad de calles vs área)##########################
                 dens_calles_z1 = resultado_algoritmo['densidades']['calles_m_por_km2_z1']
                 dens_calles_z2 = resultado_algoritmo['densidades']['calles_m_por_km2_z2']
                 eficiencia_promedio = (dens_calles_z1 + dens_calles_z2) / 2 if num_empleados > 1 else dens_calles_z1
@@ -2188,6 +2200,7 @@ def analizar_algoritmo(request):
     
     return JsonResponse({'error': 'Método no permitido'}, status=405)
 
+### comparacion de algoritmos 
 @login_required
 @csrf_exempt
 def comparar_algoritmos(request):
@@ -2634,6 +2647,9 @@ def visualizar_ruta(request):
     
     return JsonResponse({'error': 'Método no permitido'}, status=405)
 
+
+
+##  Random Forest Dashboard
 @login_required
 def random_forest_dashboard(request):
     """Dashboard para gestión del modelo Random Forest de predicción de tiempos"""
@@ -2690,6 +2706,7 @@ def entrenar_modelo_random_forest(request):
             from core.utils.random_forest_predictor import RandomForestTimePredictor, create_sample_rutas_completadas
             import os
             
+            #### ------ Default data ? why? ------------------------------Question
             data = json.loads(request.body)
             n_estimators = data.get('n_estimators', 100)
             max_depth = data.get('max_depth', None)
@@ -2704,6 +2721,7 @@ def entrenar_modelo_random_forest(request):
             # Obtener rutas completadas
             rutas_completadas = RutaCompletada.objects.all()
             
+            # Historical data
             if rutas_completadas.count() < 10:
                 return JsonResponse({
                     'error': 'Se necesitan al menos 10 rutas completadas para entrenar el modelo. Use "Generar Datos de Muestra" primero.'
@@ -2746,6 +2764,8 @@ def entrenar_modelo_random_forest(request):
                 modelo_obj.modelo_archivo = modelo_path
                 modelo_obj.save()
             
+
+            #-----------------------------------------
             return JsonResponse({
                 'success': True,
                 'message': f'Modelo entrenado exitosamente con {metricas["num_samples"]} muestras',
@@ -2760,7 +2780,7 @@ def entrenar_modelo_random_forest(request):
             })
             
         except Exception as e:
-            print(f"❌ Error entrenando modelo: {str(e)}")
+            print(f"Error entrenando modelo: {str(e)}")
             return JsonResponse({'error': f'Error entrenando modelo: {str(e)}'}, status=500)
     
     return JsonResponse({'error': 'Método no permitido'}, status=405)
@@ -2809,7 +2829,7 @@ def predecir_tiempo_random_forest(request):
             # Hacer predicción
             tiempo_predicho = predictor.predict_time(features)
             
-            # Comparar con predicción por defecto
+            # Comparar con predicción por defecto ----------------------------Question
             tiempo_default = features['distancia_km'] * 15
             
             return JsonResponse({
@@ -3278,4 +3298,38 @@ def obtener_rutas_staff_supervision(request):
         
     except Exception as e:
         print(f"❌ Error obteniendo rutas para staff: {str(e)}")
+        return JsonResponse({'error': f'Error interno: {str(e)}'}, status=500)
+
+
+@login_required
+def get_all_colonias(request):
+    """API para obtener todas las colonias para el sidebar del admin dashboard"""
+    if request.user.role != 'admin':
+        return JsonResponse({'error': 'Acceso denegado'}, status=403)
+    
+    try:
+        from core.models import ColoniaProcesada
+        
+        # Obtener todas las colonias ordenadas por fecha de creación (más recientes primero)
+        colonias = ColoniaProcesada.objects.all().order_by('-fecha_creacion')
+        
+        colonias_data = []
+        for colonia in colonias:
+            colonias_data.append({
+                'id': colonia.id,
+                'nombre': colonia.nombre,
+                'fecha_creacion': colonia.fecha_creacion.isoformat(),
+                'creado_por': colonia.creado_por.username,
+                'imagen': bool(colonia.imagen),
+                'poligono_geojson': bool(colonia.poligono_geojson),
+                'datos_json': bool(colonia.datos_json)
+            })
+        
+        return JsonResponse({
+            'success': True,
+            'colonias': colonias_data
+        })
+        
+    except Exception as e:
+        print(f"❌ Error obteniendo colonias: {str(e)}")
         return JsonResponse({'error': f'Error interno: {str(e)}'}, status=500)

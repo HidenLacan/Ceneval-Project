@@ -1,0 +1,82 @@
+[
+  {
+    "place_id": 287609985,
+    "licence": "Data \u00a9 OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+    "osm_type": "way",
+    "osm_id": 130819482,
+    "lat": "19.4419467",
+    "lon": "-99.1567455",
+    "class": "tourism",
+    "type": "museum",
+    "place_rank": 30,
+    "importance": 0.3445378330881743,
+    "addresstype": "tourism",
+    "name": "Museo Universitario del Chopo",
+    "display_name": "Museo Universitario del Chopo, 10, Calle Doctor Enrique Gonz\u00e1lez Mart\u00ednez, Santa Mar\u00eda la Ribera, Ciudad de M\u00e9xico, Cuauht\u00e9moc, Ciudad de M\u00e9xico, 06400, M\u00e9xico",
+    "boundingbox": [
+      "19.4415862",
+      "19.4423102",
+      "-99.1569234",
+      "-99.1565359"
+    ],
+    "geojson": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            -99.1569234,
+            19.4418907
+          ],
+          [
+            -99.1568279,
+            19.4418754
+          ],
+          [
+            -99.1568737,
+            19.4416203
+          ],
+          [
+            -99.1566608,
+            19.4415862
+          ],
+          [
+            -99.1566106,
+            19.4418655
+          ],
+          [
+            -99.1565757,
+            19.4418599
+          ],
+          [
+            -99.1565606,
+            19.441944
+          ],
+          [
+            -99.1565946,
+            19.4419494
+          ],
+          [
+            -99.1565359,
+            19.4422762
+          ],
+          [
+            -99.1567484,
+            19.4423102
+          ],
+          [
+            -99.1567981,
+            19.4420337
+          ],
+          [
+            -99.1568949,
+            19.4420492
+          ],
+          [
+            -99.1569234,
+            19.4418907
+          ]
+        ]
+      ]
+    }
+  }
+]

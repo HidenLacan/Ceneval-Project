@@ -1,0 +1,30 @@
+[
+  {
+    "place_id": 291103650,
+    "licence": "Data \u00a9 OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+    "osm_type": "node",
+    "osm_id": 30385126,
+    "lat": "19.3697710",
+    "lon": "-99.1415858",
+    "class": "railway",
+    "type": "station",
+    "place_rank": 30,
+    "importance": 0.39829404644605404,
+    "addresstype": "railway",
+    "name": "Portales",
+    "display_name": "Portales, Calzada de Tlalpan, Colonia Albert, Ciudad de M\u00e9xico, Benito Ju\u00e1rez, Ciudad de M\u00e9xico, 03560, M\u00e9xico",
+    "boundingbox": [
+      "19.3647710",
+      "19.3747710",
+      "-99.1465858",
+      "-99.1365858"
+    ],
+    "geojson": {
+      "type": "Point",
+      "coordinates": [
+        -99.1415858,
+        19.369771
+      ]
+    }
+  }
+]
