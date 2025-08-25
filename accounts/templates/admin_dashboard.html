@@ -937,11 +937,11 @@
     
     <!-- Contenido Principal -->
     <div class="main-content-wrapper">
-        <div class="header">
+    <div class="header">
             <div class="header-content">
                 <h1><i class="fas fa-crown"></i> ADMIN</h1>
-                <h2>Creación de polígonos</h2>
-            </div>
+        <h2>Creación de polígonos</h2>
+    </div>
             <button type="button" onclick="confirmLogout()" class="logout-btn">
                 <i class="fas fa-sign-out-alt"></i> Logout
             </button>
@@ -983,7 +983,7 @@
                                value="{{ colonia|default:'' }}">
                         <div id="suggestions-container" class="suggestions-container"></div>
                         <div id="validation-message" class="validation-message hidden"></div>
-                    </div>
+        </div>
                     <button type="button" id="buscar-btn" class="search-btn">
                         <i class="fas fa-search"></i> Buscar
                     </button>
@@ -1006,12 +1006,12 @@
                 <div class="panel">
                     <div class="panel-title">
                         <i class="fas fa-image"></i> Imagen del Mapa
-                    </div>
+            </div>
                     <div class="image-upload-area" onclick="document.getElementById('png-upload').click()">
                         <i class="fas fa-cloud-upload-alt"></i>
                         <p>Haz clic para subir una imagen PNG del mapa</p>
                         <p style="font-size: 0.9rem; color: #95a5a6;">o arrastra y suelta aquí</p>
-                    </div>
+        </div>
                     <input type="file" id="png-upload" name="png_file" accept="image/png" style="display: none;">
                     <img id="png-preview" src="#" alt="Vista previa de la imagen" style="display: none;"/>
                 {% if colonia_existente and colonia_existente.imagen %}
@@ -1047,7 +1047,7 @@
                 </div>
             </div>
     {% endif %}
-    </div>
+</div>
 </div>
 
 {% if config %}
@@ -1148,17 +1148,17 @@
         }
         
         var reader = new FileReader();
-        reader.onload = function(ev) {
+            reader.onload = function(ev) {
             var img = document.getElementById('png-preview');
-            img.src = ev.target.result;
-            img.style.display = 'block';
+                img.src = ev.target.result;
+                img.style.display = 'block';
             document.querySelector('.image-upload-area').style.display = 'none';
             
             // Mostrar mensaje de éxito
             mostrarMensaje('✅ Imagen cargada exitosamente: ' + file.name, 'success');
-        };
-        reader.readAsDataURL(file);
-    }
+            };
+            reader.readAsDataURL(file);
+        }
     
     // Funcionalidad de Drag and Drop
     var uploadArea = document.querySelector('.image-upload-area');

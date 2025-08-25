@@ -9,4 +9,8 @@ urlpatterns = [
     path("editor/config/", views.config_editor, name="config_editor"),
     path("editor/guardar/", views.guardar_poligono_editor, name="guardar_poligono_editor"),
     path("editor/reporte/", views.generar_reporte_colonia, name="generar_reporte_colonia"),
+    
+    # API endpoints for serving maps without authentication
+    path('api/maps/', views.list_available_maps, name='list_available_maps'),
+    path('api/maps/<str:map_filename>', views.serve_map_html, name='serve_map_html'),
 ]

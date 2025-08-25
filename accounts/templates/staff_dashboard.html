@@ -780,6 +780,12 @@
             border: 1px solid #ffeaa7;
         }
         
+        .message.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
         /* Responsive */
         @media (max-width: 1400px) {
             .dashboard-container {
@@ -1787,7 +1793,7 @@
                 return;
             }
             
-            showMessage('Enviando información...', 'success');
+            showMessage('Enviando información por email...', 'info');
             
             // Preparar datos para envío
             const formData = new FormData();
@@ -1798,6 +1804,11 @@
                 formData.append('employee_ids[]', empleado.id);
             });
             
+            console.log('📧 Enviando información:', {
+                colonia_id: selectedColonia.id,
+                empleados: selectedEmployees.map(e => ({id: e.id, username: e.username, email: e.email}))
+            });
+            
             // Enviar request
             fetch('/accounts/enviar_rutas_desde_dashboard/', {
                 method: 'POST',
@@ -1806,17 +1817,25 @@
                     'X-CSRFToken': getCookie('csrftoken')
                 }
             })
-            .then(response => response.json())
+            .then(response => {
+                console.log('📧 Response status:', response.status);
+                return response.json();
+            })
             .then(data => {
+                console.log('📧 Response data:', data);
                 if (data.success) {
                     showMessage(data.message, 'success');
+                    
+                    // Mostrar detalles de lo que se envió
+                    const empleadosInfo = selectedEmployees.map(e => e.username).join(', ');
+                    showMessage(`✅ Información enviada exitosamente a: ${empleadosInfo}`, 'success');
                 } else {
-                    showMessage('Error al enviar información: ' + data.error, 'error');
+                    showMessage('❌ Error al enviar información: ' + data.error, 'error');
                 }
             })
             .catch(error => {
-                console.error('Error:', error);
-                showMessage('Error al enviar información', 'error');
+                console.error('❌ Error en fetch:', error);
+                showMessage('❌ Error de conexión al enviar información', 'error');
             });
         }
         

@@ -1405,11 +1405,15 @@ def enviar_rutas_desde_dashboard(request):
         colonia_id = request.POST.get('colonia_id')
         employee_ids = request.POST.getlist('employee_ids[]')
         
+        print(f"🚀 ENVIAR_RUTAS_DESDE_DASHBOARD: colonia_id={colonia_id}, employee_ids={employee_ids}")
+        
         if not colonia_id or not employee_ids:
             return JsonResponse({'error': 'Colonia y empleados son requeridos'}, status=400)
         
         # Enviar emails
         success, message = send_route_email_from_staff_dashboard(colonia_id, employee_ids)
+        
+        print(f"📧 ENVIAR_RUTAS_DESDE_DASHBOARD: success={success}, message={message}")
         
         if success:
             return JsonResponse({'success': True, 'message': message})
@@ -1417,6 +1421,7 @@ def enviar_rutas_desde_dashboard(request):
             return JsonResponse({'error': message}, status=400)
             
     except Exception as e:
+        print(f"❌ ENVIAR_RUTAS_DESDE_DASHBOARD: Error={str(e)}")
         return JsonResponse({'error': f'Error al enviar rutas: {str(e)}'}, status=500)
 
 @login_required
@@ -1477,26 +1482,6 @@ def obtener_ruta_empleado(request):
             if 'rutas' in ruta.mapa_calculado:
                 for i, ruta_data in enumerate(ruta.mapa_calculado['rutas']):
                     print(f"  - Ruta {i+1}: empleado_id={ruta_data.get('empleado_id')}, puntos={len(ruta_data.get('puntos', []))}")
-        
-        if ruta.mapa_html:
-            print(f"🔍 DEBUG: Primeros 200 caracteres del HTML:")
-            print(ruta.mapa_html[:200])
-            
-            # Verificar que el HTML tenga estructura válida
-            if '<div class="folium-map"' in ruta.mapa_html:
-                print("✅ DEBUG: HTML contiene div folium-map")
-            else:
-                print("❌ DEBUG: HTML NO contiene div folium-map")
-                
-            if '<script>' in ruta.mapa_html:
-                print("✅ DEBUG: HTML contiene scripts")
-            else:
-                print("❌ DEBUG: HTML NO contiene scripts")
-                
-            if 'L.map(' in ruta.mapa_html:
-                print("✅ DEBUG: HTML contiene inicialización de Leaflet")
-            else:
-                print("❌ DEBUG: HTML NO contiene inicialización de Leaflet")
         
         response_data = {
             'ruta_id': ruta.id,

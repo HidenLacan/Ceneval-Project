@@ -50,7 +50,6 @@ def download_bbox(place_name: str):
                     place_name.replace("colonia ", ""),
                     place_name.replace("colonia", ""),
                     place_name + ", México",
-                    place_name + ", Nuevo León",
                     place_name + ", CDMX"
                 ]
                 
@@ -74,7 +73,7 @@ def download_bbox(place_name: str):
             with open(cache_file, "w", encoding="utf-8") as f:
                 json.dump(data, f, indent=2)
             print(f"Guardado en {cache_file}")
-            
+                
         except requests.exceptions.Timeout:
             raise RuntimeError(f"Timeout al buscar '{place_name}' en Nominatim. Verifica tu conexión a internet.")
         except requests.exceptions.RequestException as e:
@@ -574,7 +573,7 @@ def procesar_poligono_completo(colonia_id: int, num_employees=2, algorithm='kern
     G = ox.graph_from_polygon(geometry, network_type='walk')
     G = add_edge_lengths(G)
     G = nx.Graph(G)  # convertir a grafo no dirigido
-    
+
     print(f"🏗️ Grafo construido: {len(G.nodes())} nodos, {len(G.edges())} aristas")
     print(f"🚀 Iniciando división con algoritmo '{algorithm}'...")
 

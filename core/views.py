@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from django.http import JsonResponse, HttpResponseBadRequest
+from django.http import JsonResponse, HttpResponseBadRequest, HttpResponse, FileResponse
 from core.utils.main import download_bbox,procesar_poligono_completo, sanitize_filename
 import json
 import requests   
@@ -7,6 +7,9 @@ from django.views.decorators.csrf import csrf_exempt
 from core.utils.polygon_logic import get_colonia_config 
 import os
 from pathlib import Path
+from django.conf import settings
+from django.utils.decorators import method_decorator
+from django.views import View
 # Create your views here.
 
 def home(request):
@@ -98,3 +101,62 @@ def generar_reporte_colonia(request):
         return JsonResponse(resultado)
     except Exception as e:
         return JsonResponse({"status": "error", "message": str(e)}, status=500)
+
+
+@csrf_exempt
+def serve_map_html(request, map_filename):
+    """
+    Serve HTML map files without authentication
+    """
+    try:
+        # Construct the path to the map file
+        map_path = os.path.join(settings.BASE_DIR, 'core', 'mapas_division', map_filename)
+        
+        # Check if file exists
+        if not os.path.exists(map_path):
+            return HttpResponse(f"Map file {map_filename} not found", status=404)
+        
+        # Check if it's an HTML file
+        if not map_filename.endswith('.html'):
+            return HttpResponse("Only HTML files are allowed", status=400)
+        
+        # Read and return the HTML file
+        with open(map_path, 'r', encoding='utf-8') as f:
+            html_content = f.read()
+        
+        return HttpResponse(html_content, content_type='text/html')
+        
+    except Exception as e:
+        return HttpResponse(f"Error serving map: {str(e)}", status=500)
+
+
+@csrf_exempt
+def list_available_maps(request):
+    """
+    List all available map files
+    """
+    try:
+        map_dir = os.path.join(settings.BASE_DIR, 'core', 'mapas_division')
+        
+        if not os.path.exists(map_dir):
+            return HttpResponse("Map directory not found", status=404)
+        
+        # Get all HTML files
+        html_files = []
+        for filename in os.listdir(map_dir):
+            if filename.endswith('.html'):
+                html_files.append(filename)
+        
+        # Return JSON response
+        import json
+        return HttpResponse(
+            json.dumps({
+                'maps': html_files,
+                'count': len(html_files),
+                'directory': 'core/mapas_division/'
+            }, indent=2),
+            content_type='application/json'
+        )
+        
+    except Exception as e:
+        return HttpResponse(f"Error listing maps: {str(e)}", status=500)
