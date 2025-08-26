@@ -898,9 +898,16 @@ def guardar_configuracion_rutas(request):
         print(f"🚀 GUARDAR_CONFIGURACION: Procesando colonia_id={colonia.id}, empleados={len(empleados_validos)}")
         
         try:
+            # Obtener el algoritmo activo por defecto
+            from core.models import ConfiguracionAlgoritmo
+            config_activa = ConfiguracionAlgoritmo.objects.filter(activo=True).first()
+            algoritmo_activo = config_activa.algoritmo_por_defecto if config_activa else 'kernighan_lin'
+            
+            print(f"🔧 GUARDAR_CONFIGURACION: Usando algoritmo activo: {algoritmo_activo}")
+            
             # Procesar con el algoritmo real usando base de datos
             num_employees = len(empleados_validos)
-            resultado = procesar_poligono_completo(colonia.id, num_employees)
+            resultado = procesar_poligono_completo(colonia.id, num_employees, algoritmo_activo)
             
             # Extraer coordenadas reales de las calles
             G = resultado['graph']
@@ -988,12 +995,13 @@ def guardar_configuracion_rutas(request):
             creado_por=request.user,
             estado='pendiente',
             informacion_empleados=informacion_empleados,
-            notas=f"Ruta asignada por {request.user.username}",
+            notas=f"Ruta asignada por {request.user.username} usando algoritmo {algoritmo_activo}",
             datos_ruta=datos_ruta,
             mapa_calculado=mapa_calculado,
             mapa_html=mapa_html_content,
             chat_asignado=f"chat_ruta_{colonia.id}_{random.randint(1000, 9999)}",
-            tiempo_calculado=tiempo_estimado
+            tiempo_calculado=tiempo_estimado,
+            algoritmo_usado=algoritmo_activo
         )
         
         # Agregar empleados a la configuración
@@ -1006,16 +1014,18 @@ def guardar_configuracion_rutas(request):
         print(f"  ID Configuración: {configuracion_ruta.id}")
         print(f"  Colonia: {colonia.nombre}")
         print(f"  Empleados: {[e.username for e in empleados_validos]}")
+        print(f"  Algoritmo usado: {algoritmo_activo}")
         print(f"  Fecha: {data.get('fecha_creacion')}")
         print(f"  Tiempo estimado: {configuracion_ruta.get_tiempo_formateado()}")
         print(f"  Chat asignado: {configuracion_ruta.chat_asignado}")
         
         return JsonResponse({
             'success': True,
-            'message': f'Configuración guardada para {len(empleados_validos)} empleados en "{colonia.nombre}"',
+            'message': f'Configuración guardada para {len(empleados_validos)} empleados en "{colonia.nombre}" usando algoritmo {algoritmo_activo}',
             'colonia': colonia.nombre,
             'empleados_count': len(empleados_validos),
             'configuracion_id': configuracion_ruta.id,
+            'algoritmo_usado': algoritmo_activo,
             'tiempo_estimado': configuracion_ruta.get_tiempo_formateado(),
             'chat_asignado': configuracion_ruta.chat_asignado,
             'estado': configuracion_ruta.estado
@@ -1104,10 +1114,15 @@ def dividir_poligono_para_empleados(request):
         # 4. Usar tu algoritmo existente con el número correcto de empleados
         from core.utils.main import procesar_poligono_completo
         
-        print(f"🚀 DIVIDIR_POLIGONO: Procesando colonia_id={colonia_id}, empleados={num_employees}")
+        # Obtener el algoritmo activo por defecto
+        from core.models import ConfiguracionAlgoritmo
+        config_activa = ConfiguracionAlgoritmo.objects.filter(activo=True).first()
+        algoritmo_activo = config_activa.algoritmo_por_defecto if config_activa else 'kernighan_lin'
+        
+        print(f"🚀 DIVIDIR_POLIGONO: Procesando colonia_id={colonia_id}, empleados={num_employees}, algoritmo={algoritmo_activo}")
         
         # 5. Procesar directamente usando la base de datos (sin archivos temporales)
-        resultado = procesar_poligono_completo(colonia_id, num_employees)
+        resultado = procesar_poligono_completo(colonia_id, num_employees, algoritmo_activo)
         
         # 8. Extraer coordenadas reales de las calles para cada zona
         from core.utils.main import ox, nx
@@ -1142,6 +1157,7 @@ def dividir_poligono_para_empleados(request):
         # 9. Preparar respuesta para el frontend con calles reales
         response_data = {
             'success': True,
+            'algoritmo_usado': algoritmo_activo,  # Agregar algoritmo usado
             'ruta1': {
                 'nodos': resultado['nodos']['zona1'],
                 'longitud': resultado['longitudes']['zona1_m'],
@@ -2680,7 +2696,6 @@ def random_forest_dashboard(request):
 
 
 @login_required
-@csrf_exempt
 def entrenar_modelo_random_forest(request):
     """API para entrenar el modelo Random Forest"""
     if request.user.role != 'researcher':
@@ -2688,21 +2703,30 @@ def entrenar_modelo_random_forest(request):
     
     if request.method == 'POST':
         try:
+            print("🚀 Iniciando entrenamiento de modelo Random Forest...")
+            print(f"🔍 User: {request.user.username}, Role: {request.user.role}")
             from core.models import RutaCompletada, ModeloPrediccionTiempo
             from core.utils.random_forest_predictor import RandomForestTimePredictor, create_sample_rutas_completadas
             import os
             
             #### ------ Default data ? why? ------------------------------Question
             data = json.loads(request.body)
+            print(f"📊 Datos recibidos: {data}")
             n_estimators = data.get('n_estimators', 100)
             max_depth = data.get('max_depth', None)
             min_samples_split = data.get('min_samples_split', 2)
             generar_datos_muestra = data.get('generar_datos_muestra', False)
+            print(f"🎲 Generar datos de muestra: {generar_datos_muestra}")
             
             # Crear datos de muestra si se solicita
             if generar_datos_muestra:
                 print("🎲 Generando datos de muestra...")
-                create_sample_rutas_completadas()
+                try:
+                    create_sample_rutas_completadas()
+                    print("✅ Datos de muestra generados exitosamente")
+                except Exception as e:
+                    print(f"❌ Error generando datos de muestra: {str(e)}")
+                    return JsonResponse({'error': f'Error generando datos de muestra: {str(e)}'}, status=500)
             
             # Obtener rutas completadas
             rutas_completadas = RutaCompletada.objects.all()
@@ -2745,8 +2769,8 @@ def entrenar_modelo_random_forest(request):
             ModeloPrediccionTiempo.objects.exclude(pk=modelo_obj.pk).update(estado='inactivo')
             
             # Guardar modelo en archivo
-            modelo_path = f"media/modelos_prediccion/rf_model_{version}.pkl"
-            if predictor.save_model(modelo_path):
+            modelo_path = f"modelos_prediccion/rf_model_{version}.pkl"
+            if predictor.save_model(f"media/{modelo_path}"):
                 modelo_obj.modelo_archivo = modelo_path
                 modelo_obj.save()
             
@@ -2766,14 +2790,15 @@ def entrenar_modelo_random_forest(request):
             })
             
         except Exception as e:
-            print(f"Error entrenando modelo: {str(e)}")
+            print(f"❌ Error entrenando modelo: {str(e)}")
+            import traceback
+            traceback.print_exc()
             return JsonResponse({'error': f'Error entrenando modelo: {str(e)}'}, status=500)
     
     return JsonResponse({'error': 'Método no permitido'}, status=405)
 
 
 @login_required
-@csrf_exempt
 def predecir_tiempo_random_forest(request):
     """API para predecir tiempo usando Random Forest"""
     if request.user.role != 'researcher':
@@ -2843,7 +2868,6 @@ def predecir_tiempo_random_forest(request):
 
 
 @login_required
-@csrf_exempt
 def obtener_estadisticas_random_forest(request):
     """API para obtener estadísticas del modelo Random Forest"""
     if request.user.role != 'researcher':

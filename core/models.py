@@ -232,6 +232,7 @@ class ConfiguracionRuta(models.Model):
     mapa_html = models.TextField(null=True, blank=True)  # HTML completo del mapa para renderizar
     chat_asignado = models.CharField(max_length=255, blank=True, null=True)  # ID o referencia del chat
     tiempo_calculado = models.DurationField(null=True, blank=True)  # Tiempo estimado de la ruta
+    algoritmo_usado = models.CharField(max_length=20, choices=EficienciaAlgoritmica.ALGORITMO_CHOICES, default='kernighan_lin', help_text='Algoritmo utilizado para dividir la ruta')
     creado_por = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='rutas_creadas')
     tiempo_de_asignacion = models.DateTimeField(auto_now_add=True)  # Cuándo se asignó la ruta
     

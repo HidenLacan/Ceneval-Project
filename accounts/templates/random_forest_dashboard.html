@@ -212,13 +212,13 @@
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label for="pred_distancia">Distancia (km)</label>
-                                    <input type="number" class="form-control" id="pred_distancia" step="0.1" required>
+                                    <input type="number" class="form-control" id="pred_distancia" value="5.0" step="0.1" required>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label for="pred_nodos">Número de Nodos</label>
-                                    <input type="number" class="form-control" id="pred_nodos" required>
+                                    <input type="number" class="form-control" id="pred_nodos" value="50" required>
                                 </div>
                             </div>
                         </div>
@@ -226,13 +226,13 @@
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label for="pred_area">Área Zona (m²)</label>
-                                    <input type="number" class="form-control" id="pred_area" required>
+                                    <input type="number" class="form-control" id="pred_area" value="1000000" required>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label for="pred_densidad_nodos">Densidad Nodos (km²)</label>
-                                    <input type="number" class="form-control" id="pred_densidad_nodos" step="0.1" required>
+                                    <input type="number" class="form-control" id="pred_densidad_nodos" value="50.0" step="0.1" required>
                                 </div>
                             </div>
                         </div>
@@ -240,7 +240,7 @@
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label for="pred_densidad_calles">Densidad Calles (m/km²)</label>
-                                    <input type="number" class="form-control" id="pred_densidad_calles" required>
+                                    <input type="number" class="form-control" id="pred_densidad_calles" value="5000" required>
                                 </div>
                             </div>
                             <div class="col-md-6">
@@ -364,19 +364,7 @@
     </div>
 </div>
 
-<!-- Loading Modal -->
-<div class="modal fade" id="loadingModal" tabindex="-1" data-backdrop="static" data-keyboard="false">
-    <div class="modal-dialog modal-sm">
-        <div class="modal-content">
-            <div class="modal-body text-center">
-                <div class="spinner-border text-primary" role="status">
-                    <span class="sr-only">Entrenando...</span>
-                </div>
-                <p class="mt-2 mb-0" id="loadingText">Entrenando modelo...</p>
-            </div>
-        </div>
-    </div>
-</div>
+
     </div> <!-- Cierre del container-fluid py-4 -->
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -389,23 +377,20 @@ function showAlert(message, type = 'info') {
     const alertHtml = `
         <div class="alert alert-${type} alert-dismissible fade show" role="alert">
             ${message}
-            <button type="button" class="close" data-dismiss="alert">
-                <span>&times;</span>
-            </button>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     `;
     alertContainer.innerHTML = alertHtml;
 }
 
-// Función para mostrar loading
+// Función para mostrar loading (simplificada)
 function showLoading(text = 'Procesando...') {
-    document.getElementById('loadingText').textContent = text;
-    $('#loadingModal').modal('show');
+    // No hacer nada - spinner removido
 }
 
-// Función para ocultar loading
+// Función para ocultar loading (simplificada)
 function hideLoading() {
-    $('#loadingModal').modal('hide');
+    // No hacer nada - spinner removido
 }
 
 // Entrenamiento del modelo

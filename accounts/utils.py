@@ -153,8 +153,6 @@ def send_route_email(configuracion_ruta, empleados_info):
         
         Fecha de configuración: {configuracion_ruta.fecha_creacion.strftime('%d/%m/%Y %H:%M')}
         Configurado por: {configuracion_ruta.creado_por.username}
-        
-        Revisa el PDF adjunto para más detalles.
         """
         
         # Check if we're in development mode (no real email configuration)

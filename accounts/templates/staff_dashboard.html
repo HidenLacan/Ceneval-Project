@@ -8,6 +8,31 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css"/>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-draw@1.0.4/dist/leaflet.draw.css"/>
     <style>
+
+.header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .header-content h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 5px;
+        }
+
+        .header-content h2 {
+            color: #7f8c8d;
+            font-weight: 400;
+            font-size: 1.2rem;
+        }
         body { 
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
             margin: 0; 
@@ -1031,7 +1056,11 @@
 <body>
     <!-- CSRF Token -->
     {% csrf_token %}
-    
+    <div class="header">
+        <div class="header-content">
+            <h1> Staff</h1>
+            <h2>Creación de rutas</h2>
+    </div>
     <div class="dashboard-container">
         <!-- Panel superior -->
         <div class="top-panel">

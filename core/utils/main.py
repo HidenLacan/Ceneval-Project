@@ -404,135 +404,6 @@ def split_graph_spectral(G):
     
     return part1, part2
 
-def draw_partitioned_graph(G, part1, part2):
-    print("Dibujando el grafo con zonas en rojo y azul...")
-    color_map = ['red' if node in part1 else 'blue' for node in G.nodes()]
-    nx.draw(G, node_color=color_map, node_size=10, edge_color='gray', with_labels=False)
-    plt.show()
-
-def calcular_longitud_por_zona(G, part1, part2):
-    total_part1 = 0
-    total_part2 = 0
-    for u, v, data in G.edges(data=True):
-        length = data.get("length", 0)
-        if u in part1 and v in part1:
-            total_part1 += length
-        elif u in part2 and v in part2:
-            total_part2 += length
-    return total_part1, total_part2
-
-
-
-def calcular_area_por_zona(G, part1, part2):
-    def area_de_particion(nodos):
-        puntos = [Point((G.nodes[n]['x'], G.nodes[n]['y'])) for n in nodos]
-        gdf = gpd.GeoDataFrame(geometry=puntos, crs="EPSG:4326")
-        gdf = gdf.to_crs(epsg=32614)  # UTM zona 14N
-        union_geom = gdf.geometry.union_all()
-        hull = union_geom.convex_hull
-        return hull.area / 1_000_000 if hull.area else 0
-    return area_de_particion(part1), area_de_particion(part2)
-
-def generate_route_js(G, part1, part2):
-    """Genera el JavaScript para las rutas del mapa"""
-    js_lines = []
-    
-    # Generar rutas para zona 1 (roja)
-    route1_segments = []
-    for u, v, data in G.edges(data=True):
-        if u in part1 and v in part1:
-            if 'geometry' in data:
-                coords = [[pt[1], pt[0]] for pt in data['geometry'].coords]  # [lat, lon] para Leaflet
-            else:
-                coords = [[G.nodes[u]['y'], G.nodes[u]['x']], [G.nodes[v]['y'], G.nodes[v]['x']]]
-            route1_segments.append(coords)
-    
-    if route1_segments:
-        js_lines.append("// Ruta zona 1 (roja)")
-        for i, segment in enumerate(route1_segments):
-            js_lines.append(f"L.polyline({segment}, {{color: 'red', weight: 3, opacity: 0.7}}).addTo(map);")
-    
-    # Generar rutas para zona 2 (azul)
-    route2_segments = []
-    for u, v, data in G.edges(data=True):
-        if u in part2 and v in part2:
-            if 'geometry' in data:
-                coords = [[pt[1], pt[0]] for pt in data['geometry'].coords]  # [lat, lon] para Leaflet
-            else:
-                coords = [[G.nodes[u]['y'], G.nodes[u]['x']], [G.nodes[v]['y'], G.nodes[v]['x']]]
-            route2_segments.append(coords)
-    
-    if route2_segments:
-        js_lines.append("// Ruta zona 2 (azul)")
-        for i, segment in enumerate(route2_segments):
-            js_lines.append(f"L.polyline({segment}, {{color: 'blue', weight: 3, opacity: 0.7}}).addTo(map);")
-    
-    return "\n        ".join(js_lines)
-
-def draw_graph_folium(G, part1, part2, place_name="colonia", output_html=None):
-    print("Generando mapa interactivo con folium...")
-    base_mapa_dir = Path(__file__).resolve().parent.parent / "mapas_division"
-    base_mapa_dir.mkdir(parents=True, exist_ok=True)
-    filename = output_html or f"mapa_{sanitize_filename(place_name)}.html"
-    nombre_archivo = base_mapa_dir / filename
-
-    centro = list(G.nodes(data=True))[0][1]
-    m = folium.Map(location=[centro['y'], centro['x']], zoom_start=16)
-
-    # Dibujar calles respetando la geometría real
-    for u, v, data in G.edges(data=True):
-        if 'geometry' in data:
-            coords = [(pt[1], pt[0]) for pt in data['geometry'].coords]
-        else:
-            coords = [(G.nodes[u]['y'], G.nodes[u]['x']), (G.nodes[v]['y'], G.nodes[v]['x'])]
-
-        # Colorear calles según la zona
-        if u in part1 and v in part1:
-            color = 'red'
-        elif u in part2 and v in part2:
-            color = 'blue'
-        else:
-            color = 'gray'
-
-        folium.PolyLine(coords, color=color, weight=3, opacity=0.7).add_to(m)
-
-    # Guardar el archivo HTML
-    m.save(nombre_archivo)
-    
-    # Leer el contenido HTML generado y optimizarlo para la base de datos
-    with open(nombre_archivo, 'r', encoding='utf-8') as f:
-        html_content = f.read()
-    
-    # Crear una versión optimizada del HTML para la base de datos
-    # Extraer solo la parte del mapa sin las dependencias externas
-    optimized_html = f"""
-    <div class="folium-map" id="map_{sanitize_filename(place_name)}" style="width: 100%; height: 400px;"></div>
-    <script>
-        // Inicializar mapa
-        var map = L.map("map_{sanitize_filename(place_name)}", {{
-            center: [{centro['y']}, {centro['x']}],
-            zoom: 16,
-            crs: L.CRS.EPSG3857
-        }});
-        
-        // Agregar capa de tiles
-        L.tileLayer("https://tile.openstreetmap.org/{{z}}/{{x}}/{{y}}.png", {{
-            attribution: "© OpenStreetMap contributors",
-            maxZoom: 19
-        }}).addTo(map);
-        
-        // Agregar rutas
-        {generate_route_js(G, part1, part2)}
-    </script>
-    """
-    
-    return {
-        'file_path': os.path.abspath(nombre_archivo),
-        'html_content': optimized_html
-    }
-
-
-from osmnx.distance import add_edge_lengths
 
 def procesar_poligono_completo(colonia_id: int, num_employees=2, algorithm='kernighan_lin'):
     """
@@ -640,6 +511,132 @@ def procesar_poligono_completo(colonia_id: int, num_employees=2, algorithm='kern
         "part1_nodes": part1,
         "part2_nodes": part2,
         "graph": G
+    }
+
+
+def draw_partitioned_graph(G, part1, part2):
+    print("Dibujando el grafo con zonas en rojo y azul...")
+    color_map = ['red' if node in part1 else 'blue' for node in G.nodes()]
+    nx.draw(G, node_color=color_map, node_size=10, edge_color='gray', with_labels=False)
+    plt.show()
+
+def calcular_longitud_por_zona(G, part1, part2):
+    total_part1 = 0
+    total_part2 = 0
+    for u, v, data in G.edges(data=True):
+        length = data.get("length", 0)
+        if u in part1 and v in part1:
+            total_part1 += length
+        elif u in part2 and v in part2:
+            total_part2 += length
+    return total_part1, total_part2
+
+def calcular_area_por_zona(G, part1, part2):
+    def area_de_particion(nodos):
+        puntos = [Point((G.nodes[n]['x'], G.nodes[n]['y'])) for n in nodos]
+        gdf = gpd.GeoDataFrame(geometry=puntos, crs="EPSG:4326")
+        gdf = gdf.to_crs(epsg=32614)  # UTM zona 14N
+        union_geom = gdf.geometry.union_all()
+        hull = union_geom.convex_hull
+        return hull.area / 1_000_000 if hull.area else 0
+    return area_de_particion(part1), area_de_particion(part2)
+
+def generate_route_js(G, part1, part2):
+    """Genera el JavaScript para las rutas del mapa"""
+    js_lines = []
+    
+    # Generar rutas para zona 1 (roja)
+    route1_segments = []
+    for u, v, data in G.edges(data=True):
+        if u in part1 and v in part1:
+            if 'geometry' in data:
+                coords = [[pt[1], pt[0]] for pt in data['geometry'].coords]  # [lat, lon] para Leaflet
+            else:
+                coords = [[G.nodes[u]['y'], G.nodes[u]['x']], [G.nodes[v]['y'], G.nodes[v]['x']]]
+            route1_segments.append(coords)
+    
+    if route1_segments:
+        js_lines.append("// Ruta zona 1 (roja)")
+        for i, segment in enumerate(route1_segments):
+            js_lines.append(f"L.polyline({segment}, {{color: 'red', weight: 3, opacity: 0.7}}).addTo(map);")
+    
+    # Generar rutas para zona 2 (azul)
+    route2_segments = []
+    for u, v, data in G.edges(data=True):
+        if u in part2 and v in part2:
+            if 'geometry' in data:
+                coords = [[pt[1], pt[0]] for pt in data['geometry'].coords]  # [lat, lon] para Leaflet
+            else:
+                coords = [[G.nodes[u]['y'], G.nodes[u]['x']], [G.nodes[v]['y'], G.nodes[v]['x']]]
+            route2_segments.append(coords)
+    
+    if route2_segments:
+        js_lines.append("// Ruta zona 2 (azul)")
+        for i, segment in enumerate(route2_segments):
+            js_lines.append(f"L.polyline({segment}, {{color: 'blue', weight: 3, opacity: 0.7}}).addTo(map);")
+    
+    return "\n        ".join(js_lines)
+
+def draw_graph_folium(G, part1, part2, place_name="colonia", output_html=None):
+    print("Generando mapa interactivo con folium...")
+    base_mapa_dir = Path(__file__).resolve().parent.parent / "mapas_division"
+    base_mapa_dir.mkdir(parents=True, exist_ok=True)
+    filename = output_html or f"mapa_{sanitize_filename(place_name)}.html"
+    nombre_archivo = base_mapa_dir / filename
+
+    centro = list(G.nodes(data=True))[0][1]
+    m = folium.Map(location=[centro['y'], centro['x']], zoom_start=16)
+
+    # Dibujar calles respetando la geometría real
+    for u, v, data in G.edges(data=True):
+        if 'geometry' in data:
+            coords = [(pt[1], pt[0]) for pt in data['geometry'].coords]
+        else:
+            coords = [(G.nodes[u]['y'], G.nodes[u]['x']), (G.nodes[v]['y'], G.nodes[v]['x'])]
+
+        # Colorear calles según la zona
+        if u in part1 and v in part1:
+            color = 'red'
+        elif u in part2 and v in part2:
+            color = 'blue'
+        else:
+            color = 'gray'
+
+        folium.PolyLine(coords, color=color, weight=3, opacity=0.7).add_to(m)
+
+    # Guardar el archivo HTML
+    m.save(nombre_archivo)
+    
+    # Leer el contenido HTML generado y optimizarlo para la base de datos
+    with open(nombre_archivo, 'r', encoding='utf-8') as f:
+        html_content = f.read()
+    
+    # Crear una versión optimizada del HTML para la base de datos
+    # Extraer solo la parte del mapa sin las dependencias externas
+    optimized_html = f"""
+    <div class="folium-map" id="map_{sanitize_filename(place_name)}" style="width: 100%; height: 400px;"></div>
+    <script>
+        // Inicializar mapa
+        var map = L.map("map_{sanitize_filename(place_name)}", {{
+            center: [{centro['y']}, {centro['x']}],
+            zoom: 16,
+            crs: L.CRS.EPSG3857
+        }});
+        
+        // Agregar capa de tiles
+        L.tileLayer("https://tile.openstreetmap.org/{{z}}/{{x}}/{{y}}.png", {{
+            attribution: "© OpenStreetMap contributors",
+            maxZoom: 19
+        }}).addTo(map);
+        
+        // Agregar rutas
+        {generate_route_js(G, part1, part2)}
+    </script>
+    """
+    
+    return {
+        'file_path': os.path.abspath(nombre_archivo),
+        'html_content': optimized_html
     }
 
 
